@@ -9,23 +9,28 @@ CREATE TABLE locations (
 CREATE TABLE military_formations (
     formation_id SERIAL PRIMARY KEY,
     name VARCHAR(200) NOT NULL UNIQUE,
-    formation_type VARCHAR(50) NOT NULL CHECK (
-        formation_type IN ('Округ','Армия','Корпус','Дивизия','Бригада','Полк','Часть')),
+    formation_type VARCHAR(50) NOT NULL CHECK (formation_type IN ('Округ','Армия','Корпус','Дивизия','Бригада')),
     parent_id INTEGER REFERENCES military_formations(formation_id) ON DELETE SET NULL,
-    location_id INTEGER REFERENCES locations(location_id) ON DELETE SET NULL,
     formation_date DATE CHECK (formation_date <= CURRENT_DATE),
     status VARCHAR(30) NOT NULL DEFAULT 'Активна',
     CHECK (name <> ''),
     CHECK (parent_id IS NULL OR parent_id <> formation_id)
 );
 
+CREATE TABLE military_units (
+    unit_id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL UNIQUE CHECK (name <> ''),
+    formation_id INTEGER NOT NULL REFERENCES military_formations(formation_id) ON DELETE CASCADE,
+    location_id INTEGER REFERENCES locations(location_id) ON DELETE SET NULL
+);
+
 CREATE TABLE subdivisions (
     subdivision_id SERIAL PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     type VARCHAR(50) NOT NULL CHECK (type IN ('Батальон','Рота','Взвод','Отделение')),
-    formation_id INTEGER NOT NULL REFERENCES military_formations(formation_id) ON DELETE CASCADE,
+    unit_id INTEGER NOT NULL REFERENCES military_units(unit_id) ON DELETE CASCADE,
     parent_id INTEGER REFERENCES subdivisions(subdivision_id) ON DELETE SET NULL,
-    UNIQUE (name, formation_id),
+    UNIQUE (name, unit_id),
     CHECK (name <> ''),
     CHECK (parent_id IS NULL OR parent_id <> subdivision_id)
 );
@@ -43,6 +48,11 @@ CREATE TABLE personnel (
     CHECK (last_name <> ''),
     CHECK (first_name <> '')
 );
+
+ALTER TABLE MILITARY_FORMATIONS ADD COLUMN COMMANDER_ID INTEGER NOT NULL REFERENCES PERSONNEL(PERSONNEL_ID);
+ALTER TABLE SUBDIVISIONS ADD COLUMN COMMANDER_ID INTEGER NOT NULL REFERENCES PERSONNEL(PERSONNEL_ID);
+ALTER TABLE MILITARY_UNITS ADD COLUMN COMMANDER_ID INTEGER NOT NULL REFERENCES PERSONNEL(PERSONNEL_ID);
+
 
 CREATE TABLE military_ranks (
     rank_id SERIAL PRIMARY KEY,
@@ -141,11 +151,11 @@ CREATE TABLE equipment_type_attribute_values (
     )
 );
 
-CREATE TABLE equipment_in_formations (
-    formation_id INTEGER NOT NULL REFERENCES military_formations(formation_id) ON DELETE CASCADE,
+CREATE TABLE equipment_in_units (
+    unit_id INTEGER NOT NULL REFERENCES military_units(unit_id) ON DELETE CASCADE,
     type_id INTEGER NOT NULL REFERENCES equipment_types(type_id),
     quantity INTEGER NOT NULL CHECK (quantity >= 0),
-    PRIMARY KEY (formation_id, type_id)
+    PRIMARY KEY (unit_id, type_id)
 );
 
 CREATE TABLE weapon_categories (
@@ -193,20 +203,21 @@ CREATE TABLE weapon_type_attribute_values (
     )
 );
 
-CREATE TABLE weapon_in_formations (
-    formation_id INTEGER NOT NULL REFERENCES military_formations(formation_id) ON DELETE CASCADE,
+CREATE TABLE weapon_in_units (
+    unit_id INTEGER NOT NULL REFERENCES military_units(unit_id) ON DELETE CASCADE,
     type_id INTEGER NOT NULL REFERENCES weapon_types(type_id),
     quantity INTEGER NOT NULL CHECK (quantity >= 0),
-    PRIMARY KEY (formation_id, type_id)
+    PRIMARY KEY (unit_id, type_id)
 );
 
 CREATE TABLE buildings (
     building_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    location_id INTEGER NOT NULL REFERENCES locations(location_id) ON DELETE CASCADE
+    unit_id INTEGER NOT NULL REFERENCES military_units(unit_id) ON DELETE CASCADE
 );
 
-CREATE TABLE subdivision_placement (
-    subdivision_id INTEGER PRIMARY KEY REFERENCES subdivisions(subdivision_id) ON DELETE CASCADE,
-    building_id INTEGER NOT NULL REFERENCES buildings(building_id) ON DELETE CASCADE
+CREATE TABLE subdivision_buildings (
+    subdivision_id INTEGER REFERENCES subdivisions(subdivision_id) ON DELETE CASCADE,
+    building_id INTEGER REFERENCES buildings(building_id) ON DELETE CASCADE,
+    PRIMARY KEY (subdivision_id, building_id)
 );
