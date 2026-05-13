@@ -1,0 +1,15 @@
+.env
+.idea/
+.vscode/
+*.iml
+
+backend/.gradle/
+backend/build/
+backend/target/
+
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+military_district_seed.sql
+Проекты БД  6 семестр - 11 вариантов-2.pdf

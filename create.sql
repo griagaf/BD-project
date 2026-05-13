@@ -1,0 +1,277 @@
+DROP TABLE IF EXISTS subdivision_buildings CASCADE;
+DROP TABLE IF EXISTS buildings CASCADE;
+
+DROP TABLE IF EXISTS weapon_in_units CASCADE;
+DROP TABLE IF EXISTS weapon_type_attribute_values CASCADE;
+DROP TABLE IF EXISTS weapon_category_attributes CASCADE;
+DROP TABLE IF EXISTS weapon_attribute_types CASCADE;
+DROP TABLE IF EXISTS weapon_types CASCADE;
+DROP TABLE IF EXISTS weapon_categories CASCADE;
+
+DROP TABLE IF EXISTS equipment_in_units CASCADE;
+DROP TABLE IF EXISTS equipment_type_attribute_values CASCADE;
+DROP TABLE IF EXISTS equipment_category_attributes CASCADE;
+DROP TABLE IF EXISTS equipment_attribute_types CASCADE;
+DROP TABLE IF EXISTS equipment_types CASCADE;
+DROP TABLE IF EXISTS equipment_categories CASCADE;
+
+DROP TABLE IF EXISTS personnel_specialties CASCADE;
+DROP TABLE IF EXISTS specialties CASCADE;
+
+DROP TABLE IF EXISTS rank_attribute_values CASCADE;
+DROP TABLE IF EXISTS rank_type_attributes CASCADE;
+DROP TABLE IF EXISTS rank_attribute_types CASCADE;
+DROP TABLE IF EXISTS personnel_ranks CASCADE;
+DROP TABLE IF EXISTS military_ranks CASCADE;
+
+DROP TABLE IF EXISTS personnel CASCADE;
+DROP TABLE IF EXISTS subdivisions CASCADE;
+DROP TABLE IF EXISTS military_units CASCADE;
+DROP TABLE IF EXISTS military_formations CASCADE;
+DROP TABLE IF EXISTS locations CASCADE;
+
+
+
+
+CREATE TABLE locations (
+    location_id SERIAL PRIMARY KEY,
+    city VARCHAR(100) NOT NULL,
+    address TEXT,
+    UNIQUE (city, address),
+    CHECK (city <> '')
+);
+
+CREATE TABLE military_formations (
+    formation_id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL UNIQUE,
+    formation_type VARCHAR(50) NOT NULL
+        CHECK (formation_type IN ('Округ', 'Армия', 'Корпус', 'Дивизия', 'Бригада')),
+    parent_id INTEGER REFERENCES military_formations(formation_id) ON DELETE SET NULL,
+    formation_date DATE CHECK (formation_date <= CURRENT_DATE),
+    status VARCHAR(30) NOT NULL DEFAULT 'Активна',
+    commander_id INTEGER,
+    CHECK (name <> ''),
+    CHECK (parent_id IS NULL OR parent_id <> formation_id)
+);
+
+CREATE TABLE military_units (
+    unit_id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL UNIQUE,
+    formation_id INTEGER NOT NULL REFERENCES military_formations(formation_id) ON DELETE CASCADE,
+    location_id INTEGER REFERENCES locations(location_id) ON DELETE SET NULL,
+    commander_id INTEGER,
+    CHECK (name <> '')
+);
+
+CREATE TABLE subdivisions (
+    subdivision_id SERIAL PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    type VARCHAR(50) NOT NULL
+        CHECK (type IN ('Батальон', 'Рота', 'Взвод', 'Отделение')),
+    unit_id INTEGER NOT NULL REFERENCES military_units(unit_id) ON DELETE CASCADE,
+    parent_id INTEGER REFERENCES subdivisions(subdivision_id) ON DELETE SET NULL,
+    commander_id INTEGER,
+    UNIQUE (name, unit_id),
+    CHECK (name <> ''),
+    CHECK (parent_id IS NULL OR parent_id <> subdivision_id)
+);
+
+CREATE TABLE personnel (
+    personnel_id SERIAL PRIMARY KEY,
+    last_name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    personal_number VARCHAR(20) NOT NULL UNIQUE,
+    birth_date DATE NOT NULL CHECK (birth_date <= CURRENT_DATE - INTERVAL '18 years'),
+    service_start DATE NOT NULL CHECK (service_start <= CURRENT_DATE),
+    subdivision_id INTEGER NOT NULL REFERENCES subdivisions(subdivision_id) ON DELETE RESTRICT,
+    CHECK (last_name <> ''),
+    CHECK (first_name <> '')
+);
+
+CREATE TABLE military_ranks (
+    rank_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    category VARCHAR(50) NOT NULL
+        CHECK (category IN ('Офицерский', 'Сержантский и Рядовой'))
+);
+
+CREATE TABLE personnel_ranks (
+    personnel_id INTEGER PRIMARY KEY REFERENCES personnel(personnel_id) ON DELETE CASCADE,
+    rank_id INTEGER NOT NULL REFERENCES military_ranks(rank_id),
+    assignment_date DATE NOT NULL CHECK (assignment_date <= CURRENT_DATE)
+);
+
+CREATE TABLE rank_attribute_types (
+    attribute_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    data_type VARCHAR(20) NOT NULL
+        CHECK (data_type IN ('text', 'number', 'date', 'boolean'))
+);
+
+CREATE TABLE rank_type_attributes (
+    rank_id INTEGER NOT NULL REFERENCES military_ranks(rank_id) ON DELETE CASCADE,
+    attribute_id INTEGER NOT NULL REFERENCES rank_attribute_types(attribute_id) ON DELETE CASCADE,
+    PRIMARY KEY (rank_id, attribute_id)
+);
+
+CREATE TABLE rank_attribute_values (
+    personnel_id INTEGER NOT NULL REFERENCES personnel(personnel_id) ON DELETE CASCADE,
+    attribute_id INTEGER NOT NULL REFERENCES rank_attribute_types(attribute_id),
+    value_text TEXT,
+    value_number NUMERIC,
+    value_date DATE,
+    value_boolean BOOLEAN,
+    PRIMARY KEY (personnel_id, attribute_id),
+    CHECK (
+        (value_text IS NOT NULL)::int +
+        (value_number IS NOT NULL)::int +
+        (value_date IS NOT NULL)::int +
+        (value_boolean IS NOT NULL)::int = 1
+    )
+);
+
+CREATE TABLE specialties (
+    specialty_id SERIAL PRIMARY KEY,
+    name VARCHAR(150) NOT NULL UNIQUE,
+    CHECK (name <> '')
+);
+
+CREATE TABLE personnel_specialties (
+    personnel_id INTEGER NOT NULL REFERENCES personnel(personnel_id) ON DELETE CASCADE,
+    specialty_id INTEGER NOT NULL REFERENCES specialties(specialty_id) ON DELETE CASCADE,
+    PRIMARY KEY (personnel_id, specialty_id)
+);
+
+CREATE TABLE equipment_categories (
+    category_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    CHECK (name <> '')
+);
+
+CREATE TABLE equipment_types (
+    type_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    category_id INTEGER NOT NULL REFERENCES equipment_categories(category_id) ON DELETE CASCADE,
+    UNIQUE (name, category_id),
+    CHECK (name <> '')
+);
+
+CREATE TABLE equipment_attribute_types (
+    attribute_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    data_type VARCHAR(20) NOT NULL
+        CHECK (data_type IN ('text', 'number', 'date', 'boolean'))
+);
+
+CREATE TABLE equipment_category_attributes (
+    category_id INTEGER NOT NULL REFERENCES equipment_categories(category_id) ON DELETE CASCADE,
+    attribute_id INTEGER NOT NULL REFERENCES equipment_attribute_types(attribute_id) ON DELETE CASCADE,
+    PRIMARY KEY (category_id, attribute_id)
+);
+
+CREATE TABLE equipment_type_attribute_values (
+    type_id INTEGER NOT NULL REFERENCES equipment_types(type_id) ON DELETE CASCADE,
+    attribute_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    value_text TEXT,
+    value_number NUMERIC,
+    value_date DATE,
+    value_boolean BOOLEAN,
+    PRIMARY KEY (type_id, attribute_id),
+    FOREIGN KEY (category_id, attribute_id)
+        REFERENCES equipment_category_attributes(category_id, attribute_id),
+    CHECK (
+        (value_text IS NOT NULL)::int +
+        (value_number IS NOT NULL)::int +
+        (value_date IS NOT NULL)::int +
+        (value_boolean IS NOT NULL)::int = 1
+    )
+);
+
+CREATE TABLE equipment_in_units (
+    unit_id INTEGER NOT NULL REFERENCES military_units(unit_id) ON DELETE CASCADE,
+    type_id INTEGER NOT NULL REFERENCES equipment_types(type_id),
+    quantity INTEGER NOT NULL CHECK (quantity >= 0),
+    PRIMARY KEY (unit_id, type_id)
+);
+
+CREATE TABLE weapon_categories (
+    category_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    CHECK (name <> '')
+);
+
+CREATE TABLE weapon_types (
+    type_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    category_id INTEGER NOT NULL REFERENCES weapon_categories(category_id) ON DELETE CASCADE,
+    UNIQUE (name, category_id),
+    CHECK (name <> '')
+);
+
+CREATE TABLE weapon_attribute_types (
+    attribute_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    data_type VARCHAR(20) NOT NULL
+        CHECK (data_type IN ('text', 'number', 'date', 'boolean'))
+);
+
+CREATE TABLE weapon_category_attributes (
+    category_id INTEGER NOT NULL REFERENCES weapon_categories(category_id) ON DELETE CASCADE,
+    attribute_id INTEGER NOT NULL REFERENCES weapon_attribute_types(attribute_id) ON DELETE CASCADE,
+    PRIMARY KEY (category_id, attribute_id)
+);
+
+CREATE TABLE weapon_type_attribute_values (
+    type_id INTEGER NOT NULL REFERENCES weapon_types(type_id) ON DELETE CASCADE,
+    attribute_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    value_text TEXT,
+    value_number NUMERIC,
+    value_date DATE,
+    value_boolean BOOLEAN,
+    PRIMARY KEY (type_id, attribute_id),
+    FOREIGN KEY (category_id, attribute_id)
+        REFERENCES weapon_category_attributes(category_id, attribute_id),
+    CHECK (
+        (value_text IS NOT NULL)::int +
+        (value_number IS NOT NULL)::int +
+        (value_date IS NOT NULL)::int +
+        (value_boolean IS NOT NULL)::int = 1
+    )
+);
+
+CREATE TABLE weapon_in_units (
+    unit_id INTEGER NOT NULL REFERENCES military_units(unit_id) ON DELETE CASCADE,
+    type_id INTEGER NOT NULL REFERENCES weapon_types(type_id),
+    quantity INTEGER NOT NULL CHECK (quantity >= 0),
+    PRIMARY KEY (unit_id, type_id)
+);
+
+CREATE TABLE buildings (
+    building_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    unit_id INTEGER NOT NULL REFERENCES military_units(unit_id) ON DELETE CASCADE,
+    CHECK (name <> '')
+);
+
+CREATE TABLE subdivision_buildings (
+    subdivision_id INTEGER NOT NULL REFERENCES subdivisions(subdivision_id) ON DELETE CASCADE,
+    building_id INTEGER NOT NULL REFERENCES buildings(building_id) ON DELETE CASCADE,
+    PRIMARY KEY (subdivision_id, building_id)
+);
+
+
+
+ALTER TABLE military_formations
+ADD CONSTRAINT fk_military_formations_commander
+FOREIGN KEY (commander_id) REFERENCES personnel(personnel_id);
+
+ALTER TABLE military_units
+ADD CONSTRAINT fk_military_units_commander
+FOREIGN KEY (commander_id) REFERENCES personnel(personnel_id);
+
+ALTER TABLE subdivisions
+ADD CONSTRAINT fk_subdivisions_commander
+FOREIGN KEY (commander_id) REFERENCES personnel(personnel_id);
