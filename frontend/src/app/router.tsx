@@ -7,6 +7,7 @@ import { HierarchyPage } from "@/pages/hierarchy/HierarchyPage"
 import { IntelligenceTerminalPage } from "@/pages/intelligence-terminal/IntelligenceTerminalPage"
 import { LoginPage } from "@/pages/login/LoginPage"
 import { PersonnelPage } from "@/pages/personnel/PersonnelPage"
+import { PersonnelProfilePage } from "@/pages/personnel/PersonnelProfilePage"
 import { ReportsPage } from "@/pages/reports/ReportsPage"
 import { TacticalLayout } from "@/widgets/layout/TacticalLayout"
 
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "dashboard", element: <DashboardPage /> },
       { path: "hierarchy", element: <HierarchyPage /> },
       { path: "personnel", element: <PersonnelPage /> },
+      { path: "personnel/:id", element: <PersonnelProfilePage /> },
       { path: "intelligence", element: <IntelligenceTerminalPage /> },
       { path: "alerts", element: <AlertsPage /> },
       { path: "reports", element: <ReportsPage /> },
@@ -34,4 +36,3 @@ export const router = createBrowserRouter([
     ],
   },
 ])
-

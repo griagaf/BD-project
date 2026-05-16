@@ -8,3 +8,9 @@ export function useApiStatusQuery() {
   })
 }
 
+export function useCurrentUserQuery() {
+  return useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: authApi.me,
+  })
+}
