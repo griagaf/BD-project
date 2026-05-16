@@ -51,7 +51,7 @@ public class PermissionCodeResolver {
     private Optional<String> resourcePermission(String prefix, PermissionAction action) {
         return switch (action) {
             case READ -> Optional.of(prefix + ":read");
-            case UPDATE -> Optional.of(prefix + ":update");
+            case CREATE, UPDATE, DELETE -> Optional.of(prefix + ":update");
             default -> Optional.empty();
         };
     }
