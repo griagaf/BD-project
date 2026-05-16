@@ -4,6 +4,7 @@ import { AdminUsersPage } from "@/pages/admin-users/AdminUsersPage"
 import { AlertsPage } from "@/pages/alerts/AlertsPage"
 import { DashboardPage } from "@/pages/dashboard/DashboardPage"
 import { HierarchyPage } from "@/pages/hierarchy/HierarchyPage"
+import { UnitPassportPage } from "@/pages/hierarchy/UnitPassportPage"
 import { IntelligenceTerminalPage } from "@/pages/intelligence-terminal/IntelligenceTerminalPage"
 import { LoginPage } from "@/pages/login/LoginPage"
 import { PersonnelPage } from "@/pages/personnel/PersonnelPage"
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: "dashboard", element: <DashboardPage /> },
       { path: "hierarchy", element: <HierarchyPage /> },
+      { path: "units/:id", element: <UnitPassportPage /> },
       { path: "personnel", element: <PersonnelPage /> },
       { path: "personnel/:id", element: <PersonnelProfilePage /> },
       { path: "intelligence", element: <IntelligenceTerminalPage /> },
