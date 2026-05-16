@@ -89,7 +89,7 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public CurrentUserResponse currentUser(RoleCode simulationRole) {
-        UserContext user = userContextProvider.current();
+        UserContext user = userContextProvider.currentWithoutAccessSimulation();
         if (simulationRole != null && !user.hasRole(RoleCode.ADMIN_DISTRICT)) {
             throw new AccessDeniedException("Access simulation is available only for ADMIN_DISTRICT");
         }
