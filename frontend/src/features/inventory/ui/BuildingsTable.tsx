@@ -1,4 +1,5 @@
 import { Pencil, Trash2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { BuildingRow } from "@/features/inventory/model/inventoryTypes"
 import { StatusBadge } from "@/features/inventory/ui/StatusBadge"
 import { Button } from "@/shared/ui/button"
@@ -14,8 +15,9 @@ type BuildingsTableProps = {
 }
 
 export function BuildingsTable({ rows, canEdit, onEdit, onDelete }: BuildingsTableProps) {
+  const { t } = useTranslation(["common", "buildings"])
   if (!rows.length) {
-    return <EmptyState title="No buildings visible" description="Current filters and command scope returned no building records." />
+    return <EmptyState title={t("buildings:table.emptyTitle")} description={t("buildings:table.emptyDescription")} />
   }
 
   return (
@@ -23,11 +25,11 @@ export function BuildingsTable({ rows, canEdit, onEdit, onDelete }: BuildingsTab
         <Table>
           <thead className={tableHeadClass}>
             <tr>
-              <th className={tableCellClass}>Building</th>
-              <th className={tableCellClass}>Unit</th>
-              <th className={tableCellClass}>Subdivisions</th>
-              <th className={tableCellClass}>Status</th>
-              <th className={cn(tableCellClass, "text-right")}>Actions</th>
+              <th className={tableCellClass}>{t("buildings:table.building")}</th>
+              <th className={tableCellClass}>{t("buildings:table.unit")}</th>
+              <th className={tableCellClass}>{t("buildings:table.subdivisions")}</th>
+              <th className={tableCellClass}>{t("table.status")}</th>
+              <th className={cn(tableCellClass, "text-right")}>{t("table.actions")}</th>
             </tr>
           </thead>
           <tbody>

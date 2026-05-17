@@ -1,0 +1,36 @@
+{
+  "page": {
+    "eyebrow": "Intelligence Query Terminal",
+    "title": "Template-driven Query Builder",
+    "description": "Structured analytical SQL execution with role and scope checks."
+  },
+  "states": {
+    "loadingTemplates": "Loading query templates",
+    "noQueryTitle": "No query executed",
+    "noQueryDescription": "Execute a template to inspect scoped SQL results.",
+    "noRowsTitle": "No rows in current scope",
+    "noRowsDescription": "The selected template executed successfully but returned no rows."
+  },
+  "builder": {
+    "templates": "Templates",
+    "scope": "Scope",
+    "parameters": "Parameters",
+    "noParameters": "No additional parameters required",
+    "displayName": "Display name",
+    "formation": "Formation",
+    "unit": "Unit",
+    "personnel": "Personnel",
+    "global": "Global"
+  },
+  "result": {
+    "rowsReturned": "{{count}} rows returned at {{time}}"
+  },
+  "toast": {
+    "executed": "Query executed",
+    "rowsReturned": "{{count}} rows returned",
+    "failed": "Query execution failed",
+    "exported": "CSV exported",
+    "exportedDescription": "{{code}} result exported"
+  },
+  "error": "Query execution failed"
+}

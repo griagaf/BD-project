@@ -1,0 +1,13 @@
+{
+  "page": {
+    "eyebrow": "Alert Center",
+    "title": "Operational Alerts",
+    "description": "Generated readiness and data-quality alerts for current command scope."
+  },
+  "states": {
+    "loading": "Loading alerts",
+    "emptyTitle": "No active alerts",
+    "emptyDescription": "Current scope has no generated readiness or data-quality alerts."
+  },
+  "error": "Unable to load alerts"
+}

@@ -1,5 +1,6 @@
 import { Eye, Pencil, Trash2 } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import type { Personnel } from "@/features/personnel/model/personnelTypes"
 import { Button } from "@/shared/ui/button"
 import { Badge } from "@/shared/ui/badge"
@@ -16,8 +17,9 @@ type PersonnelTableProps = {
 }
 
 export function PersonnelTable({ rows, canEdit, canDelete, onEdit, onDelete }: PersonnelTableProps) {
+  const { t } = useTranslation(["common", "personnel"])
   if (!rows.length) {
-    return <EmptyState title="No personnel visible" description="Current filters and command scope returned no personnel records." />
+    return <EmptyState title={t("personnel:table.emptyTitle")} description={t("personnel:table.emptyDescription")} />
   }
 
   return (
@@ -25,21 +27,21 @@ export function PersonnelTable({ rows, canEdit, canDelete, onEdit, onDelete }: P
       <Table>
         <thead className={tableHeadClass}>
           <tr>
-            <th className={tableCellClass}>Personnel</th>
-            <th className={tableCellClass}>Rank</th>
-            <th className={tableCellClass}>Unit</th>
-            <th className={tableCellClass}>Specialties</th>
-            <th className={cn(tableCellClass, "w-36 text-right")}>Actions</th>
+            <th className={tableCellClass}>{t("personnel:table.personnel")}</th>
+            <th className={tableCellClass}>{t("personnel:table.rank")}</th>
+            <th className={tableCellClass}>{t("personnel:table.unit")}</th>
+            <th className={tableCellClass}>{t("personnel:table.specialties")}</th>
+            <th className={cn(tableCellClass, "w-36 text-right")}>{t("table.actions")}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((personnel) => (
             <tr key={personnel.id} className={tableRowClass}>
               <td className={tableCellClass}>
-                <div className="font-medium text-zinc-100">{personnel.fullName}</div>
-                <div className="text-xs text-zinc-500">{personnel.personalNumber}</div>
+                <div className="max-w-64 truncate font-medium text-zinc-100" title={personnel.fullName}>{personnel.fullName}</div>
+                <div className="truncate text-xs text-zinc-500">{personnel.personalNumber}</div>
               </td>
-              <td className={cn(tableCellClass, "text-zinc-300")}>{personnel.rank?.name ?? "No rank"}</td>
+              <td className={cn(tableCellClass, "text-zinc-300")}>{personnel.rank?.name ?? t("personnel:table.noRank")}</td>
               <td className={tableCellClass}>
                 <div className="text-zinc-300">{personnel.unitName}</div>
                 <div className="text-xs text-zinc-500">{personnel.subdivisionName}</div>
@@ -60,7 +62,7 @@ export function PersonnelTable({ rows, canEdit, canDelete, onEdit, onDelete }: P
                     className={cn(
                       "inline-flex size-9 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
                     )}
-                    title="Open profile"
+                    title={t("actions.open")}
                   >
                     <Eye className="size-4" />
                   </Link>
@@ -68,7 +70,7 @@ export function PersonnelTable({ rows, canEdit, canDelete, onEdit, onDelete }: P
                     type="button"
                     variant="ghost"
                     className="size-9 px-0"
-                    title="Edit"
+                    title={t("actions.edit")}
                     size="icon"
                     disabled={!canEdit}
                     onClick={() => onEdit(personnel)}
@@ -79,7 +81,7 @@ export function PersonnelTable({ rows, canEdit, canDelete, onEdit, onDelete }: P
                     type="button"
                     variant="ghost"
                     className="size-9 px-0"
-                    title="Delete"
+                    title={t("actions.delete")}
                     size="icon"
                     disabled={!canDelete}
                     onClick={() => onDelete(personnel.id)}

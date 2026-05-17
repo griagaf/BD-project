@@ -1,6 +1,7 @@
+import { useTranslation } from "react-i18next"
 import { Card } from "@/shared/ui/card"
 
 export function AdminUsersPage() {
-  return <Card>Admin Users module placeholder</Card>
+  const { t } = useTranslation("admin")
+  return <Card>{t("page.placeholder")}</Card>
 }
-

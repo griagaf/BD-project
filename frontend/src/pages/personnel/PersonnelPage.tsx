@@ -1,5 +1,6 @@
 import { Plus, ShieldCheck } from "lucide-react"
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
 import {
   useCreatePersonnelMutation,
@@ -25,6 +26,7 @@ const initialFilters: PersonnelFilter = {
 }
 
 export function PersonnelPage() {
+  const { t } = useTranslation(["common", "personnel"])
   const [filters, setFilters] = useState<PersonnelFilter>(initialFilters)
   const [editing, setEditing] = useState<Personnel | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -42,20 +44,20 @@ export function PersonnelPage() {
 
   const statusText = useMemo(() => {
     if (isLoading) {
-      return "Loading scoped personnel"
+      return t("personnel:page.loading")
     }
-    return `${data?.totalElements ?? 0} records visible`
-  }, [data?.totalElements, isLoading])
+    return t("personnel:page.recordsVisible", { count: data?.totalElements ?? 0 })
+  }, [data?.totalElements, isLoading, t])
 
   function submit(request: PersonnelRequest) {
     const mutation = editing ? updateMutation : createMutation
     mutation.mutate(request, {
       onSuccess: () => {
-        toast.success(editing ? "Personnel updated" : "Personnel created")
+        toast.success(editing ? t("personnel:toast.updated") : t("personnel:toast.created"))
         setModalOpen(false)
         setEditing(null)
       },
-      onError: () => toast.error("Personnel save failed"),
+      onError: () => toast.error(t("personnel:toast.saveFailed")),
     })
   }
 
@@ -63,8 +65,8 @@ export function PersonnelPage() {
     <div className="space-y-5">
       <PageHeader
         icon={ShieldCheck}
-        eyebrow="Personnel Registry"
-        title="Military Personnel"
+        eyebrow={t("personnel:page.eyebrow")}
+        title={t("personnel:page.title")}
         description={statusText}
         actions={<Button
           type="button"
@@ -75,7 +77,7 @@ export function PersonnelPage() {
           }}
         >
           <Plus className="size-4" />
-          Create
+          {t("actions.create")}
         </Button>}
       />
 
@@ -88,7 +90,7 @@ export function PersonnelPage() {
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : error ? (
-        <ErrorState title="Unable to load personnel data" />
+        <ErrorState title={t("personnel:error")} />
       ) : (
         <PersonnelTable
           rows={data?.content ?? []}
@@ -100,8 +102,8 @@ export function PersonnelPage() {
           }}
           onDelete={(id) => {
             deleteMutation.mutate(id, {
-              onSuccess: () => toast.success("Personnel deleted"),
-              onError: () => toast.error("Personnel delete failed"),
+              onSuccess: () => toast.success(t("personnel:toast.deleted")),
+              onError: () => toast.error(t("personnel:toast.deleteFailed")),
             })
           }}
         />

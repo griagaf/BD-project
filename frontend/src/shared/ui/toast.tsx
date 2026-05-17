@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { AnimatePresence, motion } from "framer-motion"
 import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/shared/ui/button"
 import { cn } from "@/shared/lib/cn"
 
@@ -38,6 +39,7 @@ export const toast = {
 }
 
 export function ToastViewport() {
+  const { t } = useTranslation("common")
   const toasts = useToastStore((state) => state.toasts)
   const dismiss = useToastStore((state) => state.dismiss)
 
@@ -65,7 +67,7 @@ export function ToastViewport() {
                   <div className="text-sm font-semibold text-zinc-100">{item.title}</div>
                   {item.description ? <div className="mt-1 text-sm text-zinc-500">{item.description}</div> : null}
                 </div>
-                <Button variant="ghost" size="icon" className="size-7" onClick={() => dismiss(item.id)} aria-label="Dismiss notification">
+                <Button variant="ghost" size="icon" className="size-7" onClick={() => dismiss(item.id)} aria-label={t("actions.dismiss")}>
                   <X className="size-4" />
                 </Button>
               </div>

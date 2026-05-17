@@ -1,0 +1,28 @@
+{
+  "page": {
+    "eyebrow": "Equipment inventory",
+    "title": "Equipment",
+    "description": "Scoped inventory view with readiness indicators."
+  },
+  "metric": {
+    "readiness": "Readiness",
+    "totalQty": "Total qty",
+    "warnings": "Warnings"
+  },
+  "table": {
+    "emptyTitle": "No equipment rows visible",
+    "emptyDescription": "Current filters and command scope returned no equipment records."
+  },
+  "filters": {
+    "searchPlaceholder": "Search by unit, type, category",
+    "allCategories": "All categories",
+    "allTypes": "All types"
+  },
+  "toast": {
+    "updated": "Equipment row updated",
+    "deleted": "Equipment row deleted",
+    "updateFailed": "Equipment update failed",
+    "deleteFailed": "Equipment delete failed"
+  },
+  "error": "Unable to load equipment"
+}

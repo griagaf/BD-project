@@ -1,9 +1,11 @@
 import { Eye, RotateCcw } from "lucide-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
 import { useAuthStore } from "@/features/auth/model/authStore"
 import { Button } from "@/shared/ui/button"
+import { roleLabel } from "@/shared/i18n/labels"
 
 const roles = [
   "STAFF_ANALYST",
@@ -28,6 +30,7 @@ const scopes = [
 ]
 
 export function ViewAsSelector() {
+  const { t } = useTranslation(["common", "security"])
   const queryClient = useQueryClient()
   const { data: user } = useCurrentUserQuery()
   const simulationRole = useAuthStore((state) => state.simulationRole)
@@ -60,27 +63,27 @@ export function ViewAsSelector() {
         value={role}
         onChange={(event) => setRole(event.target.value)}
         className="h-8 rounded-md border border-zinc-800 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:border-emerald-500"
-        aria-label="Simulation role"
+        aria-label={t("security:simulation.roleLabel")}
       >
         {roles.map((item) => (
-          <option key={item} value={item}>{item}</option>
+          <option key={item} value={item}>{roleLabel(t, item)}</option>
         ))}
       </select>
       <select
         value={scopeKey}
         onChange={(event) => setScopeKey(event.target.value)}
         className="h-8 rounded-md border border-zinc-800 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:border-emerald-500"
-        aria-label="Simulation scope"
+        aria-label={t("security:simulation.scopeLabel")}
       >
         {scopes.map((scope) => (
           <option key={`${scope.objectType}:${scope.objectId}`} value={`${scope.objectType}:${scope.objectId}`}>{scope.label}</option>
         ))}
       </select>
-      <Button className="h-8 px-3 text-xs" onClick={applySimulation}>View as</Button>
+      <Button size="sm" onClick={applySimulation}>{t("actions.viewAs")}</Button>
       {simulationRole ? (
-        <Button className="h-8 px-3 text-xs" variant="ghost" onClick={resetSimulation}>
+        <Button size="sm" variant="ghost" onClick={resetSimulation}>
           <RotateCcw className="size-3.5" />
-          Reset
+          {t("security:simulation.reset")}
         </Button>
       ) : null}
     </div>

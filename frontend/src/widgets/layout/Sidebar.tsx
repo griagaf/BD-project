@@ -1,23 +1,26 @@
 import { Activity, AlertTriangle, Binary, Boxes, Building2, Crosshair, FileText, Network, Shield, Users } from "lucide-react"
 import { NavLink } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
 import { cn } from "@/shared/lib/cn"
 import { Badge } from "@/shared/ui/badge"
+import { roleLabel } from "@/shared/i18n/labels"
 
 const navigationItems = [
-  { label: "Dashboard", path: "/dashboard", icon: Activity, permissions: ["dashboard:read"] },
-  { label: "Hierarchy", path: "/hierarchy", icon: Network, permissions: ["structure:read"] },
-  { label: "Personnel", path: "/personnel", icon: Users, permissions: ["personnel:read"] },
-  { label: "Equipment", path: "/equipment", icon: Boxes, permissions: ["equipment:read"] },
-  { label: "Weapons", path: "/weapons", icon: Crosshair, permissions: ["weapon:read"] },
-  { label: "Buildings", path: "/buildings", icon: Building2, permissions: ["building:read"] },
-  { label: "Intelligence", path: "/intelligence", icon: Binary, permissions: ["query:execute"] },
-  { label: "Alerts", path: "/alerts", icon: AlertTriangle, permissions: ["alert:read"] },
-  { label: "Reports", path: "/reports", icon: FileText, permissions: ["report:read", "report:generate"] },
-  { label: "Users", path: "/admin/users", icon: Shield, permissions: ["user:manage"] },
+  { labelKey: "dashboard:page.title", path: "/dashboard", icon: Activity, permissions: ["dashboard:read"] },
+  { labelKey: "hierarchy:page.title", path: "/hierarchy", icon: Network, permissions: ["structure:read"] },
+  { labelKey: "personnel:page.title", path: "/personnel", icon: Users, permissions: ["personnel:read"] },
+  { labelKey: "equipment:page.title", path: "/equipment", icon: Boxes, permissions: ["equipment:read"] },
+  { labelKey: "weapons:page.title", path: "/weapons", icon: Crosshair, permissions: ["weapon:read"] },
+  { labelKey: "buildings:page.title", path: "/buildings", icon: Building2, permissions: ["building:read"] },
+  { labelKey: "intelligence:page.eyebrow", path: "/intelligence", icon: Binary, permissions: ["query:execute"] },
+  { labelKey: "alerts:page.title", path: "/alerts", icon: AlertTriangle, permissions: ["alert:read"] },
+  { labelKey: "reports:page.title", path: "/reports", icon: FileText, permissions: ["report:read", "report:generate"] },
+  { labelKey: "admin:page.title", path: "/admin/users", icon: Shield, permissions: ["user:manage"] },
 ]
 
 export function Sidebar() {
+  const { t } = useTranslation(["common", "dashboard", "hierarchy", "personnel", "equipment", "weapons", "buildings", "intelligence", "alerts", "reports", "admin"])
   const { data: user } = useCurrentUserQuery()
   const visibleItems = navigationItems.filter((item) => item.permissions.some((permission) => user?.permissions.includes(permission)))
 
@@ -29,8 +32,8 @@ export function Sidebar() {
           <Shield className="size-5 text-emerald-400" />
         </div>
         <div>
-          <div className="text-sm font-semibold uppercase tracking-wide">Tactical District</div>
-          <div className="text-xs text-zinc-500">Command Center</div>
+          <div className="truncate text-sm font-semibold uppercase tracking-wide">{t("app.shortName")}</div>
+          <div className="text-xs text-zinc-500">{t("app.subtitle")}</div>
         </div>
       </div>
 
@@ -47,17 +50,17 @@ export function Sidebar() {
               )
             }
           >
-            <item.icon className="size-4" />
-            {item.label}
+            <item.icon className="h-5 w-5 shrink-0" />
+            <span className="truncate" title={t(item.labelKey)}>{t(item.labelKey)}</span>
           </NavLink>
         ))}
       </nav>
 
       <div className="absolute inset-x-3 bottom-3 rounded-md border border-zinc-800 bg-zinc-900/70 p-3">
-        <div className="text-xs uppercase text-zinc-500">Session</div>
+        <div className="text-xs uppercase text-zinc-500">{t("session.label")}</div>
         <div className="mt-2 flex flex-wrap gap-2">
           {(user?.effectiveRoles ?? user?.roles ?? []).slice(0, 2).map((role) => (
-            <Badge key={role} variant={user?.accessSimulationActive ? "warning" : "default"}>{role}</Badge>
+            <Badge key={role} variant={user?.accessSimulationActive ? "warning" : "default"} className="max-w-full truncate" title={roleLabel(t, role)}>{roleLabel(t, role)}</Badge>
           ))}
         </div>
       </div>
@@ -74,8 +77,8 @@ export function Sidebar() {
             )
           }
         >
-          <item.icon className="size-4" />
-          <span className="max-w-full truncate">{item.label}</span>
+          <item.icon className="h-5 w-5 shrink-0" />
+          <span className="max-w-full truncate">{t(item.labelKey)}</span>
         </NavLink>
       ))}
     </nav>

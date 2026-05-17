@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion"
 import { ChevronDown, ChevronRight, Crosshair, Network } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useHierarchyChildrenQuery } from "@/features/hierarchy/api/hierarchyQueries"
 import type { HierarchySelection, TreeNode } from "@/features/hierarchy/model/hierarchyTypes"
 import { cn } from "@/shared/lib/cn"
@@ -12,8 +13,10 @@ type FocusTreeProps = {
 }
 
 export function FocusTree({ roots, selected, onSelect }: FocusTreeProps) {
+  const { t } = useTranslation("hierarchy")
+
   if (!roots.length) {
-    return <div className="rounded-md border border-zinc-800 p-4 text-sm text-zinc-500">No hierarchy nodes visible</div>
+    return <div className="rounded-md border border-zinc-800 p-4 text-sm text-zinc-500">{t("tree.empty")}</div>
   }
 
   return (
@@ -36,6 +39,7 @@ function TreeNodeRow({
   selected: HierarchySelection | null
   onSelect: (node: TreeNode) => void
 }) {
+  const { t } = useTranslation("hierarchy")
   const [expanded, setExpanded] = useState(depth === 0)
   const { data: children = [], isLoading } = useHierarchyChildrenQuery({ type: node.type, id: node.objectId }, expanded && node.hasChildren)
   const active = selected?.type === node.type && selected.id === node.objectId
@@ -55,14 +59,14 @@ function TreeNodeRow({
           disabled={!node.hasChildren}
           onClick={() => setExpanded((value) => !value)}
         >
-          {node.hasChildren ? expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" /> : <Crosshair className="size-3" />}
+          {node.hasChildren ? expanded ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" /> : <Crosshair className="h-3 w-3 shrink-0" />}
         </button>
         <button type="button" className="min-w-0 flex-1 text-left" onClick={() => onSelect(node)}>
-          <div className="truncate text-sm font-medium text-zinc-100">{node.label}</div>
-          <div className="truncate text-xs text-zinc-500">{node.subtitle ?? node.type}</div>
+          <div className="truncate text-sm font-medium text-zinc-100" title={node.label}>{node.label}</div>
+          <div className="truncate text-xs text-zinc-500" title={node.subtitle ?? node.type}>{node.subtitle ?? node.type}</div>
         </button>
         <div className="flex items-center gap-1 text-xs text-zinc-600">
-          <Network className="size-3" />
+          <Network className="h-3 w-3 shrink-0" />
           {node.childrenCount}
         </div>
       </div>
@@ -78,7 +82,7 @@ function TreeNodeRow({
           >
             {isLoading ? (
               <div className="py-2 text-xs text-zinc-600" style={{ marginLeft: (depth + 1) * 14 }}>
-                Loading children
+                {t("tree.loadingChildren")}
               </div>
             ) : (
               children.map((child) => (

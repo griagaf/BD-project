@@ -1,4 +1,5 @@
 import { Pencil, Trash2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { InventoryRow } from "@/features/inventory/model/inventoryTypes"
 import { Button } from "@/shared/ui/button"
 import { StatusBadge } from "@/features/inventory/ui/StatusBadge"
@@ -14,8 +15,9 @@ type InventoryTableProps = {
 }
 
 export function InventoryTable({ rows, canEdit, onEdit, onDelete }: InventoryTableProps) {
+  const { t } = useTranslation(["common", "equipment"])
   if (!rows.length) {
-    return <EmptyState title="No inventory rows visible" description="Current filters and command scope returned no inventory records." />
+    return <EmptyState title={t("equipment:table.emptyTitle")} description={t("equipment:table.emptyDescription")} />
   }
 
   return (
@@ -23,12 +25,12 @@ export function InventoryTable({ rows, canEdit, onEdit, onDelete }: InventoryTab
         <Table>
           <thead className={tableHeadClass}>
             <tr>
-              <th className={tableCellClass}>Unit</th>
-              <th className={tableCellClass}>Category</th>
-              <th className={tableCellClass}>Type</th>
-              <th className={tableCellClass}>Quantity</th>
-              <th className={tableCellClass}>Status</th>
-              <th className={cn(tableCellClass, "text-right")}>Actions</th>
+              <th className={tableCellClass}>{t("table.unit")}</th>
+              <th className={tableCellClass}>{t("table.category")}</th>
+              <th className={tableCellClass}>{t("table.type")}</th>
+              <th className={tableCellClass}>{t("table.quantity")}</th>
+              <th className={tableCellClass}>{t("table.status")}</th>
+              <th className={cn(tableCellClass, "text-right")}>{t("table.actions")}</th>
             </tr>
           </thead>
           <tbody>

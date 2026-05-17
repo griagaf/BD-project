@@ -1,0 +1,62 @@
+{
+  "page": {
+    "eyebrow": "Тактические отчёты",
+    "title": "Smart Mission Report",
+    "description": "Агрегация готовности, ресурсов, alerts и рекомендаций по правилам."
+  },
+  "form": {
+    "objectType": "Тип объекта",
+    "objectId": "ID объекта",
+    "personnel": "Личный состав",
+    "resources": "Ресурсы",
+    "alerts": "Alerts",
+    "recommendations": "Рекомендации"
+  },
+  "actions": {
+    "generate": "Сформировать отчёт",
+    "generating": "Формирование",
+    "exporting": "Экспорт"
+  },
+  "states": {
+    "invalidObject": "ID объекта должен быть положительным числом",
+    "generateError": "Не удалось сформировать отчёт для выбранной области",
+    "exportError": "Не удалось экспортировать CSV",
+    "previewReady": "Предпросмотр отчёта готов к генерации",
+    "previewDescription": "Выберите объект в доступной области и сформируйте тактический отчёт."
+  },
+  "objectTypes": {
+    "ARMY": "Армия",
+    "FORMATION": "Соединение",
+    "BRIGADE": "Бригада",
+    "MILITARY_UNIT": "Военная часть",
+    "COMPANY": "Рота",
+    "PLATOON": "Взвод"
+  },
+  "sections": {
+    "commanders": "Командиры",
+    "commandersEmpty": "В выбранной цепочке нет командиров",
+    "personnel": "Личный состав",
+    "personnelEmpty": "Личный состав не сгруппирован по подразделениям",
+    "resources": "Ресурсы",
+    "infrastructure": "Инфраструктура",
+    "buildingsEmpty": "Проблем с сооружениями не обнаружено",
+    "specialties": "Специальности",
+    "specialtiesEmpty": "В выбранной области нет покрытых специальностей",
+    "alerts": "Alerts",
+    "alertsEmpty": "В выбранной области отчёта нет alerts"
+  },
+  "metrics": {
+    "total": "Всего",
+    "officers": "Офицеры",
+    "enlisted": "Рядовой состав",
+    "unused": "Не используются",
+    "overloaded": "Перегружены",
+    "subdivisions": "{{count}} подразделений",
+    "totalSpecialties": "Всего специальностей",
+    "covered": "Закрыто",
+    "missing": "Не хватает",
+    "quantity": "Количество",
+    "types": "Типы",
+    "gaps": "Пробелы"
+  }
+}

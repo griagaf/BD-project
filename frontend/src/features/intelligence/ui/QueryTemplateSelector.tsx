@@ -1,5 +1,6 @@
 import type { QueryTemplateMetadata } from "@/features/intelligence/model/intelligenceTypes"
 import { Card } from "@/shared/ui/card"
+import { useTranslation } from "react-i18next"
 
 type QueryTemplateSelectorProps = {
   templates: QueryTemplateMetadata[]
@@ -8,9 +9,11 @@ type QueryTemplateSelectorProps = {
 }
 
 export function QueryTemplateSelector({ templates, selectedCode, onSelect }: QueryTemplateSelectorProps) {
+  const { t } = useTranslation("intelligence")
+
   return (
     <Card className="space-y-2">
-      <div className="text-xs uppercase text-emerald-300">Templates</div>
+      <div className="text-xs uppercase text-emerald-300">{t("builder.templates")}</div>
       <div className="space-y-2">
         {templates.map((template) => (
           <button

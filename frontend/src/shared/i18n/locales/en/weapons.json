@@ -1,0 +1,14 @@
+{
+  "page": {
+    "eyebrow": "Weapons inventory",
+    "title": "Weapons",
+    "description": "Scoped inventory view with readiness indicators."
+  },
+  "toast": {
+    "updated": "Weapon row updated",
+    "deleted": "Weapon row deleted",
+    "updateFailed": "Weapon update failed",
+    "deleteFailed": "Weapon delete failed"
+  },
+  "error": "Unable to load weapons"
+}

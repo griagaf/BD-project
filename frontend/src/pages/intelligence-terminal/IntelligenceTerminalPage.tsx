@@ -1,5 +1,6 @@
 import { Download, Play, Radar } from "lucide-react"
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useExecuteQueryMutation, useExportQueryMutation, useQueryTemplatesQuery } from "@/features/intelligence/api/intelligenceQueries"
 import type { ExecuteQueryRequest, QueryScope } from "@/features/intelligence/model/intelligenceTypes"
 import { QueryParamsForm } from "@/features/intelligence/ui/QueryParamsForm"
@@ -12,6 +13,7 @@ import { ErrorState, LoadingState } from "@/shared/ui/state"
 import { toast } from "@/shared/ui/toast"
 
 export function IntelligenceTerminalPage() {
+  const { t } = useTranslation(["common", "intelligence"])
   const { data: templates = [], isLoading } = useQueryTemplatesQuery()
   const [selectedCode, setSelectedCode] = useState("FIND_UNITS_IN_FORMATION")
   const [scope, setScope] = useState<QueryScope>({ type: "FORMATION", id: 1, name: "Siberian Tactical District" })
@@ -43,9 +45,9 @@ export function IntelligenceTerminalPage() {
         anchor.download = `${selectedCode.toLowerCase()}.csv`
         anchor.click()
         URL.revokeObjectURL(url)
-        toast.success("CSV exported", `${selectedCode} result exported`)
+        toast.success(t("intelligence:toast.exported"), t("intelligence:toast.exportedDescription", { code: selectedCode }))
       },
-      onError: () => toast.error("CSV export failed"),
+      onError: () => toast.error(t("common:toasts.csvFailed")),
     })
   }
 
@@ -53,28 +55,28 @@ export function IntelligenceTerminalPage() {
     <div className="space-y-5">
       <PageHeader
         icon={Radar}
-        eyebrow="Intelligence Query Terminal"
-        title="Template-driven Query Builder"
-        description="Structured analytical SQL execution with role and scope checks."
+        eyebrow={t("intelligence:page.eyebrow")}
+        title={t("intelligence:page.title")}
+        description={t("intelligence:page.description")}
         actions={
           <>
           <Button type="button" variant="secondary" disabled={!selectedTemplate || exportMutation.isPending} onClick={exportCsv}>
             <Download className="size-4" />
-            CSV
+            {t("actions.exportCsv")}
           </Button>
           <Button type="button" disabled={!selectedTemplate || executeMutation.isPending} onClick={() => executeMutation.mutate({ code: selectedCode, request }, {
-            onSuccess: (result) => toast.success("Query executed", `${result.rowCount} rows returned`),
-            onError: () => toast.error("Query execution failed"),
+            onSuccess: (result) => toast.success(t("intelligence:toast.executed"), t("intelligence:toast.rowsReturned", { count: result.rowCount })),
+            onError: () => toast.error(t("intelligence:toast.failed")),
           })}>
             <Play className="size-4" />
-            Execute
+            {t("actions.execute")}
           </Button>
           </>
         }
       />
 
       {isLoading ? (
-        <LoadingState title="Loading query templates" />
+        <LoadingState title={t("intelligence:states.loadingTemplates")} />
       ) : (
         <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
           <QueryTemplateSelector templates={templates} selectedCode={selectedCode} onSelect={selectTemplate} />
@@ -88,7 +90,7 @@ export function IntelligenceTerminalPage() {
             />
             <QueryPreviewTerminal command={command} />
             {executeMutation.error ? (
-              <ErrorState title="Query execution failed" />
+              <ErrorState title={t("intelligence:error")} />
             ) : null}
             <QueryResultTable result={executeMutation.data} />
           </div>

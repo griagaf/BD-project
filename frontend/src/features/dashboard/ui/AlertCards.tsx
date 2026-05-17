@@ -1,35 +1,38 @@
 import { AlertTriangle } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { TacticalAlert } from "@/features/dashboard/model/dashboardTypes"
 import { Card } from "@/shared/ui/card"
 import { ActionButtons } from "@/features/dashboard/ui/ActionButtons"
+import { statusLabel } from "@/shared/i18n/labels"
 
 type AlertCardsProps = {
   alerts: TacticalAlert[]
 }
 
 export function AlertCards({ alerts }: AlertCardsProps) {
+  const { t } = useTranslation(["common", "dashboard"])
   return (
     <div className="space-y-3">
       {alerts.map((alert) => (
         <Card key={alert.id} className={severityClasses(alert.severity).card}>
           <div className="flex gap-3">
             <div className={`flex size-10 shrink-0 items-center justify-center rounded-md ${severityClasses(alert.severity).icon}`}>
-              <AlertTriangle className="size-5" />
+              <AlertTriangle className="h-5 w-5 shrink-0" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-semibold text-zinc-100">{alert.title}</h3>
+                <h3 className="break-words font-semibold text-zinc-100">{alert.title}</h3>
                 <span className={`rounded-md border px-2 py-0.5 text-xs ${severityClasses(alert.severity).badge}`}>
-                  {alert.severity}
+                  {statusLabel(t, alert.severity)}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-zinc-400">{alert.message}</p>
+              <p className="mt-1 break-words text-sm text-zinc-400">{alert.message}</p>
               <div className="mt-3"><ActionButtons actions={alert.actions} /></div>
             </div>
           </div>
         </Card>
       ))}
-      {!alerts.length ? <Card className="text-sm text-zinc-500">No critical alerts in current scope</Card> : null}
+      {!alerts.length ? <Card className="text-sm text-zinc-500">{t("dashboard:problems.noCritical")}</Card> : null}
     </div>
   )
 }

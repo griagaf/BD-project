@@ -1,0 +1,9 @@
+{
+  "simulation": {
+    "bannerTitle": "Access Simulation Mode",
+    "bannerDescription": "viewing as {{role}} in {{scope}}",
+    "roleLabel": "Simulation role",
+    "scopeLabel": "Simulation scope",
+    "reset": "Reset"
+  }
+}

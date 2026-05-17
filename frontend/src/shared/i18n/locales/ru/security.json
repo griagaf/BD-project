@@ -1,0 +1,9 @@
+{
+  "simulation": {
+    "bannerTitle": "Режим симуляции доступа",
+    "bannerDescription": "просмотр как {{role}} в области {{scope}}",
+    "roleLabel": "Роль симуляции",
+    "scopeLabel": "Область симуляции",
+    "reset": "Сбросить"
+  }
+}

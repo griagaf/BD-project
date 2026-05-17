@@ -1,5 +1,6 @@
 import { Building2, Plus } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
 import { useBuildingStatsQuery, useBuildingsQuery, useDeleteBuildingMutation, useSaveBuildingMutation } from "@/features/inventory/api/inventoryQueries"
 import type { BuildingFilter, BuildingRow } from "@/features/inventory/model/inventoryTypes"
@@ -12,6 +13,7 @@ import { TableSkeleton } from "@/shared/ui/skeleton"
 import { toast } from "@/shared/ui/toast"
 
 export function BuildingsPage() {
+  const { t } = useTranslation(["common", "buildings"])
   const [filters, setFilters] = useState<BuildingFilter>({ page: 0, size: 10 })
   const [editing, setEditing] = useState<BuildingRow | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -28,14 +30,14 @@ export function BuildingsPage() {
         <div>
           <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
             <Building2 className="size-4" />
-            Infrastructure
+            {t("buildings:page.eyebrow")}
           </div>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">Buildings</h1>
-          <p className="mt-1 text-sm text-zinc-500">Scoped building usage and readiness indicators.</p>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">{t("buildings:page.title")}</h1>
+          <p className="mt-1 text-sm text-zinc-500">{t("buildings:page.description")}</p>
         </div>
-        <Metric label="Readiness" value={`${stats?.readinessScore ?? 0}%`} />
-        <Metric label="Buildings" value={stats?.buildings ?? 0} />
-        <Metric label="Warnings" value={(stats?.emptyBuildings ?? 0) + (stats?.overloadedBuildings ?? 0)} />
+        <Metric label={t("buildings:metric.readiness")} value={`${stats?.readinessScore ?? 0}%`} />
+        <Metric label={t("buildings:metric.buildings")} value={stats?.buildings ?? 0} />
+        <Metric label={t("buildings:metric.warnings")} value={(stats?.emptyBuildings ?? 0) + (stats?.overloadedBuildings ?? 0)} />
         <Button
           type="button"
           disabled={!canEdit}
@@ -45,7 +47,7 @@ export function BuildingsPage() {
           }}
         >
           <Plus className="size-4" />
-          Create
+          {t("actions.create")}
         </Button>
       </div>
 
@@ -53,23 +55,23 @@ export function BuildingsPage() {
         <input
           value={filters.search ?? ""}
           onChange={(event) => setFilters({ ...filters, page: 0, search: event.target.value })}
-          placeholder="Search buildings or units"
+          placeholder={t("buildings:filters.search")}
           className="h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
         />
         <input
           type="number"
           value={filters.unitId ?? ""}
           onChange={(event) => setFilters({ ...filters, page: 0, unitId: event.target.value ? Number(event.target.value) : undefined })}
-          placeholder="Unit ID"
+          placeholder={t("buildings:filters.unitId")}
           className="h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
         />
-        <Button type="button" variant="secondary" onClick={() => setFilters({ page: 0, size: 10 })}>Reset</Button>
+        <Button type="button" variant="secondary" onClick={() => setFilters({ page: 0, size: 10 })}>{t("actions.reset")}</Button>
       </Card>
 
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : error ? (
-        <ErrorState title="Unable to load buildings" />
+        <ErrorState title={t("buildings:error")} />
       ) : (
         <BuildingsTable
           rows={data?.content ?? []}
@@ -79,17 +81,17 @@ export function BuildingsPage() {
             setDialogOpen(true)
           }}
           onDelete={(row) => deleteMutation.mutate(row.id, {
-            onSuccess: () => toast.success("Building deleted"),
-            onError: () => toast.error("Building delete failed"),
+            onSuccess: () => toast.success(t("buildings:toast.deleted")),
+            onError: () => toast.error(t("buildings:toast.deleteFailed")),
           })}
         />
       )}
 
       <div className="flex items-center justify-between text-sm text-zinc-500">
-        <span>Page {(filters.page ?? 0) + 1} of {Math.max(data?.totalPages ?? 1, 1)}</span>
+        <span>{t("pagination.pageOf", { page: (filters.page ?? 0) + 1, total: Math.max(data?.totalPages ?? 1, 1) })}</span>
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" disabled={data?.first ?? true} onClick={() => setFilters({ ...filters, page: Math.max((filters.page ?? 0) - 1, 0) })}>Previous</Button>
-          <Button type="button" variant="secondary" disabled={data?.last ?? true} onClick={() => setFilters({ ...filters, page: (filters.page ?? 0) + 1 })}>Next</Button>
+          <Button type="button" variant="secondary" disabled={data?.first ?? true} onClick={() => setFilters({ ...filters, page: Math.max((filters.page ?? 0) - 1, 0) })}>{t("actions.previous")}</Button>
+          <Button type="button" variant="secondary" disabled={data?.last ?? true} onClick={() => setFilters({ ...filters, page: (filters.page ?? 0) + 1 })}>{t("actions.next")}</Button>
         </div>
       </div>
 
@@ -103,11 +105,11 @@ export function BuildingsPage() {
         }}
         onSubmit={(request) => saveMutation.mutate(request, {
           onSuccess: () => {
-            toast.success(editing ? "Building updated" : "Building created")
+            toast.success(editing ? t("buildings:toast.updated") : t("buildings:toast.created"))
             setDialogOpen(false)
             setEditing(null)
           },
-          onError: () => toast.error("Building save failed"),
+          onError: () => toast.error(t("buildings:toast.saveFailed")),
         })}
       />
     </div>

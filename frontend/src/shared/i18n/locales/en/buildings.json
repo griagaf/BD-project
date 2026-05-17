@@ -1,0 +1,31 @@
+{
+  "page": {
+    "eyebrow": "Infrastructure",
+    "title": "Buildings",
+    "description": "Scoped building usage and readiness indicators."
+  },
+  "metric": {
+    "readiness": "Readiness",
+    "buildings": "Buildings",
+    "warnings": "Warnings"
+  },
+  "filters": {
+    "search": "Search buildings or units",
+    "unitId": "Unit ID"
+  },
+  "table": {
+    "building": "Building",
+    "unit": "Unit",
+    "subdivisions": "Subdivisions",
+    "emptyTitle": "No buildings visible",
+    "emptyDescription": "Current filters and command scope returned no building records."
+  },
+  "toast": {
+    "created": "Building created",
+    "updated": "Building updated",
+    "deleted": "Building deleted",
+    "saveFailed": "Building save failed",
+    "deleteFailed": "Building delete failed"
+  },
+  "error": "Unable to load buildings"
+}

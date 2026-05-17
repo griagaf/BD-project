@@ -1,18 +1,21 @@
 import { Bell, LogOut, Menu } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { useAuthStore } from "@/features/auth/model/authStore"
 import { RolePreview } from "@/features/auth/ui/RolePreview"
 import { ViewAsSelector } from "@/features/auth/ui/ViewAsSelector"
 import { Button } from "@/shared/ui/button"
 import { toast } from "@/shared/ui/toast"
+import { LanguageSwitcher } from "@/shared/ui/language-switcher"
 
 export function Topbar() {
   const navigate = useNavigate()
+  const { t } = useTranslation("common")
   const clearTokens = useAuthStore((state) => state.clearTokens)
 
   function logout() {
     clearTokens()
-    toast.info("Session closed", "Authentication state has been cleared")
+    toast.info(t("session.closed"), t("session.closedDescription"))
     navigate("/login", { replace: true })
   }
 
@@ -27,12 +30,13 @@ export function Topbar() {
 
       <div className="flex flex-wrap items-center justify-end gap-2">
         <ViewAsSelector />
-        <Button variant="ghost" size="icon" aria-label="Alerts">
+        <LanguageSwitcher />
+        <Button variant="ghost" size="icon" aria-label={t("alerts:page.title")}>
           <Bell className="size-4" />
         </Button>
         <Button variant="secondary" onClick={logout}>
-          <LogOut className="size-4" />
-          Logout
+          <LogOut className="h-4 w-4 shrink-0" />
+          <span className="hidden sm:inline">{t("actions.logout")}</span>
         </Button>
       </div>
     </header>

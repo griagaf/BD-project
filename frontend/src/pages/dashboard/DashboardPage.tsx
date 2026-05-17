@@ -1,4 +1,5 @@
 import { Activity, Clock } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { useDashboardQuery } from "@/features/dashboard/api/dashboardQueries"
 import { AlertsPanel } from "@/features/dashboard/ui/AlertsPanel"
 import { ReadinessRadar } from "@/features/dashboard/ui/ReadinessRadar"
@@ -8,14 +9,15 @@ import { PageHeader } from "@/shared/ui/page"
 import { ErrorState, LoadingState } from "@/shared/ui/state"
 
 export function DashboardPage() {
+  const { t } = useTranslation("dashboard")
   const { data, isLoading, error } = useDashboardQuery()
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={Activity} eyebrow="Operational overview" title="Tactical Dashboard" description="Scoped command summary, alerts and readiness posture." />
+      <PageHeader icon={Activity} eyebrow={t("page.eyebrow")} title={t("page.title")} description={t("page.description")} />
 
-      {isLoading ? <LoadingState title="Loading tactical dashboard" description="Compiling scoped command metrics" /> : null}
-      {error ? <ErrorState title="Unable to load dashboard" /> : null}
+      {isLoading ? <LoadingState title={t("loading")} description={t("loadingDescription")} /> : null}
+      {error ? <ErrorState title={t("error")} /> : null}
       {data ? (
         <>
           <StatsCards statistics={data.statistics} />
@@ -25,7 +27,7 @@ export function DashboardPage() {
               <Card>
                 <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
                   <Clock className="size-4" />
-                  Latest events
+                  {t("events.title")}
                 </div>
                 <div className="mt-4 space-y-2">
                   {data.latestEvents.map((event) => (
@@ -37,7 +39,7 @@ export function DashboardPage() {
                       <div className="mt-1 text-xs text-zinc-500">{event.actor} / {event.objectType}:{event.objectId ?? "n/a"}</div>
                     </div>
                   ))}
-                  {!data.latestEvents.length ? <div className="text-sm text-zinc-500">No audit events in current scope</div> : null}
+                  {!data.latestEvents.length ? <div className="text-sm text-zinc-500">{t("events.empty")}</div> : null}
                 </div>
               </Card>
             </div>

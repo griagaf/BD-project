@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { BuildingRow } from "@/features/inventory/model/inventoryTypes"
 import { Button } from "@/shared/ui/button"
 
@@ -11,6 +12,7 @@ type BuildingDialogProps = {
 }
 
 export function BuildingDialog({ row, open, saving, onClose, onSubmit }: BuildingDialogProps) {
+  const { t } = useTranslation("common")
   const [name, setName] = useState("")
   const [unitId, setUnitId] = useState(1)
 
@@ -31,11 +33,11 @@ export function BuildingDialog({ row, open, saving, onClose, onSubmit }: Buildin
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div className="w-full max-w-md rounded-md border border-zinc-800 bg-zinc-950 p-5 shadow-2xl">
-        <div className="text-xs uppercase text-emerald-300">Building registry</div>
-        <h2 className="mt-1 text-xl font-semibold text-zinc-100">{row ? "Edit building" : "Create building"}</h2>
+        <div className="text-xs uppercase text-emerald-300">{t("dialog.buildingRegistry")}</div>
+        <h2 className="mt-1 text-xl font-semibold text-zinc-100">{row ? t("dialog.editBuilding") : t("dialog.createBuilding")}</h2>
         <div className="mt-5 space-y-4">
           <label className="block">
-            <span className="text-xs uppercase text-zinc-500">Name</span>
+            <span className="text-xs uppercase text-zinc-500">{t("dialog.name")}</span>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -43,7 +45,7 @@ export function BuildingDialog({ row, open, saving, onClose, onSubmit }: Buildin
             />
           </label>
           <label className="block">
-            <span className="text-xs uppercase text-zinc-500">Unit ID</span>
+            <span className="text-xs uppercase text-zinc-500">{t("dialog.unitId")}</span>
             <input
               type="number"
               min={1}
@@ -54,8 +56,8 @@ export function BuildingDialog({ row, open, saving, onClose, onSubmit }: Buildin
           </label>
         </div>
         <div className="mt-5 flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="button" disabled={saving || !name.trim()} onClick={() => onSubmit({ name, unitId })}>Save</Button>
+          <Button type="button" variant="ghost" onClick={onClose}>{t("actions.cancel")}</Button>
+          <Button type="button" disabled={saving || !name.trim()} onClick={() => onSubmit({ name, unitId })}>{t("actions.save")}</Button>
         </div>
       </div>
     </div>
