@@ -40,6 +40,7 @@ export const router = createBrowserRouter([
       { path: "intelligence", element: <IntelligenceTerminalPage /> },
       { path: "alerts", element: <AlertsPage /> },
       { path: "reports", element: <ReportsPage /> },
+      { path: "reports/smart-mission", element: <ReportsPage /> },
       { path: "admin/users", element: <AdminUsersPage /> },
     ],
   },

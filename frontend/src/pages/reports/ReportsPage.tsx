@@ -1,6 +1,5 @@
-import { Card } from "@/shared/ui/card"
+import { TacticalReportPage } from "@/pages/reports/TacticalReportPage"
 
 export function ReportsPage() {
-  return <Card>Reports module placeholder</Card>
+  return <TacticalReportPage />
 }
-
