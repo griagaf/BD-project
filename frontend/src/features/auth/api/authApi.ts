@@ -11,4 +11,9 @@ export type ApiStatusResponse = {
 export const authApi = {
   status: () => apiClient<ApiStatusResponse>("/api/system/status", { skipAuth: true }),
   me: () => apiClient<CurrentUser>("/api/auth/me"),
+  simulationPreview: (request: { role: string; objectType: string; objectId: number }) =>
+    apiClient<CurrentUser>("/api/auth/simulation/preview", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
 }

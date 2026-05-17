@@ -1,21 +1,25 @@
 import { Activity, AlertTriangle, Binary, Boxes, Building2, Crosshair, FileText, Network, Shield, Users } from "lucide-react"
 import { NavLink } from "react-router-dom"
+import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
 import { cn } from "@/shared/lib/cn"
 
 const navigationItems = [
-  { label: "Dashboard", path: "/dashboard", icon: Activity },
-  { label: "Hierarchy", path: "/hierarchy", icon: Network },
-  { label: "Personnel", path: "/personnel", icon: Users },
-  { label: "Equipment", path: "/equipment", icon: Boxes },
-  { label: "Weapons", path: "/weapons", icon: Crosshair },
-  { label: "Buildings", path: "/buildings", icon: Building2 },
-  { label: "Intelligence", path: "/intelligence", icon: Binary },
-  { label: "Alerts", path: "/alerts", icon: AlertTriangle },
-  { label: "Reports", path: "/reports", icon: FileText },
-  { label: "Users", path: "/admin/users", icon: Shield },
+  { label: "Dashboard", path: "/dashboard", icon: Activity, permissions: ["dashboard:read"] },
+  { label: "Hierarchy", path: "/hierarchy", icon: Network, permissions: ["structure:read"] },
+  { label: "Personnel", path: "/personnel", icon: Users, permissions: ["personnel:read"] },
+  { label: "Equipment", path: "/equipment", icon: Boxes, permissions: ["equipment:read"] },
+  { label: "Weapons", path: "/weapons", icon: Crosshair, permissions: ["weapon:read"] },
+  { label: "Buildings", path: "/buildings", icon: Building2, permissions: ["building:read"] },
+  { label: "Intelligence", path: "/intelligence", icon: Binary, permissions: ["query:execute"] },
+  { label: "Alerts", path: "/alerts", icon: AlertTriangle, permissions: ["alert:read"] },
+  { label: "Reports", path: "/reports", icon: FileText, permissions: ["report:read", "report:generate"] },
+  { label: "Users", path: "/admin/users", icon: Shield, permissions: ["user:manage"] },
 ]
 
 export function Sidebar() {
+  const { data: user } = useCurrentUserQuery()
+  const visibleItems = navigationItems.filter((item) => item.permissions.some((permission) => user?.permissions.includes(permission)))
+
   return (
     <aside className="fixed inset-y-0 left-0 w-72 border-r border-zinc-800 bg-zinc-950">
       <div className="flex h-16 items-center border-b border-zinc-800 px-5">
@@ -27,7 +31,7 @@ export function Sidebar() {
       </div>
 
       <nav className="space-y-1 p-3">
-        {navigationItems.map((item) => (
+        {visibleItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

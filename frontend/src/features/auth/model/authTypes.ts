@@ -16,3 +16,9 @@ export type CurrentUser = {
   permissions: string[]
   accessSimulationActive?: boolean
 }
+
+export type AccessSimulationScope = {
+  role: string
+  objectType: string
+  objectId: number
+}

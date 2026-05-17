@@ -17,15 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SqlAccessControlService implements AccessControlService {
 
-    private static final Set<ObjectType> FORMATION_ASSIGNMENT_TYPES = Set.of(
-            ObjectType.DISTRICT,
-            ObjectType.FORMATION,
-            ObjectType.ARMY,
-            ObjectType.CORPS,
-            ObjectType.DIVISION,
-            ObjectType.BRIGADE
-    );
-
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final UserScopeResolver userScopeResolver;
     private final SchemaIntrospectionService schemaIntrospectionService;
@@ -42,12 +33,12 @@ public class SqlAccessControlService implements AccessControlService {
             return true;
         }
         if (scope.soldierId() == null) {
-            return false;
+            return objectType == ObjectType.PERSONNEL && scope.selfAssignmentIds().contains(objectId);
         }
         if (objectType == ObjectType.SELF) {
-            return scope.soldierId().equals(objectId);
+            return scope.soldierId().equals(objectId) || scope.selfAssignmentIds().contains(objectId);
         }
-        if (objectType == ObjectType.PERSONNEL && scope.soldierId().equals(objectId)) {
+        if (objectType == ObjectType.PERSONNEL && (scope.soldierId().equals(objectId) || scope.selfAssignmentIds().contains(objectId))) {
             return true;
         }
         if (scope.hasDirectAssignment(objectType, objectId)) {
@@ -125,27 +116,32 @@ public class SqlAccessControlService implements AccessControlService {
                     || scope.hasDirectAssignment(ObjectType.DIVISION, formationId)
                     || scope.hasDirectAssignment(ObjectType.BRIGADE, formationId);
         }
+        Set<Long> formationIds = scope.formationAssignmentIds();
+        if (formationIds.isEmpty()) {
+            return false;
+        }
 
         return exists("""
                 SELECT EXISTS (
                     SELECT 1
-                    FROM command_assignments ca
-                    JOIN v_formation_closure fc
-                        ON fc.root_formation_id = ca.object_id
-                    WHERE ca.soldier_id = :soldierId
-                      AND ca.starts_at <= CURRENT_DATE
-                      AND (ca.ends_at IS NULL OR ca.ends_at >= CURRENT_DATE)
-                      AND ca.object_type IN (:formationAssignmentTypes)
+                    FROM v_formation_closure fc
+                    WHERE fc.root_formation_id IN (:formationIds)
                       AND fc.descendant_formation_id = :formationId
                 )
                 """, Map.of(
-                "soldierId", scope.soldierId(),
                 "formationId", formationId,
-                "formationAssignmentTypes", formationAssignmentTypes()
+                "formationIds", formationIds
         ));
     }
 
     private boolean isUnitInScope(UserScope scope, Long unitId) {
+        if (scope.unitAssignmentIds().contains(unitId)) {
+            return true;
+        }
+        Set<Long> formationIds = scope.formationAssignmentIds();
+        if (formationIds.isEmpty()) {
+            return false;
+        }
         if (!hasFormationClosure() || !schemaIntrospectionService.relationExists("military_units")) {
             return scope.hasDirectAssignment(ObjectType.MILITARY_UNIT, unitId);
         }
@@ -154,26 +150,25 @@ public class SqlAccessControlService implements AccessControlService {
                 SELECT EXISTS (
                     SELECT 1
                     FROM military_units mu
-                    JOIN command_assignments ca ON ca.soldier_id = :soldierId
-                    LEFT JOIN v_formation_closure fc
+                    JOIN v_formation_closure fc
                         ON fc.descendant_formation_id = mu.formation_id
                     WHERE mu.unit_id = :unitId
-                      AND ca.starts_at <= CURRENT_DATE
-                      AND (ca.ends_at IS NULL OR ca.ends_at >= CURRENT_DATE)
-                      AND (
-                          (ca.object_type = 'MILITARY_UNIT' AND ca.object_id = mu.unit_id)
-                          OR (ca.object_type IN (:formationAssignmentTypes)
-                              AND ca.object_id = fc.root_formation_id)
-                      )
+                      AND fc.root_formation_id IN (:formationIds)
                 )
                 """, Map.of(
-                "soldierId", scope.soldierId(),
                 "unitId", unitId,
-                "formationAssignmentTypes", formationAssignmentTypes()
+                "formationIds", formationIds
         ));
     }
 
     private boolean isSubdivisionInScope(UserScope scope, Long subdivisionId) {
+        if (isAssignedSubdivisionDescendant(scope, subdivisionId)) {
+            return true;
+        }
+        Long unitId = subdivisionUnitId(subdivisionId);
+        if (unitId != null) {
+            return isUnitInScope(scope, unitId);
+        }
         if (!schemaIntrospectionService.relationExists("subdivisions")) {
             return scope.hasDirectAssignment(ObjectType.BATTALION, subdivisionId)
                     || scope.hasDirectAssignment(ObjectType.COMPANY, subdivisionId)
@@ -181,74 +176,21 @@ public class SqlAccessControlService implements AccessControlService {
                     || scope.hasDirectAssignment(ObjectType.SQUAD, subdivisionId);
         }
 
-        return exists("""
-                SELECT EXISTS (
-                    WITH RECURSIVE assigned_subdivisions AS (
-                        SELECT ca.object_id AS subdivision_id
-                        FROM command_assignments ca
-                        WHERE ca.soldier_id = :soldierId
-                          AND ca.starts_at <= CURRENT_DATE
-                          AND (ca.ends_at IS NULL OR ca.ends_at >= CURRENT_DATE)
-                          AND ca.object_type IN ('BATTALION', 'COMPANY', 'PLATOON', 'SQUAD')
-                        UNION ALL
-                        SELECT child.subdivision_id
-                        FROM subdivisions child
-                        JOIN assigned_subdivisions parent
-                            ON child.parent_id = parent.subdivision_id
-                    )
-                    SELECT 1
-                    FROM subdivisions s
-                    JOIN military_units mu ON mu.unit_id = s.unit_id
-                    JOIN command_assignments ca ON ca.soldier_id = :soldierId
-                    LEFT JOIN v_formation_closure fc
-                        ON fc.descendant_formation_id = mu.formation_id
-                    WHERE s.subdivision_id = :subdivisionId
-                      AND ca.starts_at <= CURRENT_DATE
-                      AND (ca.ends_at IS NULL OR ca.ends_at >= CURRENT_DATE)
-                      AND (
-                          s.subdivision_id IN (SELECT subdivision_id FROM assigned_subdivisions)
-                          OR (ca.object_type = 'MILITARY_UNIT' AND ca.object_id = mu.unit_id)
-                          OR (ca.object_type IN (:formationAssignmentTypes)
-                              AND ca.object_id = fc.root_formation_id)
-                      )
-                )
-                """, Map.of(
-                "soldierId", scope.soldierId(),
-                "subdivisionId", subdivisionId,
-                "formationAssignmentTypes", formationAssignmentTypes()
-        ));
+        return false;
     }
 
     private boolean isPersonnelInScope(UserScope scope, Long personnelId) {
         if (scope.soldierId().equals(personnelId)) {
             return true;
         }
+        if (scope.selfAssignmentIds().contains(personnelId)) {
+            return true;
+        }
         if (!schemaIntrospectionService.relationExists("personnel")) {
             return false;
         }
 
-        return exists("""
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM personnel p
-                    WHERE p.personnel_id = :personnelId
-                      AND (
-                          p.personnel_id = :soldierId
-                          OR EXISTS (
-                              SELECT 1
-                              FROM subdivisions s
-                              WHERE s.subdivision_id = p.subdivision_id
-                                AND (
-                                    :subdivisionInScope = TRUE
-                                )
-                          )
-                      )
-                )
-                """, Map.of(
-                "soldierId", scope.soldierId(),
-                "personnelId", personnelId,
-                "subdivisionInScope", personnelSubdivisionInScope(scope, personnelId)
-        ));
+        return personnelSubdivisionInScope(scope, personnelId);
     }
 
     private boolean personnelSubdivisionInScope(UserScope scope, Long personnelId) {
@@ -291,14 +233,48 @@ public class SqlAccessControlService implements AccessControlService {
         return unitId != null && isUnitInScope(scope, unitId);
     }
 
-    private boolean hasFormationClosure() {
-        return schemaIntrospectionService.relationExists("v_formation_closure");
+    private boolean isAssignedSubdivisionDescendant(UserScope scope, Long subdivisionId) {
+        Set<Long> subdivisionIds = scope.subdivisionAssignmentIds();
+        if (subdivisionIds.isEmpty() || !schemaIntrospectionService.relationExists("subdivisions")) {
+            return false;
+        }
+
+        return exists("""
+                SELECT EXISTS (
+                    WITH RECURSIVE assigned_subdivisions AS (
+                        SELECT subdivision_id
+                        FROM subdivisions
+                        WHERE subdivision_id IN (:subdivisionIds)
+                        UNION ALL
+                        SELECT child.subdivision_id
+                        FROM subdivisions child
+                        JOIN assigned_subdivisions parent
+                            ON child.parent_id = parent.subdivision_id
+                    )
+                    SELECT 1
+                    FROM assigned_subdivisions
+                    WHERE subdivision_id = :subdivisionId
+                )
+                """, Map.of(
+                "subdivisionIds", subdivisionIds,
+                "subdivisionId", subdivisionId
+        ));
     }
 
-    private Set<String> formationAssignmentTypes() {
-        return FORMATION_ASSIGNMENT_TYPES.stream()
-                .map(ObjectType::name)
-                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    private Long subdivisionUnitId(Long subdivisionId) {
+        if (!schemaIntrospectionService.relationExists("subdivisions")) {
+            return null;
+        }
+
+        return jdbcTemplate.query("""
+                SELECT unit_id
+                FROM subdivisions
+                WHERE subdivision_id = :subdivisionId
+                """, Map.of("subdivisionId", subdivisionId), rs -> rs.next() ? rs.getLong("unit_id") : null);
+    }
+
+    private boolean hasFormationClosure() {
+        return schemaIntrospectionService.relationExists("v_formation_closure");
     }
 
     private boolean exists(String sql, Map<String, ?> parameters) {

@@ -8,13 +8,21 @@ type RequestOptions = RequestInit & {
 }
 
 export async function apiClient<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { accessToken, clearTokens } = useAuthStore.getState()
+  const { accessToken, clearTokens, simulationRole, simulationObjectType, simulationObjectId } = useAuthStore.getState()
+  const simulationHeaders = simulationRole
+    ? {
+      "X-Access-Simulation-Role": simulationRole,
+      ...(simulationObjectType ? { "X-Access-Simulation-Object-Type": simulationObjectType } : {}),
+      ...(simulationObjectId ? { "X-Access-Simulation-Object-Id": String(simulationObjectId) } : {}),
+    }
+    : {}
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
       ...(accessToken && !options.skipAuth ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...(!options.skipAuth ? simulationHeaders : {}),
       ...options.headers,
     },
   })
@@ -35,4 +43,3 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
 
   return response.json() as Promise<T>
 }
-
