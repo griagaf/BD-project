@@ -22,3 +22,15 @@ export type AccessSimulationScope = {
   objectType: string
   objectId: number
 }
+
+export type LoginRequest = {
+  username: string
+  password: string
+}
+
+export type TokenResponse = {
+  accessToken: string
+  refreshToken: string
+  expiresIn: number
+  user: CurrentUser
+}

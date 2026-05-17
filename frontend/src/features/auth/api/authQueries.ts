@@ -1,11 +1,18 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { authApi } from "@/features/auth/api/authApi"
 import { useAuthStore } from "@/features/auth/model/authStore"
+import type { LoginRequest } from "@/features/auth/model/authTypes"
 
 export function useApiStatusQuery() {
   return useQuery({
     queryKey: ["system", "status"],
     queryFn: authApi.status,
+  })
+}
+
+export function useLoginMutation() {
+  return useMutation({
+    mutationFn: (request: LoginRequest) => authApi.login(request),
   })
 }
 
