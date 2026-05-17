@@ -14,63 +14,63 @@ import org.springframework.stereotype.Service;
 public class ReportExportService {
 
     public byte[] toCsv(SmartMissionReportDto report) {
-        StringBuilder csv = new StringBuilder("Section,Key,Value\n");
+        StringBuilder csv = new StringBuilder("Раздел,Показатель,Значение\n");
 
-        append(csv, "Object", "Type", report.object().type().name());
-        append(csv, "Object", "Id", report.object().id());
-        append(csv, "Object", "Name", report.object().name());
-        append(csv, "Object", "Parent", report.object().parentName());
-        append(csv, "Object", "Status", report.object().status());
-        append(csv, "Object", "Location", report.object().location());
-        append(csv, "Readiness", "Overall", report.readiness().overall());
-        append(csv, "Readiness", "Personnel", report.readiness().personnel());
-        append(csv, "Readiness", "Equipment", report.readiness().equipment());
-        append(csv, "Readiness", "Weapons", report.readiness().weapons());
-        append(csv, "Readiness", "Specialists", report.readiness().specialists());
-        append(csv, "Readiness", "Infrastructure", report.readiness().infrastructure());
-        append(csv, "Readiness", "Status", report.readiness().status());
+        append(csv, "Объект", "Тип", report.object().type().name());
+        append(csv, "Объект", "ID", report.object().id());
+        append(csv, "Объект", "Название", report.object().name());
+        append(csv, "Объект", "Родительский объект", report.object().parentName());
+        append(csv, "Объект", "Статус", report.object().status());
+        append(csv, "Объект", "Дислокация", report.object().location());
+        append(csv, "Готовность", "Общая", report.readiness().overall());
+        append(csv, "Готовность", "Личный состав", report.readiness().personnel());
+        append(csv, "Готовность", "Техника", report.readiness().equipment());
+        append(csv, "Готовность", "Вооружение", report.readiness().weapons());
+        append(csv, "Готовность", "Специалисты", report.readiness().specialists());
+        append(csv, "Готовность", "Инфраструктура", report.readiness().infrastructure());
+        append(csv, "Готовность", "Статус", report.readiness().status());
 
-        append(csv, "Personnel", "Total", report.personnel().total());
-        append(csv, "Personnel", "Officers", report.personnel().officers());
-        append(csv, "Personnel", "Enlisted", report.personnel().enlisted());
-        append(csv, "Personnel", "Commanders", report.personnel().commanders());
-        appendMap(csv, "Personnel by rank", report.personnel().byRank());
-        appendMap(csv, "Personnel by subdivision", report.personnel().bySubdivision());
+        append(csv, "Личный состав", "Всего", report.personnel().total());
+        append(csv, "Личный состав", "Офицеры", report.personnel().officers());
+        append(csv, "Личный состав", "Сержанты и рядовые", report.personnel().enlisted());
+        append(csv, "Личный состав", "Командиры", report.personnel().commanders());
+        appendMap(csv, "Личный состав по званиям", report.personnel().byRank());
+        appendMap(csv, "Личный состав по подразделениям", report.personnel().bySubdivision());
 
-        append(csv, "Equipment", "Total quantity", report.equipment().totalQuantity());
-        append(csv, "Equipment", "Types count", report.equipment().typesCount());
-        append(csv, "Equipment", "Units without equipment", report.equipment().unitsWithoutEquipment());
+        append(csv, "Техника", "Общее количество", report.equipment().totalQuantity());
+        append(csv, "Техника", "Типов техники", report.equipment().typesCount());
+        append(csv, "Техника", "Части без техники", report.equipment().unitsWithoutEquipment());
         for (ResourceQuantityDto item : report.equipment().topEquipment()) {
-            append(csv, "Equipment item", item.typeName(), item.quantity() + " / " + item.categoryName());
+            append(csv, "Позиция техники", item.typeName(), item.quantity() + " / " + item.categoryName());
         }
 
-        append(csv, "Weapons", "Total quantity", report.weapons().totalQuantity());
-        append(csv, "Weapons", "Types count", report.weapons().typesCount());
-        append(csv, "Weapons", "Units without weapons", report.weapons().unitsWithoutWeapons());
+        append(csv, "Вооружение", "Общее количество", report.weapons().totalQuantity());
+        append(csv, "Вооружение", "Типов вооружения", report.weapons().typesCount());
+        append(csv, "Вооружение", "Части без вооружения", report.weapons().unitsWithoutWeapons());
         for (ResourceQuantityDto item : report.weapons().topWeapons()) {
-            append(csv, "Weapon item", item.typeName(), item.quantity() + " / " + item.categoryName());
+            append(csv, "Позиция вооружения", item.typeName(), item.quantity() + " / " + item.categoryName());
         }
 
-        append(csv, "Buildings", "Total", report.buildings().total());
-        append(csv, "Buildings", "Unused", report.buildings().unused());
-        append(csv, "Buildings", "Overloaded", report.buildings().overloaded());
+        append(csv, "Сооружения", "Всего", report.buildings().total());
+        append(csv, "Сооружения", "Не используются", report.buildings().unused());
+        append(csv, "Сооружения", "Перегружены", report.buildings().overloaded());
         for (BuildingUsageDto building : report.buildings().problemBuildings()) {
-            append(csv, "Building issue", building.buildingName(), building.subdivisionsCount() + " subdivisions / " + building.unitName());
+            append(csv, "Проблемное сооружение", building.buildingName(), building.subdivisionsCount() + " подразделений / " + building.unitName());
         }
 
-        append(csv, "Specialties", "Total", report.specialties().totalSpecialties());
-        append(csv, "Specialties", "Covered", report.specialties().coveredSpecialties());
-        append(csv, "Specialties", "Missing", report.specialties().missingSpecialties());
-        appendMap(csv, "Top specialties", report.specialties().topSpecialties());
+        append(csv, "Специальности", "Всего", report.specialties().totalSpecialties());
+        append(csv, "Специальности", "Закрыты", report.specialties().coveredSpecialties());
+        append(csv, "Специальности", "Отсутствуют", report.specialties().missingSpecialties());
+        appendMap(csv, "Ключевые специальности", report.specialties().topSpecialties());
 
         for (ReportCommanderDto commander : report.commanders()) {
-            append(csv, "Commander", commander.position(), commander.fullName() + " / " + commander.rankName() + " / " + commander.objectName());
+            append(csv, "Командир", commander.position(), commander.fullName() + " / " + commander.rankName() + " / " + commander.objectName());
         }
         for (ReportAlertDto alert : report.alerts()) {
-            append(csv, "Alert " + alert.severity(), alert.type(), alert.title());
+            append(csv, "Предупреждение " + alert.severity(), alert.type(), alert.title());
         }
         for (ReportRecommendationDto recommendation : report.recommendations()) {
-            append(csv, "Recommendation " + recommendation.severity().name(), recommendation.code(), recommendation.title());
+            append(csv, "Рекомендация " + recommendation.severity().name(), recommendation.code(), recommendation.title());
         }
 
         return csv.toString().getBytes(StandardCharsets.UTF_8);

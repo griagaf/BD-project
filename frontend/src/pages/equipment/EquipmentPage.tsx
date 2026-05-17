@@ -15,10 +15,10 @@ import { TableSkeleton } from "@/shared/ui/skeleton"
 import { toast } from "@/shared/ui/toast"
 
 export function EquipmentPage() {
-  return <InventoryResourcePage kind="equipment" title="Equipment" icon={<Boxes className="size-4" />} />
+  return <InventoryResourcePage kind="equipment" icon={<Boxes className="h-4 w-4 shrink-0" />} />
 }
 
-export function InventoryResourcePage({ kind, title, icon }: { kind: "equipment" | "weapons"; title: string; icon: ReactNode }) {
+export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "weapons"; icon: ReactNode }) {
   const namespace = kind === "equipment" ? "equipment" : "weapons"
   const { t } = useTranslation(["common", "equipment", "weapons"])
   const [filters, setFilters] = useState<InventoryFilter>({ page: 0, size: 10 })
@@ -72,9 +72,9 @@ function Header({ title, eyebrow, description, icon, readiness, total, warnings 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_180px_180px_180px]">
       <div>
-        <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">{icon}{eyebrow}</div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-100">{title}</h1>
-        <p className="mt-1 text-sm text-zinc-500">{description}</p>
+        <div className="flex min-w-0 items-center gap-2 text-xs uppercase text-emerald-300">{icon}<span className="truncate" title={eyebrow}>{eyebrow}</span></div>
+        <h1 className="mt-1 break-words text-2xl font-semibold text-zinc-100">{title}</h1>
+        <p className="mt-1 break-words text-sm text-zinc-500">{description}</p>
       </div>
       <Metric label={t("equipment:metric.readiness")} value={`${readiness}%`} />
       <Metric label={t("equipment:metric.totalQty")} value={total} />
@@ -86,7 +86,7 @@ function Header({ title, eyebrow, description, icon, readiness, total, warnings 
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
     <Card className="p-4">
-      <div className="text-xs uppercase text-zinc-500">{label}</div>
+      <div className="truncate text-xs uppercase text-zinc-500" title={label}>{label}</div>
       <div className="mt-2 text-2xl font-semibold text-zinc-100">{value}</div>
     </Card>
   )
@@ -95,7 +95,7 @@ function Metric({ label, value }: { label: string; value: string | number }) {
 function Pager({ filters, totalPages, first, last, onChange }: { filters: InventoryFilter; totalPages: number; first: boolean; last: boolean; onChange: (filters: InventoryFilter) => void }) {
   const { t } = useTranslation("common")
   return (
-    <div className="flex items-center justify-between text-sm text-zinc-500">
+    <div className="flex flex-col gap-3 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
       <span>{t("pagination.pageOf", { page: (filters.page ?? 0) + 1, total: Math.max(totalPages, 1) })}</span>
       <div className="flex gap-2">
         <Button type="button" variant="secondary" disabled={first} onClick={() => onChange({ ...filters, page: Math.max((filters.page ?? 0) - 1, 0) })}>{t("actions.previous")}</Button>

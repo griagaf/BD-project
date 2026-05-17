@@ -20,7 +20,8 @@
     "formation": "Формирование",
     "unit": "Часть",
     "personnel": "Военнослужащий",
-    "global": "Глобально"
+    "global": "Глобально",
+    "queryPreview": "Предпросмотр команды"
   },
   "result": {
     "rowsReturned": "{{count}} строк, выполнено {{time}}"

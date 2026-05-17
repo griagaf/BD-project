@@ -7,125 +7,125 @@ import java.util.Set;
 
 public enum QueryTemplate {
     FIND_UNITS_IN_FORMATION(
-            "Find units in formation",
-            "Returns military units inside the selected formation tree.",
+            "Найти части в соединении",
+            "Возвращает военные части внутри выбранной ветки структуры.",
             "UNITS",
             Set.of("structure:read", "unit:read"),
-            List.of(param("formationId", "Formation ID", "number", true, "1")),
-            "QUERY: FIND UNITS IN FORMATION 1"
+            List.of(param("formationId", "ID соединения", "number", true, "11")),
+            "QUERY: НАЙТИ ЧАСТИ В АРМИИ 11"
     ),
     FIND_OFFICERS(
-            "Find officers",
-            "Returns personnel with officer ranks inside selected scope.",
+            "Найти офицеров",
+            "Возвращает военнослужащих с офицерскими званиями в выбранной области.",
             "PERSONNEL",
             Set.of("personnel:read"),
-            List.of(param("rankName", "Rank", "text", false, "Captain")),
-            "QUERY: FIND OFFICERS IN FORMATION 1"
+            List.of(param("rankName", "Звание", "text", false, "Капитан")),
+            "QUERY: НАЙТИ ОФИЦЕРОВ В АРМИИ 11"
     ),
     FIND_ENLISTED_PERSONNEL(
-            "Find enlisted personnel",
-            "Returns enlisted and sergeant personnel inside selected scope.",
+            "Найти сержантов и рядовых",
+            "Возвращает сержантский и рядовой состав в выбранной области.",
             "PERSONNEL",
             Set.of("personnel:read"),
-            List.of(param("rankName", "Rank", "text", false, "Sergeant")),
-            "QUERY: FIND ENLISTED PERSONNEL IN UNIT 1"
+            List.of(param("rankName", "Звание", "text", false, "Сержант")),
+            "QUERY: НАЙТИ СЕРЖАНТОВ В ЧАСТИ 11101"
     ),
     FIND_PERSONNEL_COMMAND_CHAIN(
-            "Find personnel command chain",
-            "Returns chain of command for selected personnel.",
+            "Найти цепочку командования",
+            "Возвращает цепочку подчинённости для выбранного военнослужащего.",
             "PERSONNEL",
             Set.of("personnel:read", "structure:read"),
-            List.of(param("personnelId", "Personnel ID", "number", true, "9")),
-            "QUERY: FIND COMMAND CHAIN FOR PERSONNEL 9"
+            List.of(param("personnelId", "ID военнослужащего", "number", true, "1110101111")),
+            "QUERY: НАЙТИ ЦЕПОЧКУ КОМАНДОВАНИЯ ДЛЯ 1110101111"
     ),
     FIND_UNIT_LOCATIONS(
-            "Find unit locations",
-            "Returns units and their locations in selected scope.",
+            "Найти дислокацию частей",
+            "Возвращает военные части и места их дислокации в выбранной области.",
             "UNITS",
             Set.of("unit:read", "structure:read"),
             List.of(),
-            "QUERY: FIND UNIT LOCATIONS IN FORMATION 1"
+            "QUERY: НАЙТИ ДИСЛОКАЦИЮ ЧАСТЕЙ В АРМИИ 11"
     ),
     FIND_UNIT_EQUIPMENT(
-            "Find unit equipment",
-            "Returns equipment quantities by unit, category and type.",
+            "Найти технику частей",
+            "Возвращает количество техники по частям, категориям и типам.",
             "EQUIPMENT",
             Set.of("equipment:read", "unit:read"),
             List.of(
-                    param("equipmentCategory", "Category", "text", false, "Armored vehicles"),
-                    param("equipmentType", "Type", "text", false, "BMP-2")
+                    param("equipmentCategory", "Категория", "text", false, "бронетехника"),
+                    param("equipmentType", "Тип", "text", false, "BMP-2")
             ),
-            "QUERY: FIND EQUIPMENT TYPE BMP-2 IN UNIT 1"
+            "QUERY: НАЙТИ ТЕХНИКУ BMP-2 В ЧАСТИ 11101"
     ),
     FIND_BUILDING_USAGE(
-            "Find building usage",
-            "Returns buildings with subdivision usage counters.",
+            "Найти использование сооружений",
+            "Возвращает сооружения со счётчиком закреплённых подразделений.",
             "BUILDINGS",
             Set.of("building:read", "unit:read"),
-            List.of(param("usage", "Usage", "enum", false, "ALL", List.of("ALL", "EMPTY", "OVERLOADED"))),
-            "QUERY: FIND BUILDING USAGE IN UNIT 1"
+            List.of(param("usage", "Использование", "enum", false, "ALL", List.of("ALL", "EMPTY", "OVERLOADED"))),
+            "QUERY: НАЙТИ ИСПОЛЬЗОВАНИЕ СООРУЖЕНИЙ В ЧАСТИ 11101"
     ),
     FIND_EQUIPMENT_AVAILABILITY(
-            "Find equipment availability",
-            "Checks equipment presence, absence or quantity threshold.",
+            "Проверить наличие техники",
+            "Проверяет наличие, отсутствие или превышение количества техники.",
             "EQUIPMENT",
             Set.of("equipment:read", "unit:read"),
             List.of(
-                    param("equipmentType", "Equipment type", "text", true, "BMP-2"),
-                    param("condition", "Condition", "enum", true, "WITH_QUANTITY_GT", List.of("WITH_QUANTITY_GT", "WITHOUT")),
-                    param("minQuantity", "Min quantity", "number", false, "5")
+                    param("equipmentType", "Тип техники", "text", true, "BMP-2"),
+                    param("condition", "Условие", "enum", true, "WITH_QUANTITY_GT", List.of("WITH_QUANTITY_GT", "WITHOUT")),
+                    param("minQuantity", "Минимальное количество", "number", false, "5")
             ),
-            "QUERY: FIND UNITS WITHOUT EQUIPMENT BMP-2 IN ARMY 2"
+            "QUERY: НАЙТИ ЧАСТИ БЕЗ ТЕХНИКИ BMP-2 В АРМИИ 11"
     ),
     FIND_UNIT_WEAPONS(
-            "Find unit weapons",
-            "Returns weapon quantities by unit, category and type.",
+            "Найти вооружение частей",
+            "Возвращает количество вооружения по частям, категориям и типам.",
             "WEAPONS",
             Set.of("weapon:read", "unit:read"),
             List.of(
-                    param("weaponCategory", "Category", "text", false, "Small arms"),
-                    param("weaponType", "Type", "text", false, "AK-74M")
+                    param("weaponCategory", "Категория", "text", false, "стрелковое оружие"),
+                    param("weaponType", "Тип", "text", false, "AK-74M")
             ),
-            "QUERY: FIND WEAPONS TYPE AK-74M IN UNIT 1"
+            "QUERY: НАЙТИ ВООРУЖЕНИЕ AK-74M В ЧАСТИ 11101"
     ),
     FIND_SPECIALTY_COVERAGE(
-            "Find specialty coverage",
-            "Returns specialties with enough specialists or no coverage.",
+            "Найти покрытие специальностей",
+            "Возвращает специальности с достаточным количеством специалистов или без покрытия.",
             "SPECIALTIES",
             Set.of("personnel:read", "specialty:read"),
             List.of(
-                    param("condition", "Condition", "enum", false, "WITH_SPECIALISTS", List.of("WITH_SPECIALISTS", "WITHOUT_SPECIALISTS")),
-                    param("minCount", "Min specialists", "number", false, "1")
+                    param("condition", "Условие", "enum", false, "WITH_SPECIALISTS", List.of("WITH_SPECIALISTS", "WITHOUT_SPECIALISTS")),
+                    param("minCount", "Минимум специалистов", "number", false, "1")
             ),
-            "QUERY: FIND SPECIALTY COVERAGE IN FORMATION 1"
+            "QUERY: НАЙТИ ПОКРЫТИЕ СПЕЦИАЛЬНОСТЕЙ В АРМИИ 11"
     ),
     FIND_SPECIALISTS(
-            "Find specialists",
-            "Returns personnel with selected specialty.",
+            "Найти специалистов",
+            "Возвращает военнослужащих с выбранной специальностью.",
             "PERSONNEL",
             Set.of("personnel:read", "specialty:read"),
-            List.of(param("specialtyName", "Specialty", "text", true, "Signal Operator")),
-            "QUERY: FIND SPECIALISTS \"Signal Operator\" IN UNIT 1"
+            List.of(param("specialtyName", "Специальность", "text", true, "оператор связи")),
+            "QUERY: НАЙТИ СПЕЦИАЛИСТОВ \"оператор связи\" В ЧАСТИ 11101"
     ),
     FIND_WEAPON_AVAILABILITY(
-            "Find weapon availability",
-            "Checks weapon presence, absence or quantity threshold.",
+            "Проверить наличие вооружения",
+            "Проверяет наличие, отсутствие или превышение количества вооружения.",
             "WEAPONS",
             Set.of("weapon:read", "unit:read"),
             List.of(
-                    param("weaponType", "Weapon type", "text", true, "AK-74M"),
-                    param("condition", "Condition", "enum", true, "WITH_QUANTITY_GT", List.of("WITH_QUANTITY_GT", "WITHOUT")),
-                    param("minQuantity", "Min quantity", "number", false, "10")
+                    param("weaponType", "Тип вооружения", "text", true, "AK-74M"),
+                    param("condition", "Условие", "enum", true, "WITH_QUANTITY_GT", List.of("WITH_QUANTITY_GT", "WITHOUT")),
+                    param("minQuantity", "Минимальное количество", "number", false, "10")
             ),
-            "QUERY: FIND UNITS WITHOUT WEAPON AK-74M IN ARMY 2"
+            "QUERY: НАЙТИ ЧАСТИ БЕЗ ВООРУЖЕНИЯ AK-74M В АРМИИ 11"
     ),
     FIND_FORMATION_UNIT_EXTREMES(
-            "Find formation unit extremes",
-            "Returns formations with maximum or minimum units count.",
+            "Найти соединения по числу частей",
+            "Возвращает соединения с максимальным или минимальным количеством частей.",
             "UNITS",
             Set.of("structure:read", "unit:read"),
-            List.of(param("direction", "Direction", "enum", false, "MAX", List.of("MAX", "MIN"))),
-            "QUERY: FIND FORMATIONS WITH MAX UNITS"
+            List.of(param("direction", "Направление", "enum", false, "MAX", List.of("MAX", "MIN"))),
+            "QUERY: НАЙТИ СОЕДИНЕНИЯ С МАКСИМУМОМ ЧАСТЕЙ"
     );
 
     private final String label;

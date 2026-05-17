@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "TACTICAL DISTRICT COMMAND",
-    "shortName": "Tactical District",
+    "shortName": "Тактический округ",
     "subtitle": "Центр командования"
   },
   "actions": {
@@ -27,7 +27,7 @@
     "loadingDescription": "Получение данных текущей области доступа",
     "empty": "Нет данных",
     "error": "Не удалось загрузить данные",
-    "errorDescription": "Запрос отклонён backend или сервис временно недоступен."
+    "errorDescription": "Запрос отклонён сервером или сервис временно недоступен."
   },
   "pagination": {
     "pageOf": "Страница {{page}} из {{total}}"
@@ -70,6 +70,29 @@
     "PLATOON_COMMANDER": "Командир взвода",
     "SQUAD_COMMANDER": "Командир отделения",
     "SOLDIER": "Военнослужащий"
+  },
+  "objectTypes": {
+    "DISTRICT": "Округ",
+    "ARMY": "Армия",
+    "FORMATION": "Соединение",
+    "CORPS": "Корпус",
+    "DIVISION": "Дивизия",
+    "BRIGADE": "Бригада",
+    "MILITARY_UNIT": "Военная часть",
+    "BATTALION": "Батальон",
+    "COMPANY": "Рота",
+    "PLATOON": "Взвод",
+    "SQUAD": "Отделение",
+    "PERSONNEL": "Военнослужащий",
+    "SELF": "Личная карточка",
+    "BUILDING": "Сооружение",
+    "SPECIALTY": "Специальность",
+    "EQUIPMENT": "Техника",
+    "WEAPON": "Вооружение",
+    "ALERT": "Предупреждение",
+    "REPORT": "Отчёт",
+    "USER": "Пользователь",
+    "COMMAND_ASSIGNMENT": "Командное назначение"
   },
   "status": {
     "ACTIVE": "Активен",

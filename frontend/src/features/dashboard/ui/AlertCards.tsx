@@ -16,7 +16,7 @@ export function AlertCards({ alerts }: AlertCardsProps) {
       {alerts.map((alert) => (
         <Card key={alert.id} className={severityClasses(alert.severity).card}>
           <div className="flex gap-3">
-            <div className={`flex size-10 shrink-0 items-center justify-center rounded-md ${severityClasses(alert.severity).icon}`}>
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${severityClasses(alert.severity).icon}`}>
               <AlertTriangle className="h-5 w-5 shrink-0" />
             </div>
             <div className="min-w-0 flex-1">

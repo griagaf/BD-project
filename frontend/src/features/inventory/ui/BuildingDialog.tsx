@@ -32,7 +32,7 @@ export function BuildingDialog({ row, open, saving, onClose, onSubmit }: Buildin
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-md rounded-md border border-zinc-800 bg-zinc-950 p-5 shadow-2xl">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-md border border-zinc-800 bg-zinc-950 p-5 shadow-2xl">
         <div className="text-xs uppercase text-emerald-300">{t("dialog.buildingRegistry")}</div>
         <h2 className="mt-1 text-xl font-semibold text-zinc-100">{row ? t("dialog.editBuilding") : t("dialog.createBuilding")}</h2>
         <div className="mt-5 space-y-4">
@@ -55,7 +55,7 @@ export function BuildingDialog({ row, open, saving, onClose, onSubmit }: Buildin
             />
           </label>
         </div>
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="ghost" onClick={onClose}>{t("actions.cancel")}</Button>
           <Button type="button" disabled={saving || !name.trim()} onClick={() => onSubmit({ name, unitId })}>{t("actions.save")}</Button>
         </div>

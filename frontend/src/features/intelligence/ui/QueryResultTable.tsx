@@ -26,7 +26,9 @@ export function QueryResultTable({ result }: QueryResultTableProps) {
           <thead className={tableHeadClass}>
             <tr>
               {result.columns.map((column) => (
-                <th key={column} className={cn(tableCellClass, "whitespace-nowrap")}>{column}</th>
+                <th key={column} className={cn(tableCellClass, "whitespace-nowrap")}>
+                  <span className="block max-w-56 truncate" title={column}>{column}</span>
+                </th>
               ))}
             </tr>
           </thead>
@@ -34,7 +36,9 @@ export function QueryResultTable({ result }: QueryResultTableProps) {
             {result.rows.map((row, index) => (
               <tr key={index} className={tableRowClass}>
                 {result.columns.map((column) => (
-                  <td key={column} className={cn(tableCellClass, "whitespace-nowrap text-zinc-300")}>{String(row[column] ?? "")}</td>
+                  <td key={column} className={cn(tableCellClass, "text-zinc-300")}>
+                    <span className="block max-w-72 truncate" title={String(row[column] ?? "")}>{String(row[column] ?? "")}</span>
+                  </td>
                 ))}
               </tr>
             ))}

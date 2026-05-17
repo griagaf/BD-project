@@ -29,11 +29,11 @@ export function BuildingsPage() {
       <div className="grid gap-4 lg:grid-cols-[1fr_180px_180px_180px_auto]">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
-            <Building2 className="size-4" />
-            {t("buildings:page.eyebrow")}
+            <Building2 className="h-4 w-4 shrink-0" />
+            <span className="truncate" title={t("buildings:page.eyebrow")}>{t("buildings:page.eyebrow")}</span>
           </div>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">{t("buildings:page.title")}</h1>
-          <p className="mt-1 text-sm text-zinc-500">{t("buildings:page.description")}</p>
+          <h1 className="mt-1 break-words text-2xl font-semibold text-zinc-100">{t("buildings:page.title")}</h1>
+          <p className="mt-1 break-words text-sm text-zinc-500">{t("buildings:page.description")}</p>
         </div>
         <Metric label={t("buildings:metric.readiness")} value={`${stats?.readinessScore ?? 0}%`} />
         <Metric label={t("buildings:metric.buildings")} value={stats?.buildings ?? 0} />
@@ -46,12 +46,12 @@ export function BuildingsPage() {
             setDialogOpen(true)
           }}
         >
-          <Plus className="size-4" />
+          <Plus className="h-4 w-4 shrink-0" />
           {t("actions.create")}
         </Button>
       </div>
 
-      <Card className="grid gap-3 md:grid-cols-[1fr_180px_auto]">
+      <Card className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_auto]">
         <input
           value={filters.search ?? ""}
           onChange={(event) => setFilters({ ...filters, page: 0, search: event.target.value })}
@@ -87,7 +87,7 @@ export function BuildingsPage() {
         />
       )}
 
-      <div className="flex items-center justify-between text-sm text-zinc-500">
+      <div className="flex flex-col gap-3 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
         <span>{t("pagination.pageOf", { page: (filters.page ?? 0) + 1, total: Math.max(data?.totalPages ?? 1, 1) })}</span>
         <div className="flex gap-2">
           <Button type="button" variant="secondary" disabled={data?.first ?? true} onClick={() => setFilters({ ...filters, page: Math.max((filters.page ?? 0) - 1, 0) })}>{t("actions.previous")}</Button>
@@ -119,7 +119,7 @@ export function BuildingsPage() {
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
     <Card className="p-4">
-      <div className="text-xs uppercase text-zinc-500">{label}</div>
+      <div className="truncate text-xs uppercase text-zinc-500" title={label}>{label}</div>
       <div className="mt-2 text-2xl font-semibold text-zinc-100">{value}</div>
     </Card>
   )

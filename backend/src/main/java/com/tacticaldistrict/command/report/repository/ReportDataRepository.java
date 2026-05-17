@@ -91,8 +91,8 @@ public class ReportDataRepository {
                 WHERE 1 = 1
                 """ + scope, params);
 
-        Map<String, Long> byRank = countBy(rows, "rank_name", "No rank");
-        Map<String, Long> bySubdivision = countBy(rows, "subdivision_name", "No subdivision");
+        Map<String, Long> byRank = countBy(rows, "rank_name", "Без звания");
+        Map<String, Long> bySubdivision = countBy(rows, "subdivision_name", "Без подразделения");
         long officers = rows.stream().filter(row -> "Офицерский".equals(row.get("rank_category"))).count();
         long enlisted = rows.stream().filter(row -> "Сержантский и Рядовой".equals(row.get("rank_category"))).count();
         return new ReportPersonnelSummaryDto(rows.size(), officers, enlisted, commanders(type, id).size(), byRank, bySubdivision);
@@ -287,11 +287,11 @@ public class ReportDataRepository {
 
     private String commanderPosition(String objectType) {
         return switch (objectType) {
-            case "MILITARY_UNIT" -> "Unit commander";
-            case "COMPANY" -> "Company commander";
-            case "PLATOON" -> "Platoon commander";
-            case "SQUAD" -> "Squad commander";
-            default -> "Formation commander";
+            case "MILITARY_UNIT" -> "Командир военной части";
+            case "COMPANY" -> "Командир роты";
+            case "PLATOON" -> "Командир взвода";
+            case "SQUAD" -> "Командир отделения";
+            default -> "Командир соединения";
         };
     }
 }

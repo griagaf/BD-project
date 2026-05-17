@@ -5,6 +5,7 @@ import type { ObjectPassport as ObjectPassportType, TreeNode } from "@/features/
 import { Card } from "@/shared/ui/card"
 import { BreadcrumbNavigation } from "@/features/hierarchy/ui/BreadcrumbNavigation"
 import { CommanderBadge } from "@/features/hierarchy/ui/CommanderBadge"
+import { objectTypeLabel } from "@/shared/i18n/labels"
 
 type ObjectPassportProps = {
   passport?: ObjectPassportType
@@ -13,7 +14,7 @@ type ObjectPassportProps = {
 }
 
 export function ObjectPassport({ passport, loading, onSelectBreadcrumb }: ObjectPassportProps) {
-  const { t } = useTranslation("hierarchy")
+  const { t } = useTranslation(["hierarchy", "common"])
 
   if (loading) {
     return <Card className="min-h-[360px] text-sm text-zinc-500">{t("passport.loading")}</Card>
@@ -30,8 +31,8 @@ export function ObjectPassport({ passport, loading, onSelectBreadcrumb }: Object
       <div className="space-y-3">
         <BreadcrumbNavigation nodes={passport.breadcrumbs} onSelect={onSelectBreadcrumb} />
         <div>
-          <div className="text-xs uppercase text-emerald-300">{passport.objectType.replaceAll("_", " ")}</div>
-          <h2 className="mt-1 text-2xl font-semibold text-zinc-100">{passport.name}</h2>
+          <div className="text-xs uppercase text-emerald-300">{objectTypeLabel(t, passport.objectType)}</div>
+          <h2 className="mt-1 break-words text-2xl font-semibold text-zinc-100">{passport.name}</h2>
           <p className="mt-1 text-sm text-zinc-500">{passport.subtitle ?? t("passport.operationalObject")}</p>
         </div>
       </div>
@@ -48,7 +49,7 @@ export function ObjectPassport({ passport, loading, onSelectBreadcrumb }: Object
       <div className="grid gap-2 text-sm md:grid-cols-2">
         {Object.entries(passport.details).map(([key, value]) => (
           <div key={key} className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-            <div className="text-xs uppercase text-zinc-600">{key}</div>
+            <div className="truncate text-xs uppercase text-zinc-600" title={key}>{key}</div>
             <div className="mt-1 break-words text-zinc-200">{String(value ?? t("passport.notAvailable"))}</div>
           </div>
         ))}
@@ -60,9 +61,9 @@ export function ObjectPassport({ passport, loading, onSelectBreadcrumb }: Object
 function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
     <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3">
-      <div className="flex items-center gap-2 text-xs uppercase text-zinc-500">
+      <div className="flex min-w-0 items-center gap-2 text-xs uppercase text-zinc-500">
         <span className="text-emerald-300">{icon}</span>
-        {label}
+        <span className="truncate" title={label}>{label}</span>
       </div>
       <div className="mt-2 text-xl font-semibold text-zinc-100">{value}</div>
     </div>

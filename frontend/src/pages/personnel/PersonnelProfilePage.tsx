@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Link, useParams } from "react-router-dom"
 import { usePersonnelProfileQuery } from "@/features/personnel/api/personnelQueries"
 import { Card } from "@/shared/ui/card"
+import { objectTypeLabel } from "@/shared/i18n/labels"
 
 export function PersonnelProfilePage() {
   const { t } = useTranslation(["personnel", "common"])
@@ -57,12 +58,12 @@ export function PersonnelProfilePage() {
         </div>
         <div className="space-y-3">
           {data.chainOfCommand.map((node) => (
-            <div key={`${node.objectType}-${node.objectId}`} className="flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-900 p-3">
-              <div>
+            <div key={`${node.objectType}-${node.objectId}`} className="flex flex-col gap-3 rounded-md border border-zinc-800 bg-zinc-900 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
                 <div className="truncate text-sm text-zinc-100" title={node.objectName}>{node.objectName}</div>
-                <div className="text-xs uppercase text-zinc-500">{node.objectType}</div>
+                <div className="text-xs uppercase text-zinc-500">{objectTypeLabel(t, node.objectType)}</div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-zinc-300">
+              <div className="flex min-w-0 items-center gap-2 text-sm text-zinc-300">
                 <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-300" />
                 <span className="truncate" title={node.commanderName || t("profile.noCommander")}>{node.commanderName || t("profile.noCommander")}</span>
               </div>

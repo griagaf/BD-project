@@ -62,13 +62,13 @@ export function ToastViewport() {
               )}
             >
               <div className="flex items-start gap-3">
-                <Icon className={cn("mt-0.5 size-5", item.variant === "success" && "text-emerald-300", item.variant === "error" && "text-red-300", item.variant === "info" && "text-cyan-300")} />
+                <Icon className={cn("mt-0.5 h-5 w-5 shrink-0", item.variant === "success" && "text-emerald-300", item.variant === "error" && "text-red-300", item.variant === "info" && "text-cyan-300")} />
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-semibold text-zinc-100">{item.title}</div>
                   {item.description ? <div className="mt-1 text-sm text-zinc-500">{item.description}</div> : null}
                 </div>
-                <Button variant="ghost" size="icon" className="size-7" onClick={() => dismiss(item.id)} aria-label={t("actions.dismiss")}>
-                  <X className="size-4" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => dismiss(item.id)} aria-label={t("actions.dismiss")}>
+                  <X className="h-4 w-4 shrink-0" />
                 </Button>
               </div>
             </motion.div>

@@ -12,8 +12,12 @@ import { toast } from "@/shared/ui/toast"
 const demoUsers = [
   "admin.district",
   "analyst.staff",
+  "army.cmd.1",
+  "formation.cmd.1",
   "unit.cmd.1",
+  "company.cmd.1",
   "platoon.cmd.1",
+  "squad.cmd.1",
   "soldier.demo",
 ]
 
@@ -45,7 +49,7 @@ export function LoginPage() {
       <Card className="w-full max-w-md border-emerald-500/20 shadow-[0_0_42px_rgba(16,185,129,0.12)]">
         <div className="mb-8">
           <div className="flex items-center gap-2 text-xs uppercase text-emerald-400">
-            <RadioTower className="size-4" />
+            <RadioTower className="h-4 w-4 shrink-0" />
             {t("app.name")}
           </div>
           <h1 className="mt-2 text-2xl font-semibold text-zinc-100">{t("auth:login.title")}</h1>
@@ -80,7 +84,7 @@ export function LoginPage() {
           ) : null}
 
           <Button className="h-11 w-full" disabled={loginMutation.isPending || !username || !password}>
-            <LockKeyhole className="size-4" />
+            <LockKeyhole className="h-4 w-4 shrink-0" />
             {loginMutation.isPending ? t("auth:login.pending") : t("actions.login")}
           </Button>
         </form>

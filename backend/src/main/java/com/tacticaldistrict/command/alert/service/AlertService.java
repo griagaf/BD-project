@@ -57,15 +57,15 @@ public class AlertService {
                 """, Map.of(), (rs, rowNum) -> alert(
                 "UNIT_WITHOUT_EQUIPMENT",
                 "HIGH",
-                "Unit has no equipment",
-                rs.getString("unit_name") + " has no registered equipment.",
+                "В части отсутствует техника",
+                rs.getString("unit_name") + ": техника не зарегистрирована в инвентаре.",
                 ObjectType.MILITARY_UNIT,
                 rs.getLong("unit_id"),
                 Map.of("unitName", rs.getString("unit_name")),
                 List.of(
-                        new AlertActionDto("Open unit", "/units/" + rs.getLong("unit_id"), null),
-                        new AlertActionDto("Show equipment", "/equipment?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_EQUIPMENT"),
-                        new AlertActionDto("Query terminal", "/intelligence", "FIND_EQUIPMENT_AVAILABILITY")
+                        new AlertActionDto("Открыть часть", "/units/" + rs.getLong("unit_id"), null),
+                        new AlertActionDto("Показать технику", "/equipment?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_EQUIPMENT"),
+                        new AlertActionDto("Открыть терминал", "/intelligence", "FIND_EQUIPMENT_AVAILABILITY")
                 )
         )).stream().filter(alert -> canRead(user, alert)).toList();
     }
@@ -81,15 +81,15 @@ public class AlertService {
                 """, Map.of(), (rs, rowNum) -> alert(
                 "UNIT_WITHOUT_WEAPONS",
                 "HIGH",
-                "Unit has no weapons",
-                rs.getString("unit_name") + " has no registered weapons.",
+                "В части отсутствует вооружение",
+                rs.getString("unit_name") + ": вооружение не зарегистрировано в инвентаре.",
                 ObjectType.MILITARY_UNIT,
                 rs.getLong("unit_id"),
                 Map.of("unitName", rs.getString("unit_name")),
                 List.of(
-                        new AlertActionDto("Open unit", "/units/" + rs.getLong("unit_id"), null),
-                        new AlertActionDto("Show weapons", "/weapons?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_WEAPONS"),
-                        new AlertActionDto("Query terminal", "/intelligence", "FIND_WEAPON_AVAILABILITY")
+                        new AlertActionDto("Открыть часть", "/units/" + rs.getLong("unit_id"), null),
+                        new AlertActionDto("Показать вооружение", "/weapons?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_WEAPONS"),
+                        new AlertActionDto("Открыть терминал", "/intelligence", "FIND_WEAPON_AVAILABILITY")
                 )
         )).stream().filter(alert -> canRead(user, alert)).toList();
     }
@@ -106,14 +106,14 @@ public class AlertService {
                 """, Map.of(), (rs, rowNum) -> alert(
                 "BUILDING_WITHOUT_SUBDIVISIONS",
                 "MEDIUM",
-                "Building has no subdivisions",
-                rs.getString("building_name") + " is not assigned to any subdivision.",
+                "Сооружение не используется",
+                rs.getString("building_name") + " не закреплено ни за одним подразделением.",
                 ObjectType.BUILDING,
                 rs.getLong("building_id"),
                 Map.of("buildingName", rs.getString("building_name"), "unitName", rs.getString("unit_name")),
                 List.of(
-                        new AlertActionDto("Open buildings", "/buildings", null),
-                        new AlertActionDto("Query terminal", "/intelligence", "FIND_BUILDING_USAGE")
+                        new AlertActionDto("Открыть сооружения", "/buildings", null),
+                        new AlertActionDto("Открыть терминал", "/intelligence", "FIND_BUILDING_USAGE")
                 )
         )).stream().filter(alert -> canRead(user, alert)).toList();
     }
@@ -130,8 +130,8 @@ public class AlertService {
                 """, Map.of("threshold", BUILDING_OVERLOAD_THRESHOLD), (rs, rowNum) -> alert(
                 "BUILDING_OVERLOADED",
                 "MEDIUM",
-                "Building is overloaded",
-                rs.getString("building_name") + " hosts " + rs.getLong("subdivisions_count") + " subdivisions.",
+                "Перегрузка сооружения",
+                rs.getString("building_name") + " размещает подразделений: " + rs.getLong("subdivisions_count") + ".",
                 ObjectType.BUILDING,
                 rs.getLong("building_id"),
                 Map.of(
@@ -140,8 +140,8 @@ public class AlertService {
                         "subdivisionsCount", rs.getLong("subdivisions_count")
                 ),
                 List.of(
-                        new AlertActionDto("Open buildings", "/buildings", null),
-                        new AlertActionDto("Query terminal", "/intelligence", "FIND_BUILDING_USAGE")
+                        new AlertActionDto("Открыть сооружения", "/buildings", null),
+                        new AlertActionDto("Открыть терминал", "/intelligence", "FIND_BUILDING_USAGE")
                 )
         )).stream().filter(alert -> canRead(user, alert)).toList();
     }
@@ -157,12 +157,12 @@ public class AlertService {
                 """, Map.of(), (rs, rowNum) -> alert(
                 "SPECIALTY_WITHOUT_SPECIALISTS",
                 "MEDIUM",
-                "Specialty has no specialists",
-                rs.getString("specialty_name") + " has no assigned personnel.",
+                "Недостаток специалистов",
+                "По специальности \"" + rs.getString("specialty_name") + "\" нет назначенных военнослужащих.",
                 ObjectType.SPECIALTY,
                 rs.getLong("specialty_id"),
                 Map.of("specialtyName", rs.getString("specialty_name")),
-                List.of(new AlertActionDto("Query terminal", "/intelligence", "FIND_SPECIALTY_COVERAGE"))
+                List.of(new AlertActionDto("Открыть терминал", "/intelligence", "FIND_SPECIALTY_COVERAGE"))
         )).stream()
                 .filter(alert -> permissionService.canRead(user, ObjectType.SPECIALTY, alert.objectId()))
                 .toList();
@@ -179,14 +179,14 @@ public class AlertService {
                 """, Map.of("threshold", EQUIPMENT_EXCEEDED_THRESHOLD), (rs, rowNum) -> alert(
                 "EQUIPMENT_QUANTITY_EXCEEDED",
                 "CRITICAL",
-                "Equipment quantity exceeds threshold",
-                rs.getString("unit_name") + " has high quantity of " + rs.getString("equipment_type") + ".",
+                "Превышение количества техники",
+                rs.getString("unit_name") + ": зафиксировано повышенное количество техники \"" + rs.getString("equipment_type") + "\".",
                 ObjectType.MILITARY_UNIT,
                 rs.getLong("unit_id"),
                 Map.of("unitName", rs.getString("unit_name"), "equipmentType", rs.getString("equipment_type"), "quantity", rs.getInt("quantity")),
                 List.of(
-                        new AlertActionDto("Show equipment", "/equipment?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_EQUIPMENT"),
-                        new AlertActionDto("Query terminal", "/intelligence", "FIND_EQUIPMENT_AVAILABILITY")
+                        new AlertActionDto("Показать технику", "/equipment?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_EQUIPMENT"),
+                        new AlertActionDto("Открыть терминал", "/intelligence", "FIND_EQUIPMENT_AVAILABILITY")
                 )
         )).stream().filter(alert -> canRead(user, alert)).toList();
     }
@@ -202,14 +202,14 @@ public class AlertService {
                 """, Map.of("threshold", WEAPON_EXCEEDED_THRESHOLD), (rs, rowNum) -> alert(
                 "WEAPON_QUANTITY_EXCEEDED",
                 "CRITICAL",
-                "Weapon quantity exceeds threshold",
-                rs.getString("unit_name") + " has high quantity of " + rs.getString("weapon_type") + ".",
+                "Превышение количества вооружения",
+                rs.getString("unit_name") + ": зафиксировано повышенное количество вооружения \"" + rs.getString("weapon_type") + "\".",
                 ObjectType.MILITARY_UNIT,
                 rs.getLong("unit_id"),
                 Map.of("unitName", rs.getString("unit_name"), "weaponType", rs.getString("weapon_type"), "quantity", rs.getInt("quantity")),
                 List.of(
-                        new AlertActionDto("Show weapons", "/weapons?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_WEAPONS"),
-                        new AlertActionDto("Query terminal", "/intelligence", "FIND_WEAPON_AVAILABILITY")
+                        new AlertActionDto("Показать вооружение", "/weapons?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_WEAPONS"),
+                        new AlertActionDto("Открыть терминал", "/intelligence", "FIND_WEAPON_AVAILABILITY")
                 )
         )).stream().filter(alert -> canRead(user, alert)).toList();
     }

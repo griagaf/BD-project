@@ -45,6 +45,16 @@
     "alerts": "Alerts",
     "alertsEmpty": "No alerts in selected report scope"
   },
+  "object": {
+    "noParent": "No parent"
+  },
+  "readiness": {
+    "personnel": "Personnel",
+    "equipment": "Equipment",
+    "weapons": "Weapons",
+    "specialists": "Specialists",
+    "infrastructure": "Infrastructure"
+  },
   "metrics": {
     "total": "Total",
     "officers": "Officers",

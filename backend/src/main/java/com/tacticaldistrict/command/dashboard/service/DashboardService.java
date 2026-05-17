@@ -114,11 +114,11 @@ public class DashboardService {
         int overall = clamp((personnel + equipment + weapons + specialists + infrastructure) / 5);
 
         return new ReadinessDto(overall, List.of(
-                axis("personnel", "Personnel", personnel),
-                axis("equipment", "Equipment", equipment),
-                axis("weapons", "Weapons", weapons),
-                axis("specialists", "Specialists", specialists),
-                axis("infrastructure", "Infrastructure", infrastructure)
+                axis("personnel", "Личный состав", personnel),
+                axis("equipment", "Техника", equipment),
+                axis("weapons", "Вооружение", weapons),
+                axis("specialists", "Специалисты", specialists),
+                axis("infrastructure", "Инфраструктура", infrastructure)
         ));
     }
 
@@ -200,13 +200,13 @@ public class DashboardService {
 
     private String label(String type) {
         return switch (type) {
-            case "UNIT_WITHOUT_EQUIPMENT" -> "Units without equipment";
-            case "UNIT_WITHOUT_WEAPONS" -> "Units without weapons";
-            case "BUILDING_WITHOUT_SUBDIVISIONS" -> "Buildings without subdivisions";
-            case "BUILDING_OVERLOADED" -> "Overloaded buildings";
-            case "SPECIALTY_WITHOUT_SPECIALISTS" -> "Specialties without specialists";
-            case "EQUIPMENT_QUANTITY_EXCEEDED" -> "Equipment quantity exceeded";
-            case "WEAPON_QUANTITY_EXCEEDED" -> "Weapon quantity exceeded";
+            case "UNIT_WITHOUT_EQUIPMENT" -> "Части без техники";
+            case "UNIT_WITHOUT_WEAPONS" -> "Части без вооружения";
+            case "BUILDING_WITHOUT_SUBDIVISIONS" -> "Свободные сооружения";
+            case "BUILDING_OVERLOADED" -> "Перегруженные сооружения";
+            case "SPECIALTY_WITHOUT_SPECIALISTS" -> "Специальности без специалистов";
+            case "EQUIPMENT_QUANTITY_EXCEEDED" -> "Превышение количества техники";
+            case "WEAPON_QUANTITY_EXCEEDED" -> "Превышение количества вооружения";
             default -> type;
         };
     }

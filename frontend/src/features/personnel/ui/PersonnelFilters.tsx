@@ -13,7 +13,7 @@ type PersonnelFiltersProps = {
 export function PersonnelFilters({ filters, specialties, onChange }: PersonnelFiltersProps) {
   const { t } = useTranslation(["common", "personnel"])
   return (
-    <Card className="grid gap-3 md:grid-cols-[1.4fr_0.7fr_0.7fr_0.8fr_auto] md:items-end">
+    <Card className="grid gap-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,0.8fr)_auto] md:items-end">
       <label className="space-y-2">
         <span className="text-xs uppercase text-zinc-500">{t("personnel:filters.search")}</span>
         <div className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3">

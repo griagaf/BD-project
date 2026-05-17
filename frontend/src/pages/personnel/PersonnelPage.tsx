@@ -76,7 +76,7 @@ export function PersonnelPage() {
             setModalOpen(true)
           }}
         >
-          <Plus className="size-4" />
+          <Plus className="h-4 w-4 shrink-0" />
           {t("actions.create")}
         </Button>}
       />
@@ -109,9 +109,9 @@ export function PersonnelPage() {
         />
       )}
 
-      <div className="flex items-center justify-between text-sm text-zinc-500">
+      <div className="flex flex-col gap-3 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
         <span>
-          Page {(data?.page ?? 0) + 1} of {Math.max(data?.totalPages ?? 1, 1)}
+          {t("pagination.pageOf", { page: (data?.page ?? 0) + 1, total: Math.max(data?.totalPages ?? 1, 1) })}
         </span>
         <div className="flex gap-2">
           <Button
@@ -120,7 +120,7 @@ export function PersonnelPage() {
             disabled={data?.first ?? true}
             onClick={() => setFilters({ ...filters, page: Math.max((filters.page ?? 0) - 1, 0) })}
           >
-            Previous
+            {t("actions.previous")}
           </Button>
           <Button
             type="button"
@@ -128,7 +128,7 @@ export function PersonnelPage() {
             disabled={data?.last ?? true}
             onClick={() => setFilters({ ...filters, page: (filters.page ?? 0) + 1 })}
           >
-            Next
+            {t("actions.next")}
           </Button>
         </div>
       </div>

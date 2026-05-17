@@ -9,19 +9,19 @@ import { Card } from "@/shared/ui/card"
 import { PageHeader } from "@/shared/ui/page"
 import { ErrorState, EmptyState } from "@/shared/ui/state"
 
-const objectTypes: Array<{ value: ReportObjectType; label: string }> = [
-  { value: "ARMY", label: "Army" },
-  { value: "FORMATION", label: "Formation" },
-  { value: "BRIGADE", label: "Brigade" },
-  { value: "MILITARY_UNIT", label: "Military Unit" },
-  { value: "COMPANY", label: "Company" },
-  { value: "PLATOON", label: "Platoon" },
+const objectTypes: ReportObjectType[] = [
+  "ARMY",
+  "FORMATION",
+  "BRIGADE",
+  "MILITARY_UNIT",
+  "COMPANY",
+  "PLATOON",
 ]
 
 export function TacticalReportPage() {
   const { t } = useTranslation("reports")
   const [objectType, setObjectType] = useState<ReportObjectType>("MILITARY_UNIT")
-  const [objectId, setObjectId] = useState("1")
+  const [objectId, setObjectId] = useState("11101")
   const [includePersonnel, setIncludePersonnel] = useState(true)
   const [includeResources, setIncludeResources] = useState(true)
   const [includeAlerts, setIncludeAlerts] = useState(true)
@@ -75,7 +75,7 @@ export function TacticalReportPage() {
         />}
       />
 
-      <Card className="grid gap-4 lg:grid-cols-[220px_160px_minmax(0,1fr)]">
+      <Card className="grid gap-4 lg:grid-cols-[220px_180px_minmax(0,1fr)]">
         <label className="space-y-2">
           <span className="text-xs uppercase text-zinc-500">{t("form.objectType")}</span>
           <select
@@ -84,7 +84,7 @@ export function TacticalReportPage() {
             className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
           >
             {objectTypes.map((type) => (
-              <option key={type.value} value={type.value}>{t(`objectTypes.${type.value}`)}</option>
+              <option key={type} value={type}>{t(`objectTypes.${type}`)}</option>
             ))}
           </select>
         </label>
@@ -120,14 +120,14 @@ export function TacticalReportPage() {
 
 function ReportOption({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className="flex h-10 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-300">
+    <label className="flex h-10 min-w-0 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-300">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="size-4 accent-emerald-400"
+        className="h-4 w-4 shrink-0 accent-emerald-400"
       />
-      {label}
+      <span className="truncate" title={label}>{label}</span>
     </label>
   )
 }

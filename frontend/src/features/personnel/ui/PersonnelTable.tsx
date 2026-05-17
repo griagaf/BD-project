@@ -41,10 +41,14 @@ export function PersonnelTable({ rows, canEdit, canDelete, onEdit, onDelete }: P
                 <div className="max-w-64 truncate font-medium text-zinc-100" title={personnel.fullName}>{personnel.fullName}</div>
                 <div className="truncate text-xs text-zinc-500">{personnel.personalNumber}</div>
               </td>
-              <td className={cn(tableCellClass, "text-zinc-300")}>{personnel.rank?.name ?? t("personnel:table.noRank")}</td>
+              <td className={cn(tableCellClass, "text-zinc-300")}>
+                <span className="block max-w-40 truncate" title={personnel.rank?.name ?? t("personnel:table.noRank")}>
+                  {personnel.rank?.name ?? t("personnel:table.noRank")}
+                </span>
+              </td>
               <td className={tableCellClass}>
-                <div className="text-zinc-300">{personnel.unitName}</div>
-                <div className="text-xs text-zinc-500">{personnel.subdivisionName}</div>
+                <div className="max-w-56 truncate text-zinc-300" title={personnel.unitName}>{personnel.unitName}</div>
+                <div className="max-w-56 truncate text-xs text-zinc-500" title={personnel.subdivisionName}>{personnel.subdivisionName}</div>
               </td>
               <td className={tableCellClass}>
                 <div className="flex flex-wrap gap-1">
@@ -60,33 +64,33 @@ export function PersonnelTable({ rows, canEdit, canDelete, onEdit, onDelete }: P
                   <Link
                     to={`/personnel/${personnel.id}`}
                     className={cn(
-                      "inline-flex size-9 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
+                      "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
                     )}
                     title={t("actions.open")}
                   >
-                    <Eye className="size-4" />
+                    <Eye className="h-4 w-4 shrink-0" />
                   </Link>
                   <Button
                     type="button"
                     variant="ghost"
-                    className="size-9 px-0"
+                    className="h-9 w-9 shrink-0 px-0"
                     title={t("actions.edit")}
                     size="icon"
                     disabled={!canEdit}
                     onClick={() => onEdit(personnel)}
                   >
-                    <Pencil className="size-4" />
+                    <Pencil className="h-4 w-4 shrink-0" />
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
-                    className="size-9 px-0"
+                    className="h-9 w-9 shrink-0 px-0"
                     title={t("actions.delete")}
                     size="icon"
                     disabled={!canDelete}
                     onClick={() => onDelete(personnel.id)}
                   >
-                    <Trash2 className="size-4" />
+                    <Trash2 className="h-4 w-4 shrink-0" />
                   </Button>
                 </div>
               </td>

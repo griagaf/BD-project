@@ -36,18 +36,24 @@ export function InventoryTable({ rows, canEdit, onEdit, onDelete }: InventoryTab
           <tbody>
             {rows.map((row) => (
               <tr key={`${row.unitId}:${row.typeId}`} className={tableRowClass}>
-                <td className={cn(tableCellClass, "text-zinc-100")}>{row.unitName}</td>
-                <td className={cn(tableCellClass, "text-zinc-400")}>{row.categoryName}</td>
-                <td className={cn(tableCellClass, "text-zinc-300")}>{row.typeName}</td>
+                <td className={cn(tableCellClass, "text-zinc-100")}>
+                  <span className="block max-w-64 truncate" title={row.unitName}>{row.unitName}</span>
+                </td>
+                <td className={cn(tableCellClass, "text-zinc-400")}>
+                  <span className="block max-w-48 truncate" title={row.categoryName}>{row.categoryName}</span>
+                </td>
+                <td className={cn(tableCellClass, "text-zinc-300")}>
+                  <span className="block max-w-56 truncate" title={row.typeName}>{row.typeName}</span>
+                </td>
                 <td className={cn(tableCellClass, "font-semibold text-zinc-100")}>{row.quantity}</td>
                 <td className={tableCellClass}><StatusBadge status={row.status} /></td>
                 <td className={tableCellClass}>
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="ghost" size="icon" disabled={!canEdit} onClick={() => onEdit(row)}>
-                      <Pencil className="size-4" />
+                      <Pencil className="h-4 w-4 shrink-0" />
                     </Button>
                     <Button type="button" variant="ghost" size="icon" disabled={!canEdit} onClick={() => onDelete(row)}>
-                      <Trash2 className="size-4" />
+                      <Trash2 className="h-4 w-4 shrink-0" />
                     </Button>
                   </div>
                 </td>

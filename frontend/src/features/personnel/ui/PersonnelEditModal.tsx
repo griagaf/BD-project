@@ -70,7 +70,7 @@ export function PersonnelEditModal({
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
       <form
-        className="w-full max-w-3xl rounded-md border border-zinc-800 bg-zinc-950 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-md border border-zinc-800 bg-zinc-950 shadow-2xl"
         onSubmit={(event) => {
           event.preventDefault()
           onSubmit(form)
@@ -81,7 +81,7 @@ export function PersonnelEditModal({
             <div className="text-sm font-semibold uppercase text-zinc-100">{title}</div>
             <div className="text-xs text-zinc-500">{t("personnel:form.record")}</div>
           </div>
-          <Button type="button" variant="ghost" className="size-9 px-0" onClick={onClose}>
+          <Button type="button" variant="ghost" className="h-9 w-9 shrink-0 px-0" onClick={onClose}>
             <X className="h-4 w-4 shrink-0" />
           </Button>
         </div>
@@ -118,9 +118,10 @@ export function PersonnelEditModal({
             <span className="text-xs uppercase text-zinc-500">{t("personnel:form.specialties")}</span>
             <div className="grid gap-2 rounded-md border border-zinc-800 bg-zinc-900 p-3 sm:grid-cols-2">
               {specialties.map((specialty) => (
-                <label key={specialty.id} className="flex items-center gap-2 text-sm text-zinc-300">
+                <label key={specialty.id} className="flex min-w-0 items-center gap-2 text-sm text-zinc-300">
                   <input
                     type="checkbox"
+                    className="h-4 w-4 shrink-0 accent-emerald-400"
                     checked={form.specialtyIds.includes(specialty.id)}
                     onChange={(event) => {
                       const specialtyIds = event.target.checked
@@ -129,14 +130,14 @@ export function PersonnelEditModal({
                       setForm({ ...form, specialtyIds })
                     }}
                   />
-                  {specialty.name}
+                  <span className="truncate" title={specialty.name}>{specialty.name}</span>
                 </label>
               ))}
             </div>
           </label>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-zinc-800 px-5 py-4">
+        <div className="flex flex-col-reverse gap-2 border-t border-zinc-800 px-5 py-4 sm:flex-row sm:justify-end">
           <Button type="button" variant="secondary" onClick={onClose}>
             {t("actions.cancel")}
           </Button>

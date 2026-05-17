@@ -16,8 +16,8 @@ export function IntelligenceTerminalPage() {
   const { t } = useTranslation(["common", "intelligence"])
   const { data: templates = [], isLoading } = useQueryTemplatesQuery()
   const [selectedCode, setSelectedCode] = useState("FIND_UNITS_IN_FORMATION")
-  const [scope, setScope] = useState<QueryScope>({ type: "FORMATION", id: 1, name: "Siberian Tactical District" })
-  const [parameters, setParameters] = useState<Record<string, string | number>>({ formationId: 1 })
+  const [scope, setScope] = useState<QueryScope>({ type: "FORMATION", id: 1101, name: "11-й армейский корпус" })
+  const [parameters, setParameters] = useState<Record<string, string | number>>({ formationId: 1101 })
   const executeMutation = useExecuteQueryMutation()
   const exportMutation = useExportQueryMutation()
 
@@ -61,14 +61,14 @@ export function IntelligenceTerminalPage() {
         actions={
           <>
           <Button type="button" variant="secondary" disabled={!selectedTemplate || exportMutation.isPending} onClick={exportCsv}>
-            <Download className="size-4" />
+            <Download className="h-4 w-4 shrink-0" />
             {t("actions.exportCsv")}
           </Button>
           <Button type="button" disabled={!selectedTemplate || executeMutation.isPending} onClick={() => executeMutation.mutate({ code: selectedCode, request }, {
             onSuccess: (result) => toast.success(t("intelligence:toast.executed"), t("intelligence:toast.rowsReturned", { count: result.rowCount })),
             onError: () => toast.error(t("intelligence:toast.failed")),
           })}>
-            <Play className="size-4" />
+            <Play className="h-4 w-4 shrink-0" />
             {t("actions.execute")}
           </Button>
           </>

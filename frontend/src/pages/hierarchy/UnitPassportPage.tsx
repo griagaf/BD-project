@@ -18,14 +18,14 @@ export function UnitPassportPage() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
-            <Building2 className="size-4" />
-            {t("passport.unit")}
+            <Building2 className="h-4 w-4 shrink-0" />
+            <span className="truncate" title={t("passport.unit")}>{t("passport.unit")}</span>
           </div>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">{passport?.name ?? t("passport.fallbackUnit")}</h1>
-          <p className="mt-1 text-sm text-zinc-500">{passport?.subtitle ?? t("passport.description")}</p>
+          <h1 className="mt-1 break-words text-2xl font-semibold text-zinc-100">{passport?.name ?? t("passport.fallbackUnit")}</h1>
+          <p className="mt-1 break-words text-sm text-zinc-500">{passport?.subtitle ?? t("passport.description")}</p>
         </div>
         <Button type="button" variant="secondary" onClick={() => navigate("/hierarchy")}>
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="h-4 w-4 shrink-0" />
           {t("passport.back")}
         </Button>
       </div>

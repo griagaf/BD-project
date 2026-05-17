@@ -28,8 +28,8 @@ export function Sidebar() {
     <>
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-zinc-800 bg-zinc-950/95 backdrop-blur lg:block">
       <div className="flex h-16 items-center border-b border-zinc-800 px-5">
-        <div className="mr-3 flex size-9 items-center justify-center rounded-md border border-emerald-500/25 bg-emerald-500/10">
-          <Shield className="size-5 text-emerald-400" />
+        <div className="mr-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-emerald-500/25 bg-emerald-500/10">
+          <Shield className="h-5 w-5 shrink-0 text-emerald-400" />
         </div>
         <div>
           <div className="truncate text-sm font-semibold uppercase tracking-wide">{t("app.shortName")}</div>

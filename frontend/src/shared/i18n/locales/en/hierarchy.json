@@ -14,7 +14,9 @@
     "loading": "Loading object passport",
     "select": "Select hierarchy object",
     "operationalObject": "Operational object",
-    "notAvailable": "n/a"
+    "notAvailable": "n/a",
+    "noCommander": "No commander assigned",
+    "commanderSlot": "Commander slot"
   },
   "panel": {
     "actions": "Actions",

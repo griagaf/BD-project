@@ -1,15 +1,15 @@
 {
   "page": {
     "eyebrow": "Тактические отчёты",
-    "title": "Smart Mission Report",
-    "description": "Агрегация готовности, ресурсов, alerts и рекомендаций по правилам."
+    "title": "Сводный тактический отчёт",
+    "description": "Агрегация готовности, ресурсов, предупреждений и рекомендаций по правилам."
   },
   "form": {
     "objectType": "Тип объекта",
     "objectId": "ID объекта",
     "personnel": "Личный состав",
     "resources": "Ресурсы",
-    "alerts": "Alerts",
+    "alerts": "Предупреждения",
     "recommendations": "Рекомендации"
   },
   "actions": {
@@ -42,8 +42,18 @@
     "buildingsEmpty": "Проблем с сооружениями не обнаружено",
     "specialties": "Специальности",
     "specialtiesEmpty": "В выбранной области нет покрытых специальностей",
-    "alerts": "Alerts",
-    "alertsEmpty": "В выбранной области отчёта нет alerts"
+    "alerts": "Предупреждения",
+    "alertsEmpty": "В выбранной области отчёта нет предупреждений"
+  },
+  "object": {
+    "noParent": "Без вышестоящего объекта"
+  },
+  "readiness": {
+    "personnel": "Личный состав",
+    "equipment": "Техника",
+    "weapons": "Вооружение",
+    "specialists": "Специалисты",
+    "infrastructure": "Инфраструктура"
   },
   "metrics": {
     "total": "Всего",
@@ -57,6 +67,6 @@
     "missing": "Не хватает",
     "quantity": "Количество",
     "types": "Типы",
-    "gaps": "Пробелы"
+    "gaps": "Дефицит"
   }
 }

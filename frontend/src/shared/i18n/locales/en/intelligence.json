@@ -20,7 +20,8 @@
     "formation": "Formation",
     "unit": "Unit",
     "personnel": "Personnel",
-    "global": "Global"
+    "global": "Global",
+    "queryPreview": "Query Preview"
   },
   "result": {
     "rowsReturned": "{{count}} rows returned at {{time}}"

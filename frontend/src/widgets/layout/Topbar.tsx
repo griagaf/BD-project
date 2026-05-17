@@ -22,8 +22,8 @@ export function Topbar() {
   return (
     <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-950/88 px-4 py-3 backdrop-blur sm:px-6">
       <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 lg:hidden">
-          <Menu className="size-4 text-emerald-300" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 lg:hidden">
+          <Menu className="h-4 w-4 shrink-0 text-emerald-300" />
         </div>
         <RolePreview />
       </div>
@@ -32,7 +32,7 @@ export function Topbar() {
         <ViewAsSelector />
         <LanguageSwitcher />
         <Button variant="ghost" size="icon" aria-label={t("alerts:page.title")}>
-          <Bell className="size-4" />
+          <Bell className="h-4 w-4 shrink-0" />
         </Button>
         <Button variant="secondary" onClick={logout}>
           <LogOut className="h-4 w-4 shrink-0" />

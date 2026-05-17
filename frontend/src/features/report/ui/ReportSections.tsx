@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { Boxes, Building2, Crosshair, ShieldCheck, Users } from "lucide-react"
 import type { SmartMissionReport } from "@/features/report/model/reportTypes"
+import { statusLabel } from "@/shared/i18n/labels"
 
 type SectionProps = {
   title: string
@@ -22,7 +23,7 @@ export function ReportSection({ title, action, children }: SectionProps) {
 }
 
 export function ReportSections({ report }: { report: SmartMissionReport }) {
-  const { t } = useTranslation(["reports", "equipment", "weapons", "buildings", "personnel"])
+  const { t } = useTranslation(["reports", "equipment", "weapons", "buildings", "personnel", "common"])
 
   return (
     <div className="space-y-4">
@@ -112,11 +113,11 @@ export function ReportSections({ report }: { report: SmartMissionReport }) {
         <div className="space-y-2">
           {report.alerts.map((alert) => (
             <div key={alert.alertId} className="rounded-md border border-zinc-800 bg-zinc-900/50 px-3 py-2">
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-medium text-zinc-100">{alert.title}</div>
-                <span className="rounded bg-zinc-800 px-2 py-1 text-xs text-amber-200">{alert.severity}</span>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0 break-words text-sm font-medium text-zinc-100">{alert.title}</div>
+                <span className="shrink-0 rounded bg-zinc-800 px-2 py-1 text-xs text-amber-200">{statusLabel(t, alert.severity)}</span>
               </div>
-              <div className="mt-1 text-xs text-zinc-500">{alert.message}</div>
+              <div className="mt-1 break-words text-xs text-zinc-500">{alert.message}</div>
             </div>
           ))}
           {!report.alerts.length ? <div className="text-sm text-zinc-500">{t("sections.alertsEmpty")}</div> : null}
@@ -131,8 +132,8 @@ function MetricGrid({ items, icon }: { items: Array<[string, number]>; icon?: Re
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {items.map(([label, value]) => (
         <div key={label} className="rounded-md border border-zinc-800 bg-zinc-900/50 p-3">
-          <div className="flex items-center justify-between text-xs uppercase text-zinc-500">
-            {label}
+          <div className="flex min-w-0 items-center justify-between gap-2 text-xs uppercase text-zinc-500">
+            <span className="truncate" title={label}>{label}</span>
             {icon}
           </div>
           <div className="mt-2 text-2xl font-semibold text-zinc-100">{value}</div>
@@ -170,7 +171,7 @@ function KeyValueList({ values, empty }: { values: Record<string, number>; empty
     <div className="mt-4 grid gap-2 md:grid-cols-2">
       {entries.map(([key, value]) => (
         <div key={key} className="flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-sm">
-          <span className="text-zinc-300">{key}</span>
+            <span className="truncate text-zinc-300" title={key}>{key}</span>
           <span className="text-zinc-500">{value}</span>
         </div>
       ))}
