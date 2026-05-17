@@ -7,13 +7,16 @@ import { BuildingDialog } from "@/features/inventory/ui/BuildingDialog"
 import { BuildingsTable } from "@/features/inventory/ui/BuildingsTable"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
+import { ErrorState } from "@/shared/ui/state"
+import { TableSkeleton } from "@/shared/ui/skeleton"
+import { toast } from "@/shared/ui/toast"
 
 export function BuildingsPage() {
   const [filters, setFilters] = useState<BuildingFilter>({ page: 0, size: 10 })
   const [editing, setEditing] = useState<BuildingRow | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const { data: user } = useCurrentUserQuery()
-  const { data, error } = useBuildingsQuery(filters)
+  const { data, error, isLoading } = useBuildingsQuery(filters)
   const { data: stats } = useBuildingStatsQuery()
   const saveMutation = useSaveBuildingMutation(editing?.id)
   const deleteMutation = useDeleteBuildingMutation()
@@ -63,8 +66,10 @@ export function BuildingsPage() {
         <Button type="button" variant="secondary" onClick={() => setFilters({ page: 0, size: 10 })}>Reset</Button>
       </Card>
 
-      {error ? (
-        <Card className="border-red-950 bg-red-950/20 text-sm text-red-200">Unable to load buildings</Card>
+      {isLoading ? (
+        <TableSkeleton columns={5} />
+      ) : error ? (
+        <ErrorState title="Unable to load buildings" />
       ) : (
         <BuildingsTable
           rows={data?.content ?? []}
@@ -73,7 +78,10 @@ export function BuildingsPage() {
             setEditing(row)
             setDialogOpen(true)
           }}
-          onDelete={(row) => deleteMutation.mutate(row.id)}
+          onDelete={(row) => deleteMutation.mutate(row.id, {
+            onSuccess: () => toast.success("Building deleted"),
+            onError: () => toast.error("Building delete failed"),
+          })}
         />
       )}
 
@@ -95,9 +103,11 @@ export function BuildingsPage() {
         }}
         onSubmit={(request) => saveMutation.mutate(request, {
           onSuccess: () => {
+            toast.success(editing ? "Building updated" : "Building created")
             setDialogOpen(false)
             setEditing(null)
           },
+          onError: () => toast.error("Building save failed"),
         })}
       />
     </div>

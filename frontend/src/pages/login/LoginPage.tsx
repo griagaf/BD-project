@@ -6,6 +6,7 @@ import { useLoginMutation } from "@/features/auth/api/authQueries"
 import { useAuthStore } from "@/features/auth/model/authStore"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
+import { toast } from "@/shared/ui/toast"
 
 const demoUsers = [
   "admin.district",
@@ -32,12 +33,13 @@ export function LoginPage() {
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,
     })
+    toast.success("Access granted", `Signed in as ${response.user.displayName}`)
     queryClient.invalidateQueries({ queryKey: ["auth"] })
     navigate("/dashboard", { replace: true })
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-6 text-zinc-100">
+    <div className="flex min-h-screen items-center justify-center px-6 py-8 text-zinc-100">
       <Card className="w-full max-w-md border-emerald-500/20 shadow-[0_0_42px_rgba(16,185,129,0.12)]">
         <div className="mb-8">
           <div className="flex items-center gap-2 text-xs uppercase text-emerald-400">

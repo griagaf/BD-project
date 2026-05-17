@@ -6,9 +6,9 @@ import { Topbar } from "@/widgets/layout/Topbar"
 
 export function TacticalLayout() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen text-zinc-100">
       <Sidebar />
-      <div className="min-h-screen pl-72">
+      <div className="min-h-screen lg:pl-72">
         <Topbar />
         <SimulationBanner />
         <ContentArea>

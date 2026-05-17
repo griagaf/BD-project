@@ -1,5 +1,8 @@
 import type { QueryResult } from "@/features/intelligence/model/intelligenceTypes"
 import { Card } from "@/shared/ui/card"
+import { EmptyState } from "@/shared/ui/state"
+import { Table, TableShell, tableCellClass, tableHeadClass, tableRowClass } from "@/shared/ui/table"
+import { cn } from "@/shared/lib/cn"
 
 type QueryResultTableProps = {
   result?: QueryResult
@@ -7,39 +10,40 @@ type QueryResultTableProps = {
 
 export function QueryResultTable({ result }: QueryResultTableProps) {
   if (!result) {
-    return <Card className="text-sm text-zinc-500">Execute a query to inspect scoped results</Card>
+    return <EmptyState title="No query executed" description="Execute a template to inspect scoped SQL results." />
   }
 
   return (
-    <Card className="overflow-hidden p-0">
+    <Card className="p-0">
       <div className="border-b border-zinc-800 px-4 py-3 text-sm text-zinc-400">
         {result.rowCount} rows returned at {new Date(result.executedAt).toLocaleString()}
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-800 bg-zinc-900/60 text-xs uppercase text-zinc-500">
+      {result.rows.length ? (
+        <TableShell className="rounded-none border-0">
+        <Table>
+          <thead className={tableHeadClass}>
             <tr>
               {result.columns.map((column) => (
-                <th key={column} className="whitespace-nowrap px-4 py-3">{column}</th>
+                <th key={column} className={cn(tableCellClass, "whitespace-nowrap")}>{column}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {result.rows.map((row, index) => (
-              <tr key={index} className="border-b border-zinc-900">
+              <tr key={index} className={tableRowClass}>
                 {result.columns.map((column) => (
-                  <td key={column} className="whitespace-nowrap px-4 py-3 text-zinc-300">{String(row[column] ?? "")}</td>
+                  <td key={column} className={cn(tableCellClass, "whitespace-nowrap text-zinc-300")}>{String(row[column] ?? "")}</td>
                 ))}
               </tr>
             ))}
-            {!result.rows.length ? (
-              <tr>
-                <td className="px-4 py-8 text-center text-zinc-500" colSpan={Math.max(result.columns.length, 1)}>No rows in current scope</td>
-              </tr>
-            ) : null}
           </tbody>
-        </table>
-      </div>
+        </Table>
+      </TableShell>
+      ) : (
+        <div className="p-5">
+          <EmptyState title="No rows in current scope" description="The selected template executed successfully but returned no rows." />
+        </div>
+      )}
     </Card>
   )
 }

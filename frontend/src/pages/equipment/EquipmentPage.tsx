@@ -9,6 +9,9 @@ import { InventoryDialog } from "@/features/inventory/ui/InventoryDialog"
 import { InventoryTable } from "@/features/inventory/ui/InventoryTable"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
+import { ErrorState } from "@/shared/ui/state"
+import { TableSkeleton } from "@/shared/ui/skeleton"
+import { toast } from "@/shared/ui/toast"
 
 export function EquipmentPage() {
   return <InventoryResourcePage kind="equipment" title="Equipment" icon={<Boxes className="size-4" />} />
@@ -18,7 +21,7 @@ export function InventoryResourcePage({ kind, title, icon }: { kind: "equipment"
   const [filters, setFilters] = useState<InventoryFilter>({ page: 0, size: 10 })
   const [editing, setEditing] = useState<InventoryRow | null>(null)
   const { data: user } = useCurrentUserQuery()
-  const { data, error } = useInventoryQuery(kind, filters)
+  const { data, error, isLoading } = useInventoryQuery(kind, filters)
   const { data: stats } = useInventoryStatsQuery(kind)
   const { data: dictionaries } = useInventoryDictionariesQuery(kind)
   const updateMutation = useUpdateInventoryMutation(kind)
@@ -29,10 +32,15 @@ export function InventoryResourcePage({ kind, title, icon }: { kind: "equipment"
     <div className="space-y-5">
       <Header title={title} icon={icon} readiness={stats?.readinessScore ?? 0} total={stats?.totalQuantity ?? 0} warnings={stats?.warningRows ?? 0} />
       <FiltersPanel filters={filters} categories={dictionaries?.categories} types={dictionaries?.types} onChange={setFilters} />
-      {error ? (
-        <Card className="border-red-950 bg-red-950/20 text-sm text-red-200">Unable to load inventory</Card>
+      {isLoading ? (
+        <TableSkeleton columns={6} />
+      ) : error ? (
+        <ErrorState title="Unable to load inventory" />
       ) : (
-        <InventoryTable rows={data?.content ?? []} canEdit={canEdit} onEdit={setEditing} onDelete={(row) => deleteMutation.mutate({ unitId: row.unitId, typeId: row.typeId })} />
+        <InventoryTable rows={data?.content ?? []} canEdit={canEdit} onEdit={setEditing} onDelete={(row) => deleteMutation.mutate({ unitId: row.unitId, typeId: row.typeId }, {
+          onSuccess: () => toast.success(`${title} row deleted`),
+          onError: () => toast.error(`${title} delete failed`),
+        })} />
       )}
       <Pager filters={filters} totalPages={data?.totalPages ?? 1} first={data?.first ?? true} last={data?.last ?? true} onChange={setFilters} />
       <InventoryDialog
@@ -42,7 +50,13 @@ export function InventoryResourcePage({ kind, title, icon }: { kind: "equipment"
         onClose={() => setEditing(null)}
         onSubmit={(quantity) => {
           if (editing) {
-            updateMutation.mutate({ unitId: editing.unitId, typeId: editing.typeId, quantity }, { onSuccess: () => setEditing(null) })
+            updateMutation.mutate({ unitId: editing.unitId, typeId: editing.typeId, quantity }, {
+              onSuccess: () => {
+                toast.success(`${title} row updated`)
+                setEditing(null)
+              },
+              onError: () => toast.error(`${title} update failed`),
+            })
           }
         }}
       />

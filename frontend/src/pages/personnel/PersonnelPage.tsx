@@ -13,7 +13,10 @@ import { PersonnelEditModal } from "@/features/personnel/ui/PersonnelEditModal"
 import { PersonnelFilters } from "@/features/personnel/ui/PersonnelFilters"
 import { PersonnelTable } from "@/features/personnel/ui/PersonnelTable"
 import { Button } from "@/shared/ui/button"
-import { Card } from "@/shared/ui/card"
+import { PageHeader } from "@/shared/ui/page"
+import { TableSkeleton } from "@/shared/ui/skeleton"
+import { ErrorState } from "@/shared/ui/state"
+import { toast } from "@/shared/ui/toast"
 
 const initialFilters: PersonnelFilter = {
   page: 0,
@@ -48,24 +51,22 @@ export function PersonnelPage() {
     const mutation = editing ? updateMutation : createMutation
     mutation.mutate(request, {
       onSuccess: () => {
+        toast.success(editing ? "Personnel updated" : "Personnel created")
         setModalOpen(false)
         setEditing(null)
       },
+      onError: () => toast.error("Personnel save failed"),
     })
   }
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
-            <ShieldCheck className="size-4" />
-            Personnel Registry
-          </div>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">Military Personnel</h1>
-          <p className="mt-1 text-sm text-zinc-500">{statusText}</p>
-        </div>
-        <Button
+      <PageHeader
+        icon={ShieldCheck}
+        eyebrow="Personnel Registry"
+        title="Military Personnel"
+        description={statusText}
+        actions={<Button
           type="button"
           disabled={!canCreate}
           onClick={() => {
@@ -75,8 +76,8 @@ export function PersonnelPage() {
         >
           <Plus className="size-4" />
           Create
-        </Button>
-      </div>
+        </Button>}
+      />
 
       <PersonnelFilters
         filters={filters}
@@ -84,8 +85,10 @@ export function PersonnelPage() {
         onChange={(nextFilters) => setFilters({ ...filters, ...nextFilters })}
       />
 
-      {error ? (
-        <Card className="border-red-950 bg-red-950/20 text-sm text-red-200">Unable to load personnel data</Card>
+      {isLoading ? (
+        <TableSkeleton columns={5} />
+      ) : error ? (
+        <ErrorState title="Unable to load personnel data" />
       ) : (
         <PersonnelTable
           rows={data?.content ?? []}
@@ -96,7 +99,10 @@ export function PersonnelPage() {
             setModalOpen(true)
           }}
           onDelete={(id) => {
-            deleteMutation.mutate(id)
+            deleteMutation.mutate(id, {
+              onSuccess: () => toast.success("Personnel deleted"),
+              onError: () => toast.error("Personnel delete failed"),
+            })
           }}
         />
       )}

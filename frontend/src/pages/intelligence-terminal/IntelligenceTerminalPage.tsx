@@ -7,7 +7,9 @@ import { QueryPreviewTerminal } from "@/features/intelligence/ui/QueryPreviewTer
 import { QueryResultTable } from "@/features/intelligence/ui/QueryResultTable"
 import { QueryTemplateSelector } from "@/features/intelligence/ui/QueryTemplateSelector"
 import { Button } from "@/shared/ui/button"
-import { Card } from "@/shared/ui/card"
+import { PageHeader } from "@/shared/ui/page"
+import { ErrorState, LoadingState } from "@/shared/ui/state"
+import { toast } from "@/shared/ui/toast"
 
 export function IntelligenceTerminalPage() {
   const { data: templates = [], isLoading } = useQueryTemplatesQuery()
@@ -41,35 +43,38 @@ export function IntelligenceTerminalPage() {
         anchor.download = `${selectedCode.toLowerCase()}.csv`
         anchor.click()
         URL.revokeObjectURL(url)
+        toast.success("CSV exported", `${selectedCode} result exported`)
       },
+      onError: () => toast.error("CSV export failed"),
     })
   }
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
-            <Radar className="size-4" />
-            Intelligence Query Terminal
-          </div>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">Template-driven Query Builder</h1>
-          <p className="mt-1 text-sm text-zinc-500">Structured analytical SQL execution with role and scope checks.</p>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        icon={Radar}
+        eyebrow="Intelligence Query Terminal"
+        title="Template-driven Query Builder"
+        description="Structured analytical SQL execution with role and scope checks."
+        actions={
+          <>
           <Button type="button" variant="secondary" disabled={!selectedTemplate || exportMutation.isPending} onClick={exportCsv}>
             <Download className="size-4" />
             CSV
           </Button>
-          <Button type="button" disabled={!selectedTemplate || executeMutation.isPending} onClick={() => executeMutation.mutate({ code: selectedCode, request })}>
+          <Button type="button" disabled={!selectedTemplate || executeMutation.isPending} onClick={() => executeMutation.mutate({ code: selectedCode, request }, {
+            onSuccess: (result) => toast.success("Query executed", `${result.rowCount} rows returned`),
+            onError: () => toast.error("Query execution failed"),
+          })}>
             <Play className="size-4" />
             Execute
           </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {isLoading ? (
-        <Card className="text-sm text-zinc-500">Loading query templates</Card>
+        <LoadingState title="Loading query templates" />
       ) : (
         <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
           <QueryTemplateSelector templates={templates} selectedCode={selectedCode} onSelect={selectTemplate} />
@@ -83,7 +88,7 @@ export function IntelligenceTerminalPage() {
             />
             <QueryPreviewTerminal command={command} />
             {executeMutation.error ? (
-              <Card className="border-red-950 bg-red-950/20 text-sm text-red-200">Query execution failed</Card>
+              <ErrorState title="Query execution failed" />
             ) : null}
             <QueryResultTable result={executeMutation.data} />
           </div>

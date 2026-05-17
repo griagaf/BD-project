@@ -4,23 +4,18 @@ import { AlertsPanel } from "@/features/dashboard/ui/AlertsPanel"
 import { ReadinessRadar } from "@/features/dashboard/ui/ReadinessRadar"
 import { StatsCards } from "@/features/dashboard/ui/StatsCards"
 import { Card } from "@/shared/ui/card"
+import { PageHeader } from "@/shared/ui/page"
+import { ErrorState, LoadingState } from "@/shared/ui/state"
 
 export function DashboardPage() {
   const { data, isLoading, error } = useDashboardQuery()
 
   return (
     <div className="space-y-5">
-      <div>
-        <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
-          <Activity className="size-4" />
-          Operational overview
-        </div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-100">Tactical Dashboard</h1>
-        <p className="mt-1 text-sm text-zinc-500">Scoped command summary, alerts and readiness posture.</p>
-      </div>
+      <PageHeader icon={Activity} eyebrow="Operational overview" title="Tactical Dashboard" description="Scoped command summary, alerts and readiness posture." />
 
-      {isLoading ? <Card className="text-sm text-zinc-500">Loading tactical dashboard</Card> : null}
-      {error ? <Card className="border-red-950 bg-red-950/20 text-sm text-red-200">Unable to load dashboard</Card> : null}
+      {isLoading ? <LoadingState title="Loading tactical dashboard" description="Compiling scoped command metrics" /> : null}
+      {error ? <ErrorState title="Unable to load dashboard" /> : null}
       {data ? (
         <>
           <StatsCards statistics={data.statistics} />
