@@ -4,6 +4,15 @@ export type CurrentUser = {
   username: string
   displayName: string
   roles: string[]
+  effectiveRoles?: string[]
+  assignments?: Array<{
+    assignmentId: number
+    objectType: string
+    objectId: number
+    startsAt: string
+    endsAt: string | null
+    primary: boolean
+  }>
   permissions: string[]
+  accessSimulationActive?: boolean
 }
-

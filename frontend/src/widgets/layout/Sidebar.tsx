@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, Binary, FileText, Network, Shield, Users } from "lucide-react"
+import { Activity, AlertTriangle, Binary, Boxes, Building2, Crosshair, FileText, Network, Shield, Users } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import { cn } from "@/shared/lib/cn"
 
@@ -6,6 +6,9 @@ const navigationItems = [
   { label: "Dashboard", path: "/dashboard", icon: Activity },
   { label: "Hierarchy", path: "/hierarchy", icon: Network },
   { label: "Personnel", path: "/personnel", icon: Users },
+  { label: "Equipment", path: "/equipment", icon: Boxes },
+  { label: "Weapons", path: "/weapons", icon: Crosshair },
+  { label: "Buildings", path: "/buildings", icon: Building2 },
   { label: "Intelligence", path: "/intelligence", icon: Binary },
   { label: "Alerts", path: "/alerts", icon: AlertTriangle },
   { label: "Reports", path: "/reports", icon: FileText },
@@ -44,4 +47,3 @@ export function Sidebar() {
     </aside>
   )
 }
-
