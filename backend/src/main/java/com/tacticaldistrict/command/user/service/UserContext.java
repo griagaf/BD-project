@@ -1,6 +1,7 @@
 package com.tacticaldistrict.command.user.service;
 
 import com.tacticaldistrict.command.security.model.RoleCode;
+import com.tacticaldistrict.command.security.model.ObjectType;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -10,7 +11,10 @@ public record UserContext(
         String username,
         String displayName,
         Set<RoleCode> roles,
-        Set<String> permissions
+        Set<String> permissions,
+        boolean accessSimulationActive,
+        ObjectType simulationScopeType,
+        Long simulationScopeId
 ) {
 
     public boolean hasRole(RoleCode role) {
@@ -24,5 +28,8 @@ public record UserContext(
     public boolean hasPermission(String permission) {
         return permissions.contains(permission);
     }
-}
 
+    public boolean hasSimulationScope() {
+        return accessSimulationActive && simulationScopeType != null && simulationScopeId != null;
+    }
+}

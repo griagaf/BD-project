@@ -1,6 +1,8 @@
 import { Bell, LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "@/features/auth/model/authStore"
+import { RolePreview } from "@/features/auth/ui/RolePreview"
+import { ViewAsSelector } from "@/features/auth/ui/ViewAsSelector"
 import { Button } from "@/shared/ui/button"
 
 export function Topbar() {
@@ -15,11 +17,11 @@ export function Topbar() {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-950/90 px-6 backdrop-blur">
       <div>
-        <div className="text-xs uppercase text-zinc-500">Active command scope</div>
-        <div className="text-sm font-medium text-zinc-200">Skeleton / unrestricted preview</div>
+        <RolePreview />
       </div>
 
       <div className="flex items-center gap-3">
+        <ViewAsSelector />
         <Button variant="ghost" aria-label="Alerts">
           <Bell className="size-4" />
         </Button>
@@ -31,4 +33,3 @@ export function Topbar() {
     </header>
   )
 }
-

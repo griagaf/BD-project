@@ -7,7 +7,9 @@ import com.tacticaldistrict.command.auth.dto.LogoutRequest;
 import com.tacticaldistrict.command.auth.dto.RefreshRequest;
 import com.tacticaldistrict.command.auth.dto.TokenResponse;
 import com.tacticaldistrict.command.auth.service.AuthService;
+import com.tacticaldistrict.command.security.model.ObjectType;
 import com.tacticaldistrict.command.security.model.RoleCode;
+import com.tacticaldistrict.command.user.service.UserContextProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-
-    private static final String ACCESS_SIMULATION_HEADER = "X-Access-Simulation-Role";
 
     private final AuthService authService;
 
@@ -53,9 +53,11 @@ public class AuthController {
 
     @GetMapping("/me")
     public CurrentUserResponse me(
-            @RequestHeader(name = ACCESS_SIMULATION_HEADER, required = false) RoleCode simulationRole
+            @RequestHeader(name = UserContextProvider.ACCESS_SIMULATION_ROLE_HEADER, required = false) RoleCode simulationRole,
+            @RequestHeader(name = UserContextProvider.ACCESS_SIMULATION_OBJECT_TYPE_HEADER, required = false) ObjectType simulationObjectType,
+            @RequestHeader(name = UserContextProvider.ACCESS_SIMULATION_OBJECT_ID_HEADER, required = false) Long simulationObjectId
     ) {
-        return authService.currentUser(simulationRole);
+        return authService.currentUser(new AccessSimulationRequest(simulationRole, simulationObjectType, simulationObjectId));
     }
 
     @PostMapping("/simulation/preview")
@@ -63,4 +65,3 @@ public class AuthController {
         return authService.simulationPreview(request);
     }
 }
-

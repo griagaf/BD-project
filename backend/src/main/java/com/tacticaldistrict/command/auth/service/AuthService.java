@@ -7,6 +7,7 @@ import com.tacticaldistrict.command.auth.dto.LogoutRequest;
 import com.tacticaldistrict.command.auth.dto.RefreshRequest;
 import com.tacticaldistrict.command.auth.dto.TokenResponse;
 import com.tacticaldistrict.command.security.config.JwtProperties;
+import com.tacticaldistrict.command.security.model.ObjectType;
 import com.tacticaldistrict.command.security.model.RoleCode;
 import com.tacticaldistrict.command.security.model.UserPrincipal;
 import com.tacticaldistrict.command.security.service.JwtService;
@@ -88,18 +89,22 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public CurrentUserResponse currentUser(RoleCode simulationRole) {
+    public CurrentUserResponse currentUser(AccessSimulationRequest simulationRequest) {
         UserContext user = userContextProvider.currentWithoutAccessSimulation();
-        if (simulationRole != null && !user.hasRole(RoleCode.ADMIN_DISTRICT)) {
+        if (simulationRequest.role() != null && !user.hasRole(RoleCode.ADMIN_DISTRICT)) {
             throw new AccessDeniedException("Access simulation is available only for ADMIN_DISTRICT");
         }
 
-        Set<RoleCode> effectiveRoles = simulationRole == null
+        Set<RoleCode> effectiveRoles = simulationRequest.role() == null
                 ? user.roles()
-                : Set.of(simulationRole);
+                : Set.of(simulationRequest.role());
         Set<String> permissions = effectiveRoles.isEmpty()
                 ? Set.of()
                 : permissionRepository.findPermissionCodesByRoles(effectiveRoles);
+
+        List<CommandAssignmentResponse> assignments = simulationRequest.role() == null
+                ? assignments(user.soldierId())
+                : simulationAssignments(user.soldierId(), simulationRequest);
 
         return new CurrentUserResponse(
                 user.userId(),
@@ -108,15 +113,15 @@ public class AuthService {
                 user.displayName(),
                 toNames(user.roles()),
                 toNames(effectiveRoles),
-                assignments(user.soldierId()),
+                assignments,
                 permissions,
-                simulationRole != null
+                simulationRequest.role() != null
         );
     }
 
     @Transactional(readOnly = true)
     public CurrentUserResponse simulationPreview(AccessSimulationRequest request) {
-        return currentUser(request.role());
+        return currentUser(request);
     }
 
     private CurrentUserResponse currentUser(UserPrincipal principal, RoleCode simulationRole) {
@@ -149,6 +154,21 @@ public class AuthService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    private List<CommandAssignmentResponse> simulationAssignments(Long soldierId, AccessSimulationRequest request) {
+        if (request.objectType() == null || request.objectId() == null) {
+            return List.of();
+        }
+
+        return List.of(new CommandAssignmentResponse(
+                null,
+                request.objectType().name(),
+                request.objectId(),
+                LocalDate.now(),
+                null,
+                true
+        ));
     }
 
     private CommandAssignmentResponse toResponse(CommandAssignmentEntity entity) {
