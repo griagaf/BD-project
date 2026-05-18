@@ -7,6 +7,7 @@ import com.tacticaldistrict.command.personnel.dto.PersonnelProfileResponse;
 import com.tacticaldistrict.command.personnel.dto.PersonnelResponse;
 import com.tacticaldistrict.command.personnel.dto.RankResponse;
 import com.tacticaldistrict.command.personnel.dto.SpecialtyResponse;
+import com.tacticaldistrict.command.security.model.ObjectType;
 import com.tacticaldistrict.command.security.model.RoleCode;
 import com.tacticaldistrict.command.user.service.UserContext;
 import java.sql.ResultSet;
@@ -246,6 +247,11 @@ public class PersonnelQueryRepository {
             return;
         }
 
+        if (user.hasSimulationScope()) {
+            appendSimulationScope(user, where, params);
+            return;
+        }
+
         where.append("""
                 AND (
                     p.personnel_id = :scopeSoldierId
@@ -282,6 +288,44 @@ public class PersonnelQueryRepository {
                 """);
         params.put("scopeSoldierId", user.soldierId());
         params.put("formationAssignmentTypes", FORMATION_ASSIGNMENT_TYPES);
+    }
+
+    private void appendSimulationScope(UserContext user, StringBuilder where, Map<String, Object> params) {
+        ObjectType scopeType = user.simulationScopeType();
+        Long scopeId = user.simulationScopeId();
+        if (scopeType == null || scopeId == null || scopeType == ObjectType.DISTRICT) {
+            return;
+        }
+        params.put("simulationScopeId", scopeId);
+        switch (scopeType) {
+            case SELF, PERSONNEL -> where.append(" AND p.personnel_id = :simulationScopeId ");
+            case MILITARY_UNIT -> where.append(" AND mu.unit_id = :simulationScopeId ");
+            case FORMATION, ARMY, CORPS, DIVISION, BRIGADE -> where.append("""
+                    AND EXISTS (
+                        SELECT 1
+                        FROM v_formation_closure simulation_fc
+                        WHERE simulation_fc.root_formation_id = :simulationScopeId
+                          AND simulation_fc.descendant_formation_id = mu.formation_id
+                    )
+                    """);
+            case BATTALION, COMPANY, PLATOON, SQUAD -> where.append("""
+                    AND EXISTS (
+                        WITH RECURSIVE simulation_sub_tree AS (
+                            SELECT subdivision_id
+                            FROM subdivisions
+                            WHERE subdivision_id = :simulationScopeId
+                            UNION ALL
+                            SELECT child.subdivision_id
+                            FROM subdivisions child
+                            JOIN simulation_sub_tree parent ON child.parent_id = parent.subdivision_id
+                        )
+                        SELECT 1
+                        FROM simulation_sub_tree st
+                        WHERE st.subdivision_id = s.subdivision_id
+                    )
+                    """);
+            default -> where.append(" AND 1 = 0 ");
+        }
     }
 
     private String orderBy(Sort sort) {

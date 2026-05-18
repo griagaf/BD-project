@@ -11,8 +11,8 @@ public enum QueryTemplate {
             "Возвращает военные части внутри выбранной ветки структуры.",
             "UNITS",
             Set.of("structure:read", "unit:read"),
-            List.of(param("formationId", "ID соединения", "number", true, "11")),
-            "QUERY: НАЙТИ ЧАСТИ В АРМИИ 11"
+            List.of(param("formationId", "ID соединения", "number", true, "1101")),
+            "QUERY: НАЙТИ ЧАСТИ В КОРПУСЕ 1101"
     ),
     FIND_OFFICERS(
             "Найти офицеров",
@@ -20,7 +20,7 @@ public enum QueryTemplate {
             "PERSONNEL",
             Set.of("personnel:read"),
             List.of(param("rankName", "Звание", "text", false, "Капитан")),
-            "QUERY: НАЙТИ ОФИЦЕРОВ В АРМИИ 11"
+            "QUERY: НАЙТИ ОФИЦЕРОВ В КОРПУСЕ 1101"
     ),
     FIND_ENLISTED_PERSONNEL(
             "Найти сержантов и рядовых",
@@ -44,7 +44,7 @@ public enum QueryTemplate {
             "UNITS",
             Set.of("unit:read", "structure:read"),
             List.of(),
-            "QUERY: НАЙТИ ДИСЛОКАЦИЮ ЧАСТЕЙ В АРМИИ 11"
+            "QUERY: НАЙТИ ДИСЛОКАЦИЮ ЧАСТЕЙ В КОРПУСЕ 1101"
     ),
     FIND_UNIT_EQUIPMENT(
             "Найти технику частей",
@@ -75,7 +75,7 @@ public enum QueryTemplate {
                     param("condition", "Условие", "enum", true, "WITH_QUANTITY_GT", List.of("WITH_QUANTITY_GT", "WITHOUT")),
                     param("minQuantity", "Минимальное количество", "number", false, "5")
             ),
-            "QUERY: НАЙТИ ЧАСТИ БЕЗ ТЕХНИКИ BMP-2 В АРМИИ 11"
+            "QUERY: НАЙТИ ЧАСТИ БЕЗ ТЕХНИКИ BMP-2 В КОРПУСЕ 1101"
     ),
     FIND_UNIT_WEAPONS(
             "Найти вооружение частей",
@@ -97,7 +97,7 @@ public enum QueryTemplate {
                     param("condition", "Условие", "enum", false, "WITH_SPECIALISTS", List.of("WITH_SPECIALISTS", "WITHOUT_SPECIALISTS")),
                     param("minCount", "Минимум специалистов", "number", false, "1")
             ),
-            "QUERY: НАЙТИ ПОКРЫТИЕ СПЕЦИАЛЬНОСТЕЙ В АРМИИ 11"
+            "QUERY: НАЙТИ ПОКРЫТИЕ СПЕЦИАЛЬНОСТЕЙ В КОРПУСЕ 1101"
     ),
     FIND_SPECIALISTS(
             "Найти специалистов",
@@ -117,7 +117,7 @@ public enum QueryTemplate {
                     param("condition", "Условие", "enum", true, "WITH_QUANTITY_GT", List.of("WITH_QUANTITY_GT", "WITHOUT")),
                     param("minQuantity", "Минимальное количество", "number", false, "10")
             ),
-            "QUERY: НАЙТИ ЧАСТИ БЕЗ ВООРУЖЕНИЯ AK-74M В АРМИИ 11"
+            "QUERY: НАЙТИ ЧАСТИ БЕЗ ВООРУЖЕНИЯ AK-74M В КОРПУСЕ 1101"
     ),
     FIND_FORMATION_UNIT_EXTREMES(
             "Найти соединения по числу частей",

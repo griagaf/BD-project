@@ -11,6 +11,7 @@ import { Card } from "@/shared/ui/card"
 import { ErrorState } from "@/shared/ui/state"
 import { TableSkeleton } from "@/shared/ui/skeleton"
 import { toast } from "@/shared/ui/toast"
+import { Pagination } from "@/shared/ui/pagination"
 
 export function BuildingsPage() {
   const { t } = useTranslation(["common", "buildings"])
@@ -87,13 +88,14 @@ export function BuildingsPage() {
         />
       )}
 
-      <div className="flex flex-col gap-3 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-        <span>{t("pagination.pageOf", { page: (filters.page ?? 0) + 1, total: Math.max(data?.totalPages ?? 1, 1) })}</span>
-        <div className="flex gap-2">
-          <Button type="button" variant="secondary" disabled={data?.first ?? true} onClick={() => setFilters({ ...filters, page: Math.max((filters.page ?? 0) - 1, 0) })}>{t("actions.previous")}</Button>
-          <Button type="button" variant="secondary" disabled={data?.last ?? true} onClick={() => setFilters({ ...filters, page: (filters.page ?? 0) + 1 })}>{t("actions.next")}</Button>
-        </div>
-      </div>
+      <Pagination
+        page={data?.page ?? filters.page ?? 0}
+        size={data?.size ?? filters.size ?? 10}
+        totalElements={data?.totalElements ?? 0}
+        totalPages={data?.totalPages ?? 1}
+        onPageChange={(page) => setFilters({ ...filters, page })}
+        onSizeChange={(size) => setFilters({ ...filters, page: 0, size })}
+      />
 
       <BuildingDialog
         row={editing}

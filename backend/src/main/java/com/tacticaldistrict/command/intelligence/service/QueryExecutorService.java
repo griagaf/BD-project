@@ -472,7 +472,7 @@ public class QueryExecutorService {
                     GROUP BY fc.root_formation_id, fc.root_formation_name, fc.root_formation_type
                 ),
                 ranked AS (
-                    SELECT uc.*, RANK() OVER (ORDER BY uc.units_count """ + order + """
+                    SELECT uc.*, RANK() OVER (ORDER BY uc.units_count """ + " " + order + " " + """
                     ) AS rank_no
                     FROM units_count uc
                 )

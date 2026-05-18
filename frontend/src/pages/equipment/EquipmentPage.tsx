@@ -13,6 +13,7 @@ import { Card } from "@/shared/ui/card"
 import { ErrorState } from "@/shared/ui/state"
 import { TableSkeleton } from "@/shared/ui/skeleton"
 import { toast } from "@/shared/ui/toast"
+import { Pagination } from "@/shared/ui/pagination"
 
 export function EquipmentPage() {
   return <InventoryResourcePage kind="equipment" icon={<Boxes className="h-4 w-4 shrink-0" />} />
@@ -45,7 +46,14 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
           onError: () => toast.error(t(`${namespace}:toast.deleteFailed`)),
         })} />
       )}
-      <Pager filters={filters} totalPages={data?.totalPages ?? 1} first={data?.first ?? true} last={data?.last ?? true} onChange={setFilters} />
+      <Pagination
+        page={data?.page ?? filters.page ?? 0}
+        size={data?.size ?? filters.size ?? 10}
+        totalElements={data?.totalElements ?? 0}
+        totalPages={data?.totalPages ?? 1}
+        onPageChange={(page) => setFilters({ ...filters, page })}
+        onSizeChange={(size) => setFilters({ ...filters, page: 0, size })}
+      />
       <InventoryDialog
         row={editing}
         open={Boolean(editing)}
@@ -89,18 +97,5 @@ function Metric({ label, value }: { label: string; value: string | number }) {
       <div className="truncate text-xs uppercase text-zinc-500" title={label}>{label}</div>
       <div className="mt-2 text-2xl font-semibold text-zinc-100">{value}</div>
     </Card>
-  )
-}
-
-function Pager({ filters, totalPages, first, last, onChange }: { filters: InventoryFilter; totalPages: number; first: boolean; last: boolean; onChange: (filters: InventoryFilter) => void }) {
-  const { t } = useTranslation("common")
-  return (
-    <div className="flex flex-col gap-3 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-      <span>{t("pagination.pageOf", { page: (filters.page ?? 0) + 1, total: Math.max(totalPages, 1) })}</span>
-      <div className="flex gap-2">
-        <Button type="button" variant="secondary" disabled={first} onClick={() => onChange({ ...filters, page: Math.max((filters.page ?? 0) - 1, 0) })}>{t("actions.previous")}</Button>
-        <Button type="button" variant="secondary" disabled={last} onClick={() => onChange({ ...filters, page: (filters.page ?? 0) + 1 })}>{t("actions.next")}</Button>
-      </div>
-    </div>
   )
 }

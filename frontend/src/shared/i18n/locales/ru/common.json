@@ -27,10 +27,16 @@
     "loadingDescription": "Получение данных текущей области доступа",
     "empty": "Нет данных",
     "error": "Не удалось загрузить данные",
-    "errorDescription": "Запрос отклонён сервером или сервис временно недоступен."
+    "errorDescription": "Запрос отклонён сервером или сервис временно недоступен.",
+    "notAvailable": "н/д"
   },
   "pagination": {
-    "pageOf": "Страница {{page}} из {{total}}"
+    "pageOf": "Страница {{page}} из {{total}}",
+    "range": "{{from}}–{{to}} из {{total}} записей",
+    "rowsPerPage": "Строк на странице",
+    "first": "Первая",
+    "last": "Последняя",
+    "ellipsis": "…"
   },
   "session": {
     "label": "Сессия",

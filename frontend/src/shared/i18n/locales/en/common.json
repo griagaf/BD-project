@@ -27,10 +27,16 @@
     "loadingDescription": "Fetching data for the current command scope",
     "empty": "No data",
     "error": "Unable to load data",
-    "errorDescription": "The backend rejected the request or the service is unavailable."
+    "errorDescription": "The backend rejected the request or the service is unavailable.",
+    "notAvailable": "n/a"
   },
   "pagination": {
-    "pageOf": "Page {{page}} of {{total}}"
+    "pageOf": "Page {{page}} of {{total}}",
+    "range": "{{from}}–{{to}} of {{total}} records",
+    "rowsPerPage": "Rows per page",
+    "first": "First",
+    "last": "Last",
+    "ellipsis": "…"
   },
   "session": {
     "label": "Session",
