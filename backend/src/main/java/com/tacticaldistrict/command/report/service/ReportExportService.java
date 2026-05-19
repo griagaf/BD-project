@@ -14,10 +14,9 @@ import org.springframework.stereotype.Service;
 public class ReportExportService {
 
     public byte[] toCsv(SmartMissionReportDto report) {
-        StringBuilder csv = new StringBuilder("Раздел,Показатель,Значение\n");
+        StringBuilder csv = new StringBuilder("\uFEFFРаздел,Показатель,Значение\n");
 
         append(csv, "Объект", "Тип", report.object().type().name());
-        append(csv, "Объект", "ID", report.object().id());
         append(csv, "Объект", "Название", report.object().name());
         append(csv, "Объект", "Родительский объект", report.object().parentName());
         append(csv, "Объект", "Статус", report.object().status());

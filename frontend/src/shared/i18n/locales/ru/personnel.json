@@ -18,9 +18,9 @@
     "search": "Поиск",
     "searchPlaceholder": "ФИО или личный номер",
     "unit": "Часть",
-    "unitPlaceholder": "ID части",
+    "unitPlaceholder": "Выберите часть",
     "subdivision": "Подразделение",
-    "subdivisionPlaceholder": "ID подразделения",
+    "subdivisionPlaceholder": "Выберите подразделение",
     "specialty": "Специальность",
     "all": "Все"
   },
@@ -34,7 +34,9 @@
     "personalNumber": "Личный номер",
     "birthDate": "Дата рождения",
     "serviceStart": "Начало службы",
-    "subdivisionId": "ID подразделения",
+    "subdivisionId": "Подразделение",
+    "subdivision": "Подразделение",
+    "selectSubdivision": "Выберите подразделение",
     "rank": "Звание",
     "specialties": "Специальности"
   },

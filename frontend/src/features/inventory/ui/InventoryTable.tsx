@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from "lucide-react"
+import { Eye, Pencil, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { InventoryRow } from "@/features/inventory/model/inventoryTypes"
 import { Button } from "@/shared/ui/button"
@@ -12,9 +12,10 @@ type InventoryTableProps = {
   canEdit: boolean
   onEdit: (row: InventoryRow) => void
   onDelete: (row: InventoryRow) => void
+  onOpenType?: (typeId: number) => void
 }
 
-export function InventoryTable({ rows, canEdit, onEdit, onDelete }: InventoryTableProps) {
+export function InventoryTable({ rows, canEdit, onEdit, onDelete, onOpenType }: InventoryTableProps) {
   const { t } = useTranslation(["common", "equipment"])
   if (!rows.length) {
     return <EmptyState title={t("equipment:table.emptyTitle")} description={t("equipment:table.emptyDescription")} />
@@ -51,6 +52,9 @@ export function InventoryTable({ rows, canEdit, onEdit, onDelete }: InventoryTab
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="ghost" size="icon" disabled={!canEdit} onClick={() => onEdit(row)}>
                       <Pencil className="h-4 w-4 shrink-0" />
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => onOpenType?.(row.typeId)}>
+                      <Eye className="h-4 w-4 shrink-0" />
                     </Button>
                     <Button type="button" variant="ghost" size="icon" disabled={!canEdit} onClick={() => onDelete(row)}>
                       <Trash2 className="h-4 w-4 shrink-0" />

@@ -11,7 +11,9 @@
   },
   "filters": {
     "search": "Search buildings or units",
-    "unitId": "Unit ID"
+    "unitId": "Military unit",
+    "unit": "Military unit",
+    "unitPlaceholder": "Select military unit"
   },
   "table": {
     "building": "Building",

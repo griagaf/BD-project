@@ -1,16 +1,20 @@
 import { Search, SlidersHorizontal } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import type { PersonnelFilter, Specialty } from "@/features/personnel/model/personnelTypes"
+import type { LookupOption } from "@/shared/api/lookupApi"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
+import { SearchableSelect } from "@/shared/ui/searchable-select"
 
 type PersonnelFiltersProps = {
   filters: PersonnelFilter
   specialties: Specialty[]
+  unitOptions: LookupOption[]
+  subdivisionOptions: LookupOption[]
   onChange: (filters: PersonnelFilter) => void
 }
 
-export function PersonnelFilters({ filters, specialties, onChange }: PersonnelFiltersProps) {
+export function PersonnelFilters({ filters, specialties, unitOptions, subdivisionOptions, onChange }: PersonnelFiltersProps) {
   const { t } = useTranslation(["common", "personnel"])
   return (
     <Card className="grid gap-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,0.8fr)_auto] md:items-end">
@@ -27,25 +31,21 @@ export function PersonnelFilters({ filters, specialties, onChange }: PersonnelFi
         </div>
       </label>
 
-      <label className="space-y-2">
-        <span className="text-xs uppercase text-zinc-500">{t("personnel:filters.unit")}</span>
-        <input
-          className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
-          value={filters.unitId ?? ""}
-          onChange={(event) => onChange({ ...filters, unitId: event.target.value, page: 0 })}
-          placeholder={t("personnel:filters.unitPlaceholder")}
-        />
-      </label>
+      <SearchableSelect
+        label={t("personnel:filters.unit")}
+        value={filters.unitId ? Number(filters.unitId) : null}
+        options={unitOptions}
+        placeholder={t("personnel:filters.unitPlaceholder")}
+        onChange={(value) => onChange({ ...filters, unitId: value ? String(value) : undefined, page: 0 })}
+      />
 
-      <label className="space-y-2">
-        <span className="text-xs uppercase text-zinc-500">{t("personnel:filters.subdivision")}</span>
-        <input
-          className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
-          value={filters.subdivisionId ?? ""}
-          onChange={(event) => onChange({ ...filters, subdivisionId: event.target.value, page: 0 })}
-          placeholder={t("personnel:filters.subdivisionPlaceholder")}
-        />
-      </label>
+      <SearchableSelect
+        label={t("personnel:filters.subdivision")}
+        value={filters.subdivisionId ? Number(filters.subdivisionId) : null}
+        options={subdivisionOptions}
+        placeholder={t("personnel:filters.subdivisionPlaceholder")}
+        onChange={(value) => onChange({ ...filters, subdivisionId: value ? String(value) : undefined, page: 0 })}
+      />
 
       <label className="space-y-2">
         <span className="text-xs uppercase text-zinc-500">{t("personnel:filters.specialty")}</span>

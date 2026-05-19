@@ -8,6 +8,7 @@ public record UserAdminResponse(
         String username,
         String displayName,
         Long personnelId,
+        String personnelLabel,
         boolean active,
         Set<String> roles,
         Instant createdAt,

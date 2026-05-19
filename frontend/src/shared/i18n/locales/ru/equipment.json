@@ -18,9 +18,27 @@
     "allCategories": "Все категории",
     "allTypes": "Все типы"
   },
+  "actions": {
+    "addInventory": "Добавить технику",
+    "manageTypes": "Справочник техники"
+  },
+  "dictionary": {
+    "title": "Справочник техники",
+    "newType": "Новый тип техники",
+    "newCategory": "Новая категория",
+    "currentTypes": "Текущие типы",
+    "typeName": "Название типа",
+    "selectCategory": "Выберите категорию",
+    "purpose": "Назначение",
+    "manufacturer": "Производитель",
+    "adoptionYear": "Год принятия"
+  },
   "toast": {
+    "created": "Техника добавлена в часть",
     "updated": "Запись техники обновлена",
     "deleted": "Запись техники удалена",
+    "categoryCreated": "Категория техники создана",
+    "typeCreated": "Тип техники создан",
     "updateFailed": "Не удалось обновить технику",
     "deleteFailed": "Не удалось удалить технику"
   },

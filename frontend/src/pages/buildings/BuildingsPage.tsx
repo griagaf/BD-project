@@ -1,4 +1,5 @@
 import { Building2, Plus } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
@@ -12,6 +13,8 @@ import { ErrorState } from "@/shared/ui/state"
 import { TableSkeleton } from "@/shared/ui/skeleton"
 import { toast } from "@/shared/ui/toast"
 import { Pagination } from "@/shared/ui/pagination"
+import { lookupApi } from "@/shared/api/lookupApi"
+import { SearchableSelect } from "@/shared/ui/searchable-select"
 
 export function BuildingsPage() {
   const { t } = useTranslation(["common", "buildings"])
@@ -23,6 +26,11 @@ export function BuildingsPage() {
   const { data: stats } = useBuildingStatsQuery()
   const saveMutation = useSaveBuildingMutation(editing?.id)
   const deleteMutation = useDeleteBuildingMutation()
+  const { data: unitOptions = [] } = useQuery({
+    queryKey: ["lookups", "units", "buildings"],
+    queryFn: () => lookupApi.units(),
+    staleTime: 5 * 60_000,
+  })
   const canEdit = user?.permissions.includes("building:update") ?? false
 
   return (
@@ -59,12 +67,12 @@ export function BuildingsPage() {
           placeholder={t("buildings:filters.search")}
           className="h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
         />
-        <input
-          type="number"
-          value={filters.unitId ?? ""}
-          onChange={(event) => setFilters({ ...filters, page: 0, unitId: event.target.value ? Number(event.target.value) : undefined })}
-          placeholder={t("buildings:filters.unitId")}
-          className="h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
+        <SearchableSelect
+          label={t("buildings:filters.unit")}
+          value={filters.unitId ?? null}
+          options={unitOptions}
+          placeholder={t("buildings:filters.unitPlaceholder")}
+          onChange={(value) => setFilters({ ...filters, page: 0, unitId: value ?? undefined })}
         />
         <Button type="button" variant="secondary" onClick={() => setFilters({ page: 0, size: 10 })}>{t("actions.reset")}</Button>
       </Card>
@@ -101,6 +109,7 @@ export function BuildingsPage() {
         row={editing}
         open={dialogOpen}
         saving={saveMutation.isPending}
+        unitOptions={unitOptions}
         onClose={() => {
           setDialogOpen(false)
           setEditing(null)

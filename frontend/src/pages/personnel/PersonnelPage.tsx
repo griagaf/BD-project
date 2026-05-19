@@ -1,4 +1,5 @@
 import { Plus, ShieldCheck } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
@@ -19,6 +20,7 @@ import { TableSkeleton } from "@/shared/ui/skeleton"
 import { ErrorState } from "@/shared/ui/state"
 import { toast } from "@/shared/ui/toast"
 import { Pagination } from "@/shared/ui/pagination"
+import { lookupApi } from "@/shared/api/lookupApi"
 
 const initialFilters: PersonnelFilter = {
   page: 0,
@@ -34,6 +36,16 @@ export function PersonnelPage() {
   const { data: user } = useCurrentUserQuery()
   const { data, isLoading, error } = usePersonnelQuery(filters)
   const { data: dictionaries } = usePersonnelDictionariesQuery()
+  const { data: subdivisionOptions = [] } = useQuery({
+    queryKey: ["lookups", "subdivisions", "personnel-form"],
+    queryFn: () => lookupApi.subdivisions(),
+    staleTime: 5 * 60_000,
+  })
+  const { data: unitOptions = [] } = useQuery({
+    queryKey: ["lookups", "units", "personnel-filters"],
+    queryFn: () => lookupApi.units(),
+    staleTime: 5 * 60_000,
+  })
   const createMutation = useCreatePersonnelMutation()
   const updateMutation = useUpdatePersonnelMutation(editing?.id ?? 0)
   const deleteMutation = useDeletePersonnelMutation()
@@ -85,6 +97,8 @@ export function PersonnelPage() {
       <PersonnelFilters
         filters={filters}
         specialties={dictionaries?.specialties ?? []}
+        unitOptions={unitOptions}
+        subdivisionOptions={subdivisionOptions}
         onChange={(nextFilters) => setFilters({ ...filters, ...nextFilters })}
       />
 
@@ -124,6 +138,7 @@ export function PersonnelPage() {
         personnel={editing}
         ranks={dictionaries?.ranks ?? []}
         specialties={dictionaries?.specialties ?? []}
+        subdivisionOptions={subdivisionOptions}
         saving={createMutation.isPending || updateMutation.isPending}
         onClose={() => {
           setModalOpen(false)

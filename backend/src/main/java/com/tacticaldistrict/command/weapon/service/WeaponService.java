@@ -4,13 +4,17 @@ import com.tacticaldistrict.command.audit.AuditService;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.equipment.dto.InventoryQuantityRequest;
 import com.tacticaldistrict.command.equipment.dto.InventoryStatisticsResponse;
+import com.tacticaldistrict.command.equipment.dto.InventoryCategoryRequest;
 import com.tacticaldistrict.command.security.access.PermissionService;
 import com.tacticaldistrict.command.security.model.ObjectType;
+import com.tacticaldistrict.command.security.model.RoleCode;
 import com.tacticaldistrict.command.user.service.UserContext;
 import com.tacticaldistrict.command.user.service.UserContextProvider;
 import com.tacticaldistrict.command.weapon.dto.UnitWeaponResponse;
 import com.tacticaldistrict.command.weapon.dto.WeaponCategoryResponse;
 import com.tacticaldistrict.command.weapon.dto.WeaponFilter;
+import com.tacticaldistrict.command.weapon.dto.WeaponTypePassportResponse;
+import com.tacticaldistrict.command.weapon.dto.WeaponTypeRequest;
 import com.tacticaldistrict.command.weapon.dto.WeaponTypeResponse;
 import jakarta.persistence.EntityNotFoundException;
 import java.sql.ResultSet;
@@ -87,6 +91,7 @@ public class WeaponService {
         return jdbcTemplate.query("""
                 SELECT category_id, name
                 FROM weapon_categories
+                WHERE archived = FALSE
                 ORDER BY name
                 """, Map.of(), (rs, rowNum) -> new WeaponCategoryResponse(rs.getLong("category_id"), rs.getString("name")));
     }
@@ -97,6 +102,7 @@ public class WeaponService {
                 SELECT wt.type_id, wt.name, wc.category_id, wc.name AS category_name
                 FROM weapon_types wt
                 JOIN weapon_categories wc ON wc.category_id = wt.category_id
+                WHERE wt.archived = FALSE AND wc.archived = FALSE
                 ORDER BY wc.name, wt.name
                 """, Map.of(), (rs, rowNum) -> new WeaponTypeResponse(
                 rs.getLong("type_id"),
@@ -118,6 +124,133 @@ public class WeaponService {
         long warningRows = rows.stream().filter(row -> row.quantity() <= 0).count();
         int readiness = units == 0 || rows.isEmpty() ? 0 : Math.max(0, Math.min(100, (int) (92 - warningRows * 15)));
         return new InventoryStatisticsResponse(units, (long) rows.size(), totalQuantity, warningRows, readiness);
+    }
+
+    @Transactional
+    public WeaponCategoryResponse createCategory(InventoryCategoryRequest request) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        Long id = jdbcTemplate.queryForObject("""
+                INSERT INTO weapon_categories (name)
+                VALUES (:name)
+                RETURNING category_id
+                """, Map.of("name", request.name().trim()), Long.class);
+        auditService.created(user, ObjectType.WEAPON, id, "Weapon category created");
+        return new WeaponCategoryResponse(id, request.name().trim());
+    }
+
+    @Transactional
+    public WeaponCategoryResponse updateCategory(Long id, InventoryCategoryRequest request) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        int updated = jdbcTemplate.update("""
+                UPDATE weapon_categories
+                SET name = :name
+                WHERE category_id = :id AND archived = FALSE
+                """, Map.of("id", id, "name", request.name().trim()));
+        if (updated == 0) {
+            throw new EntityNotFoundException("Weapon category not found: " + id);
+        }
+        auditService.updated(user, ObjectType.WEAPON, id, "Weapon category updated");
+        return new WeaponCategoryResponse(id, request.name().trim());
+    }
+
+    @Transactional
+    public void archiveCategory(Long id) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        jdbcTemplate.update("UPDATE weapon_categories SET archived = TRUE WHERE category_id = :id", Map.of("id", id));
+        auditService.deleted(user, ObjectType.WEAPON, id, "Weapon category archived");
+    }
+
+    @Transactional
+    public WeaponTypeResponse createType(WeaponTypeRequest request) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        validateCategory(request.categoryId());
+        Long id = jdbcTemplate.queryForObject("""
+                INSERT INTO weapon_types (
+                    name, category_id, purpose, caliber, effective_range_m,
+                    adoption_year, manufacturer, description
+                )
+                VALUES (
+                    :name, :categoryId, :purpose, :caliber, :effectiveRangeM,
+                    :adoptionYear, :manufacturer, :description
+                )
+                RETURNING type_id
+                """, typeParams(request), Long.class);
+        auditService.created(user, ObjectType.WEAPON, id, "Weapon type created");
+        return typeById(id);
+    }
+
+    @Transactional
+    public WeaponTypeResponse updateType(Long id, WeaponTypeRequest request) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        validateCategory(request.categoryId());
+        Map<String, Object> params = typeParams(request);
+        params.put("id", id);
+        int updated = jdbcTemplate.update("""
+                UPDATE weapon_types
+                SET name = :name,
+                    category_id = :categoryId,
+                    purpose = :purpose,
+                    caliber = :caliber,
+                    effective_range_m = :effectiveRangeM,
+                    adoption_year = :adoptionYear,
+                    manufacturer = :manufacturer,
+                    description = :description
+                WHERE type_id = :id AND archived = FALSE
+                """, params);
+        if (updated == 0) {
+            throw new EntityNotFoundException("Weapon type not found: " + id);
+        }
+        auditService.updated(user, ObjectType.WEAPON, id, "Weapon type updated");
+        return typeById(id);
+    }
+
+    @Transactional
+    public void archiveType(Long id) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        jdbcTemplate.update("UPDATE weapon_types SET archived = TRUE WHERE type_id = :id", Map.of("id", id));
+        auditService.deleted(user, ObjectType.WEAPON, id, "Weapon type archived");
+    }
+
+    @Transactional(readOnly = true)
+    public WeaponTypePassportResponse typePassport(Long id) {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("weapon:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
+        WeaponTypePassportResponse base = jdbcTemplate.queryForObject("""
+                SELECT wt.type_id, wt.name, wc.category_id, wc.name AS category_name,
+                       wt.purpose, wt.caliber, wt.effective_range_m, wt.adoption_year,
+                       wt.manufacturer, wt.description,
+                       COALESCE(SUM(wiu.quantity), 0) AS total_quantity,
+                       COUNT(DISTINCT wiu.unit_id) AS units_count
+                FROM weapon_types wt
+                JOIN weapon_categories wc ON wc.category_id = wt.category_id
+                LEFT JOIN weapon_in_units wiu ON wiu.type_id = wt.type_id
+                WHERE wt.type_id = :id AND wt.archived = FALSE
+                GROUP BY wt.type_id, wt.name, wc.category_id, wc.name,
+                         wt.purpose, wt.caliber, wt.effective_range_m, wt.adoption_year,
+                         wt.manufacturer, wt.description
+                """, Map.of("id", id), this::mapTypePassport);
+        if (base == null) {
+            throw new EntityNotFoundException("Weapon type not found: " + id);
+        }
+        List<UnitWeaponResponse> distribution = queryInventory(new WeaponFilter(null, null, null, id))
+                .stream()
+                .filter(row -> permissionService.canRead(user, ObjectType.MILITARY_UNIT, row.unitId()))
+                .toList();
+        long totalQuantity = distribution.stream().mapToLong(UnitWeaponResponse::quantity).sum();
+        long unitsCount = distribution.stream().map(UnitWeaponResponse::unitId).distinct().count();
+        return new WeaponTypePassportResponse(
+                base.id(), base.name(), base.categoryId(), base.categoryName(), base.purpose(),
+                base.caliber(), base.effectiveRangeM(), base.adoptionYear(), base.manufacturer(),
+                base.description(), totalQuantity, unitsCount, distribution
+        );
     }
 
     private List<UnitWeaponResponse> queryInventory(WeaponFilter filter) {
@@ -149,7 +282,7 @@ public class WeaponService {
                 JOIN military_units mu ON mu.unit_id = wiu.unit_id
                 JOIN weapon_types wt ON wt.type_id = wiu.type_id
                 JOIN weapon_categories wc ON wc.category_id = wt.category_id
-                """ + where + " ORDER BY mu.name, wc.name, wt.name", params, this::mapRow);
+                """ + where + " AND wt.archived = FALSE AND wc.archived = FALSE ORDER BY mu.name, wc.name, wt.name", params, this::mapRow);
     }
 
     private UnitWeaponResponse mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -168,13 +301,83 @@ public class WeaponService {
 
     private void validateType(Long typeId) {
         Boolean exists = jdbcTemplate.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM weapon_types WHERE type_id = :typeId)",
+                "SELECT EXISTS (SELECT 1 FROM weapon_types WHERE type_id = :typeId AND archived = FALSE)",
                 Map.of("typeId", typeId),
                 Boolean.class
         );
         if (!Boolean.TRUE.equals(exists)) {
             throw new EntityNotFoundException("Weapon type not found: " + typeId);
         }
+    }
+
+    private void validateCategory(Long categoryId) {
+        Boolean exists = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM weapon_categories WHERE category_id = :categoryId AND archived = FALSE)",
+                Map.of("categoryId", categoryId),
+                Boolean.class
+        );
+        if (!Boolean.TRUE.equals(exists)) {
+            throw new EntityNotFoundException("Weapon category not found: " + categoryId);
+        }
+    }
+
+    private WeaponTypeResponse typeById(Long id) {
+        WeaponTypeResponse response = jdbcTemplate.queryForObject("""
+                SELECT wt.type_id, wt.name, wc.category_id, wc.name AS category_name
+                FROM weapon_types wt
+                JOIN weapon_categories wc ON wc.category_id = wt.category_id
+                WHERE wt.type_id = :id AND wt.archived = FALSE
+                """, Map.of("id", id), (rs, rowNum) -> new WeaponTypeResponse(
+                rs.getLong("type_id"),
+                rs.getString("name"),
+                rs.getLong("category_id"),
+                rs.getString("category_name")
+        ));
+        if (response == null) {
+            throw new EntityNotFoundException("Weapon type not found: " + id);
+        }
+        return response;
+    }
+
+    private WeaponTypePassportResponse mapTypePassport(ResultSet rs, int rowNum) throws SQLException {
+        return new WeaponTypePassportResponse(
+                rs.getLong("type_id"),
+                rs.getString("name"),
+                rs.getLong("category_id"),
+                rs.getString("category_name"),
+                rs.getString("purpose"),
+                rs.getString("caliber"),
+                (Integer) rs.getObject("effective_range_m"),
+                (Integer) rs.getObject("adoption_year"),
+                rs.getString("manufacturer"),
+                rs.getString("description"),
+                rs.getLong("total_quantity"),
+                rs.getLong("units_count"),
+                List.of()
+        );
+    }
+
+    private Map<String, Object> typeParams(WeaponTypeRequest request) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("name", request.name().trim());
+        params.put("categoryId", request.categoryId());
+        params.put("purpose", blankToNull(request.purpose()));
+        params.put("caliber", blankToNull(request.caliber()));
+        params.put("effectiveRangeM", request.effectiveRangeM());
+        params.put("adoptionYear", request.adoptionYear());
+        params.put("manufacturer", blankToNull(request.manufacturer()));
+        params.put("description", blankToNull(request.description()));
+        return params;
+    }
+
+    private void checkDictionaryManagement(UserContext user) {
+        if (!user.hasRole(RoleCode.ADMIN_DISTRICT)) {
+            throw new AccessDeniedException("Only district administrator can manage weapon dictionaries");
+        }
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private PageResponse<UnitWeaponResponse> page(List<UnitWeaponResponse> rows, Pageable pageable) {

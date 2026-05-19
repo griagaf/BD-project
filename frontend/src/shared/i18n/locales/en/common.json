@@ -20,7 +20,8 @@
     "login": "Login",
     "logout": "Logout",
     "viewAs": "View as",
-    "dismiss": "Dismiss notification"
+    "dismiss": "Dismiss notification",
+    "close": "Close"
   },
   "states": {
     "loading": "Loading data",
@@ -60,11 +61,26 @@
   },
   "dialog": {
     "inventoryUpdate": "Inventory update",
+    "inventoryAdd": "Add inventory row",
+    "inventoryPosition": "Inventory position",
+    "inventoryPositionDescription": "Select unit, type, and quantity without entering technical IDs.",
     "buildingRegistry": "Building registry",
     "editBuilding": "Edit building",
     "createBuilding": "Create building",
     "name": "Name",
-    "unitId": "Unit ID"
+    "unitId": "Military unit"
+  },
+  "fields": {
+    "unit": "Military unit",
+    "resourceType": "Type",
+    "unitsCount": "Units",
+    "adoptionYear": "Adoption year",
+    "manufacturer": "Manufacturer",
+    "distribution": "Distribution by units"
+  },
+  "placeholders": {
+    "selectUnit": "Select military unit",
+    "selectResourceType": "Select type"
   },
   "roles": {
     "ADMIN_DISTRICT": "District Administrator",

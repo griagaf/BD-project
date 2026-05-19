@@ -2,13 +2,16 @@ import { Save, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Personnel, PersonnelRequest, Rank, Specialty } from "@/features/personnel/model/personnelTypes"
+import type { LookupOption } from "@/shared/api/lookupApi"
 import { Button } from "@/shared/ui/button"
+import { SearchableSelect } from "@/shared/ui/searchable-select"
 
 type PersonnelEditModalProps = {
   open: boolean
   personnel: Personnel | null
   ranks: Rank[]
   specialties: Specialty[]
+  subdivisionOptions: LookupOption[]
   saving: boolean
   onClose: () => void
   onSubmit: (request: PersonnelRequest) => void
@@ -32,6 +35,7 @@ export function PersonnelEditModal({
   personnel,
   ranks,
   specialties,
+  subdivisionOptions,
   saving,
   onClose,
   onSubmit,
@@ -93,11 +97,12 @@ export function PersonnelEditModal({
           <Field label={t("personnel:form.personalNumber")} value={form.personalNumber} onChange={(value) => setForm({ ...form, personalNumber: value })} />
           <Field label={t("personnel:form.birthDate")} type="date" value={form.birthDate} onChange={(value) => setForm({ ...form, birthDate: value })} />
           <Field label={t("personnel:form.serviceStart")} type="date" value={form.serviceStart} onChange={(value) => setForm({ ...form, serviceStart: value })} />
-          <Field
-            label={t("personnel:form.subdivisionId")}
-            type="number"
-            value={`${form.subdivisionId}`}
-            onChange={(value) => setForm({ ...form, subdivisionId: Number(value) })}
+          <SearchableSelect
+            label={t("personnel:form.subdivision")}
+            value={form.subdivisionId}
+            options={subdivisionOptions}
+            placeholder={t("personnel:form.selectSubdivision")}
+            onChange={(value) => setForm({ ...form, subdivisionId: value ?? form.subdivisionId })}
           />
           <label className="space-y-2">
             <span className="text-xs uppercase text-zinc-500">{t("personnel:form.rank")}</span>

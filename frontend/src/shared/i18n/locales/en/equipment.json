@@ -18,9 +18,27 @@
     "allCategories": "All categories",
     "allTypes": "All types"
   },
+  "actions": {
+    "addInventory": "Add equipment",
+    "manageTypes": "Equipment dictionary"
+  },
+  "dictionary": {
+    "title": "Equipment dictionary",
+    "newType": "New equipment type",
+    "newCategory": "New category",
+    "currentTypes": "Current types",
+    "typeName": "Type name",
+    "selectCategory": "Select category",
+    "purpose": "Purpose",
+    "manufacturer": "Manufacturer",
+    "adoptionYear": "Adoption year"
+  },
   "toast": {
+    "created": "Equipment added to unit",
     "updated": "Equipment row updated",
     "deleted": "Equipment row deleted",
+    "categoryCreated": "Equipment category created",
+    "typeCreated": "Equipment type created",
     "updateFailed": "Equipment update failed",
     "deleteFailed": "Equipment delete failed"
   },

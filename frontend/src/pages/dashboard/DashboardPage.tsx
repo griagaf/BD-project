@@ -37,8 +37,8 @@ export function DashboardPage() {
                         <div className="break-words text-sm text-zinc-100">{event.message || `${event.eventType} ${objectTypeLabel(t, event.objectType)}`}</div>
                         <div className="shrink-0 text-xs text-zinc-600">{new Date(event.createdAt).toLocaleString()}</div>
                       </div>
-                      <div className="mt-1 truncate text-xs text-zinc-500" title={`${event.actor} / ${objectTypeLabel(t, event.objectType)}:${event.objectId ?? "н/д"}`}>
-                        {event.actor} / {objectTypeLabel(t, event.objectType)}:{event.objectId ?? "н/д"}
+                      <div className="mt-1 truncate text-xs text-zinc-500" title={`${event.actor} / ${objectTypeLabel(t, event.objectType)}`}>
+                        {event.actor} / {objectTypeLabel(t, event.objectType)}
                       </div>
                     </div>
                   ))}

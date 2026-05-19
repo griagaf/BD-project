@@ -40,6 +40,60 @@ export type InventoryCategory = {
   name: string
 }
 
+export type InventoryCategoryRequest = {
+  name: string
+}
+
+export type EquipmentTypeRequest = {
+  name: string
+  categoryId: number
+  purpose?: string | null
+  crewSize?: number | null
+  weightTons?: number | null
+  maxSpeedKmh?: number | null
+  operationalRangeKm?: number | null
+  adoptionYear?: number | null
+  manufacturer?: string | null
+  description?: string | null
+}
+
+export type WeaponTypeRequest = {
+  name: string
+  categoryId: number
+  purpose?: string | null
+  caliber?: string | null
+  effectiveRangeM?: number | null
+  adoptionYear?: number | null
+  manufacturer?: string | null
+  description?: string | null
+}
+
+export type EquipmentTypePassport = InventoryType & {
+  purpose?: string | null
+  crewSize?: number | null
+  weightTons?: number | null
+  maxSpeedKmh?: number | null
+  operationalRangeKm?: number | null
+  adoptionYear?: number | null
+  manufacturer?: string | null
+  description?: string | null
+  totalQuantity: number
+  unitsCount: number
+  distribution: InventoryRow[]
+}
+
+export type WeaponTypePassport = InventoryType & {
+  purpose?: string | null
+  caliber?: string | null
+  effectiveRangeM?: number | null
+  adoptionYear?: number | null
+  manufacturer?: string | null
+  description?: string | null
+  totalQuantity: number
+  unitsCount: number
+  distribution: InventoryRow[]
+}
+
 export type InventoryStats = {
   visibleUnits: number
   inventoryRows: number

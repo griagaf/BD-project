@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion"
 import { ChevronDown, ChevronRight, Crosshair, Network } from "lucide-react"
-import { useState } from "react"
+import { memo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useHierarchyChildrenQuery } from "@/features/hierarchy/api/hierarchyQueries"
 import type { HierarchySelection, TreeNode } from "@/features/hierarchy/model/hierarchyTypes"
@@ -28,7 +28,7 @@ export function FocusTree({ roots, selected, onSelect }: FocusTreeProps) {
   )
 }
 
-function TreeNodeRow({
+const TreeNodeRow = memo(function TreeNodeRow({
   node,
   depth,
   selected,
@@ -77,7 +77,7 @@ function TreeNodeRow({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.16 }}
+            transition={{ duration: 0.12, ease: "easeOut" }}
             className="overflow-hidden pt-2"
           >
             {isLoading ? (
@@ -94,4 +94,4 @@ function TreeNodeRow({
       </AnimatePresence>
     </div>
   )
-}
+})

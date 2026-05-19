@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { BuildingRow } from "@/features/inventory/model/inventoryTypes"
+import type { LookupOption } from "@/shared/api/lookupApi"
 import { Button } from "@/shared/ui/button"
+import { SearchableSelect } from "@/shared/ui/searchable-select"
 
 type BuildingDialogProps = {
   row: BuildingRow | null
   open: boolean
   saving: boolean
+  unitOptions: LookupOption[]
   onClose: () => void
   onSubmit: (request: { name: string; unitId: number }) => void
 }
 
-export function BuildingDialog({ row, open, saving, onClose, onSubmit }: BuildingDialogProps) {
+export function BuildingDialog({ row, open, saving, unitOptions, onClose, onSubmit }: BuildingDialogProps) {
   const { t } = useTranslation("common")
   const [name, setName] = useState("")
   const [unitId, setUnitId] = useState(1)
@@ -44,16 +47,13 @@ export function BuildingDialog({ row, open, saving, onClose, onSubmit }: Buildin
               className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
             />
           </label>
-          <label className="block">
-            <span className="text-xs uppercase text-zinc-500">{t("dialog.unitId")}</span>
-            <input
-              type="number"
-              min={1}
-              value={unitId}
-              onChange={(event) => setUnitId(Number(event.target.value))}
-              className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
-            />
-          </label>
+          <SearchableSelect
+            label={t("fields.unit")}
+            value={unitId}
+            options={unitOptions}
+            placeholder={t("placeholders.selectUnit")}
+            onChange={(value) => setUnitId(value ?? unitId)}
+          />
         </div>
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="ghost" onClick={onClose}>{t("actions.cancel")}</Button>

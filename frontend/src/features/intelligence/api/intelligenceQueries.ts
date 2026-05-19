@@ -6,6 +6,7 @@ export function useQueryTemplatesQuery() {
   return useQuery({
     queryKey: ["intelligence", "templates"],
     queryFn: intelligenceApi.templates,
+    staleTime: 10 * 60_000,
   })
 }
 

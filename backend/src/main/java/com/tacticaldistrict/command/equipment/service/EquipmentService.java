@@ -4,15 +4,20 @@ import com.tacticaldistrict.command.audit.AuditService;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.equipment.dto.EquipmentCategoryResponse;
 import com.tacticaldistrict.command.equipment.dto.EquipmentFilter;
+import com.tacticaldistrict.command.equipment.dto.EquipmentTypePassportResponse;
+import com.tacticaldistrict.command.equipment.dto.EquipmentTypeRequest;
+import com.tacticaldistrict.command.equipment.dto.InventoryCategoryRequest;
 import com.tacticaldistrict.command.equipment.dto.EquipmentTypeResponse;
 import com.tacticaldistrict.command.equipment.dto.InventoryQuantityRequest;
 import com.tacticaldistrict.command.equipment.dto.InventoryStatisticsResponse;
 import com.tacticaldistrict.command.equipment.dto.UnitEquipmentResponse;
 import com.tacticaldistrict.command.security.access.PermissionService;
 import com.tacticaldistrict.command.security.model.ObjectType;
+import com.tacticaldistrict.command.security.model.RoleCode;
 import com.tacticaldistrict.command.user.service.UserContext;
 import com.tacticaldistrict.command.user.service.UserContextProvider;
 import jakarta.persistence.EntityNotFoundException;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -87,6 +92,7 @@ public class EquipmentService {
         return jdbcTemplate.query("""
                 SELECT category_id, name
                 FROM equipment_categories
+                WHERE archived = FALSE
                 ORDER BY name
                 """, Map.of(), (rs, rowNum) -> new EquipmentCategoryResponse(rs.getLong("category_id"), rs.getString("name")));
     }
@@ -97,6 +103,7 @@ public class EquipmentService {
                 SELECT et.type_id, et.name, ec.category_id, ec.name AS category_name
                 FROM equipment_types et
                 JOIN equipment_categories ec ON ec.category_id = et.category_id
+                WHERE et.archived = FALSE AND ec.archived = FALSE
                 ORDER BY ec.name, et.name
                 """, Map.of(), (rs, rowNum) -> new EquipmentTypeResponse(
                 rs.getLong("type_id"),
@@ -118,6 +125,136 @@ public class EquipmentService {
         long warningRows = rows.stream().filter(row -> row.quantity() <= 0).count();
         int readiness = readiness(units, rows.size(), warningRows);
         return new InventoryStatisticsResponse(units, (long) rows.size(), totalQuantity, warningRows, readiness);
+    }
+
+    @Transactional
+    public EquipmentCategoryResponse createCategory(InventoryCategoryRequest request) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        Long id = jdbcTemplate.queryForObject("""
+                INSERT INTO equipment_categories (name)
+                VALUES (:name)
+                RETURNING category_id
+                """, Map.of("name", request.name().trim()), Long.class);
+        auditService.created(user, ObjectType.EQUIPMENT, id, "Equipment category created");
+        return new EquipmentCategoryResponse(id, request.name().trim());
+    }
+
+    @Transactional
+    public EquipmentCategoryResponse updateCategory(Long id, InventoryCategoryRequest request) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        int updated = jdbcTemplate.update("""
+                UPDATE equipment_categories
+                SET name = :name
+                WHERE category_id = :id AND archived = FALSE
+                """, Map.of("id", id, "name", request.name().trim()));
+        if (updated == 0) {
+            throw new EntityNotFoundException("Equipment category not found: " + id);
+        }
+        auditService.updated(user, ObjectType.EQUIPMENT, id, "Equipment category updated");
+        return new EquipmentCategoryResponse(id, request.name().trim());
+    }
+
+    @Transactional
+    public void archiveCategory(Long id) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        jdbcTemplate.update("UPDATE equipment_categories SET archived = TRUE WHERE category_id = :id", Map.of("id", id));
+        auditService.deleted(user, ObjectType.EQUIPMENT, id, "Equipment category archived");
+    }
+
+    @Transactional
+    public EquipmentTypeResponse createType(EquipmentTypeRequest request) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        validateCategory(request.categoryId());
+        Long id = jdbcTemplate.queryForObject("""
+                INSERT INTO equipment_types (
+                    name, category_id, purpose, crew_size, weight_tons, max_speed_kmh,
+                    operational_range_km, adoption_year, manufacturer, description
+                )
+                VALUES (
+                    :name, :categoryId, :purpose, :crewSize, :weightTons, :maxSpeedKmh,
+                    :operationalRangeKm, :adoptionYear, :manufacturer, :description
+                )
+                RETURNING type_id
+                """, typeParams(request), Long.class);
+        auditService.created(user, ObjectType.EQUIPMENT, id, "Equipment type created");
+        return typeById(id);
+    }
+
+    @Transactional
+    public EquipmentTypeResponse updateType(Long id, EquipmentTypeRequest request) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        validateCategory(request.categoryId());
+        Map<String, Object> params = typeParams(request);
+        params.put("id", id);
+        int updated = jdbcTemplate.update("""
+                UPDATE equipment_types
+                SET name = :name,
+                    category_id = :categoryId,
+                    purpose = :purpose,
+                    crew_size = :crewSize,
+                    weight_tons = :weightTons,
+                    max_speed_kmh = :maxSpeedKmh,
+                    operational_range_km = :operationalRangeKm,
+                    adoption_year = :adoptionYear,
+                    manufacturer = :manufacturer,
+                    description = :description
+                WHERE type_id = :id AND archived = FALSE
+                """, params);
+        if (updated == 0) {
+            throw new EntityNotFoundException("Equipment type not found: " + id);
+        }
+        auditService.updated(user, ObjectType.EQUIPMENT, id, "Equipment type updated");
+        return typeById(id);
+    }
+
+    @Transactional
+    public void archiveType(Long id) {
+        UserContext user = userContextProvider.current();
+        checkDictionaryManagement(user);
+        jdbcTemplate.update("UPDATE equipment_types SET archived = TRUE WHERE type_id = :id", Map.of("id", id));
+        auditService.deleted(user, ObjectType.EQUIPMENT, id, "Equipment type archived");
+    }
+
+    @Transactional(readOnly = true)
+    public EquipmentTypePassportResponse typePassport(Long id) {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("equipment:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
+        EquipmentTypePassportResponse base = jdbcTemplate.queryForObject("""
+                SELECT et.type_id, et.name, ec.category_id, ec.name AS category_name,
+                       et.purpose, et.crew_size, et.weight_tons, et.max_speed_kmh,
+                       et.operational_range_km, et.adoption_year, et.manufacturer, et.description,
+                       COALESCE(SUM(eiu.quantity), 0) AS total_quantity,
+                       COUNT(DISTINCT eiu.unit_id) AS units_count
+                FROM equipment_types et
+                JOIN equipment_categories ec ON ec.category_id = et.category_id
+                LEFT JOIN equipment_in_units eiu ON eiu.type_id = et.type_id
+                WHERE et.type_id = :id AND et.archived = FALSE
+                GROUP BY et.type_id, et.name, ec.category_id, ec.name,
+                         et.purpose, et.crew_size, et.weight_tons, et.max_speed_kmh,
+                         et.operational_range_km, et.adoption_year, et.manufacturer, et.description
+                """, Map.of("id", id), this::mapTypePassport);
+        if (base == null) {
+            throw new EntityNotFoundException("Equipment type not found: " + id);
+        }
+        List<UnitEquipmentResponse> distribution = queryInventory(new EquipmentFilter(null, null, null, id))
+                .stream()
+                .filter(row -> permissionService.canRead(user, ObjectType.MILITARY_UNIT, row.unitId()))
+                .toList();
+        long totalQuantity = distribution.stream().mapToLong(UnitEquipmentResponse::quantity).sum();
+        long unitsCount = distribution.stream().map(UnitEquipmentResponse::unitId).distinct().count();
+        return new EquipmentTypePassportResponse(
+                base.id(), base.name(), base.categoryId(), base.categoryName(), base.purpose(),
+                base.crewSize(), base.weightTons(), base.maxSpeedKmh(), base.operationalRangeKm(),
+                base.adoptionYear(), base.manufacturer(), base.description(),
+                totalQuantity, unitsCount, distribution
+        );
     }
 
     private List<UnitEquipmentResponse> queryInventory(EquipmentFilter filter) {
@@ -149,7 +286,7 @@ public class EquipmentService {
                 JOIN military_units mu ON mu.unit_id = eiu.unit_id
                 JOIN equipment_types et ON et.type_id = eiu.type_id
                 JOIN equipment_categories ec ON ec.category_id = et.category_id
-                """ + where + " ORDER BY mu.name, ec.name, et.name", params, this::mapRow);
+                """ + where + " AND et.archived = FALSE AND ec.archived = FALSE ORDER BY mu.name, ec.name, et.name", params, this::mapRow);
     }
 
     private UnitEquipmentResponse mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -168,13 +305,88 @@ public class EquipmentService {
 
     private void validateType(Long typeId) {
         Boolean exists = jdbcTemplate.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM equipment_types WHERE type_id = :typeId)",
+                "SELECT EXISTS (SELECT 1 FROM equipment_types WHERE type_id = :typeId AND archived = FALSE)",
                 Map.of("typeId", typeId),
                 Boolean.class
         );
         if (!Boolean.TRUE.equals(exists)) {
             throw new EntityNotFoundException("Equipment type not found: " + typeId);
         }
+    }
+
+    private void validateCategory(Long categoryId) {
+        Boolean exists = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM equipment_categories WHERE category_id = :categoryId AND archived = FALSE)",
+                Map.of("categoryId", categoryId),
+                Boolean.class
+        );
+        if (!Boolean.TRUE.equals(exists)) {
+            throw new EntityNotFoundException("Equipment category not found: " + categoryId);
+        }
+    }
+
+    private EquipmentTypeResponse typeById(Long id) {
+        EquipmentTypeResponse response = jdbcTemplate.queryForObject("""
+                SELECT et.type_id, et.name, ec.category_id, ec.name AS category_name
+                FROM equipment_types et
+                JOIN equipment_categories ec ON ec.category_id = et.category_id
+                WHERE et.type_id = :id AND et.archived = FALSE
+                """, Map.of("id", id), (rs, rowNum) -> new EquipmentTypeResponse(
+                rs.getLong("type_id"),
+                rs.getString("name"),
+                rs.getLong("category_id"),
+                rs.getString("category_name")
+        ));
+        if (response == null) {
+            throw new EntityNotFoundException("Equipment type not found: " + id);
+        }
+        return response;
+    }
+
+    private EquipmentTypePassportResponse mapTypePassport(ResultSet rs, int rowNum) throws SQLException {
+        BigDecimal weight = rs.getBigDecimal("weight_tons");
+        return new EquipmentTypePassportResponse(
+                rs.getLong("type_id"),
+                rs.getString("name"),
+                rs.getLong("category_id"),
+                rs.getString("category_name"),
+                rs.getString("purpose"),
+                (Integer) rs.getObject("crew_size"),
+                weight,
+                (Integer) rs.getObject("max_speed_kmh"),
+                (Integer) rs.getObject("operational_range_km"),
+                (Integer) rs.getObject("adoption_year"),
+                rs.getString("manufacturer"),
+                rs.getString("description"),
+                rs.getLong("total_quantity"),
+                rs.getLong("units_count"),
+                List.of()
+        );
+    }
+
+    private Map<String, Object> typeParams(EquipmentTypeRequest request) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("name", request.name().trim());
+        params.put("categoryId", request.categoryId());
+        params.put("purpose", blankToNull(request.purpose()));
+        params.put("crewSize", request.crewSize());
+        params.put("weightTons", request.weightTons());
+        params.put("maxSpeedKmh", request.maxSpeedKmh());
+        params.put("operationalRangeKm", request.operationalRangeKm());
+        params.put("adoptionYear", request.adoptionYear());
+        params.put("manufacturer", blankToNull(request.manufacturer()));
+        params.put("description", blankToNull(request.description()));
+        return params;
+    }
+
+    private void checkDictionaryManagement(UserContext user) {
+        if (!user.hasRole(RoleCode.ADMIN_DISTRICT)) {
+            throw new AccessDeniedException("Only district administrator can manage equipment dictionaries");
+        }
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private PageResponse<UnitEquipmentResponse> page(List<UnitEquipmentResponse> rows, Pageable pageable) {

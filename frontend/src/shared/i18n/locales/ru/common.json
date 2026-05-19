@@ -20,7 +20,8 @@
     "login": "Войти",
     "logout": "Выйти",
     "viewAs": "Смотреть как",
-    "dismiss": "Закрыть уведомление"
+    "dismiss": "Закрыть уведомление",
+    "close": "Закрыть"
   },
   "states": {
     "loading": "Загрузка данных",
@@ -60,11 +61,26 @@
   },
   "dialog": {
     "inventoryUpdate": "Обновление инвентаря",
+    "inventoryAdd": "Добавление позиции",
+    "inventoryPosition": "Позиция инвентаря",
+    "inventoryPositionDescription": "Выберите часть, тип и количество без ручного ввода технических ID.",
     "buildingRegistry": "Реестр сооружений",
     "editBuilding": "Изменить сооружение",
     "createBuilding": "Создать сооружение",
     "name": "Название",
-    "unitId": "ID части"
+    "unitId": "Военная часть"
+  },
+  "fields": {
+    "unit": "Военная часть",
+    "resourceType": "Тип",
+    "unitsCount": "Частей",
+    "adoptionYear": "Год принятия",
+    "manufacturer": "Производитель",
+    "distribution": "Распределение по частям"
+  },
+  "placeholders": {
+    "selectUnit": "Выберите военную часть",
+    "selectResourceType": "Выберите тип"
   },
   "roles": {
     "ADMIN_DISTRICT": "Администратор округа",

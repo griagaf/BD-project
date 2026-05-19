@@ -25,8 +25,8 @@ export function ReportViewer({ report }: { report: SmartMissionReport }) {
             {t("page.title")}
           </div>
           <h2 className="mt-2 break-words text-2xl font-semibold text-zinc-100">{report.object.name}</h2>
-          <div className="mt-2 text-sm text-zinc-500">
-            {objectTypeLabel(t, report.object.type)}:{report.object.id} / {report.object.parentName ?? t("object.noParent")} / {new Date(report.generatedAt).toLocaleString()}
+          <div className="mt-2 break-words text-sm text-zinc-500">
+            {objectTypeLabel(t, report.object.type)} / {report.object.parentName ?? t("object.noParent")} / {new Date(report.generatedAt).toLocaleString()}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {report.object.path.map((node) => (

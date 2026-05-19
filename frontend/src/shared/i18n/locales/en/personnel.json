@@ -18,9 +18,9 @@
     "search": "Search",
     "searchPlaceholder": "Name or personal number",
     "unit": "Unit",
-    "unitPlaceholder": "Unit ID",
+    "unitPlaceholder": "Select unit",
     "subdivision": "Subdivision",
-    "subdivisionPlaceholder": "Subdivision ID",
+    "subdivisionPlaceholder": "Select subdivision",
     "specialty": "Specialty",
     "all": "All"
   },
@@ -34,7 +34,9 @@
     "personalNumber": "Personal number",
     "birthDate": "Birth date",
     "serviceStart": "Service start",
-    "subdivisionId": "Subdivision ID",
+    "subdivisionId": "Subdivision",
+    "subdivision": "Subdivision",
+    "selectSubdivision": "Select subdivision",
     "rank": "Rank",
     "specialties": "Specialties"
   },

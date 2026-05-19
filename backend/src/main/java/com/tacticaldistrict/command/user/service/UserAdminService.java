@@ -25,6 +25,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ public class UserAdminService {
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final UserContextProvider userContextProvider;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
 
     @Transactional(readOnly = true)
     public PageResponse<UserAdminResponse> search(String search, Boolean active, int page, int size) {
@@ -179,10 +181,25 @@ public class UserAdminService {
                 user.getUsername(),
                 user.getDisplayName(),
                 user.getPersonnelId(),
+                personnelLabel(user.getPersonnelId()),
                 user.isActive(),
                 roles,
                 user.getCreatedAt(),
                 user.getUpdatedAt()
+        );
+    }
+
+    private String personnelLabel(Long personnelId) {
+        if (personnelId == null) {
+            return null;
+        }
+        return jdbcTemplate.query("""
+                        SELECT trim(last_name || ' ' || first_name || ' ' || coalesce(middle_name, '')) AS label
+                        FROM personnel
+                        WHERE personnel_id = :personnelId
+                        """,
+                java.util.Map.of("personnelId", personnelId),
+                rs -> rs.next() ? rs.getString("label") : null
         );
     }
 

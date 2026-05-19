@@ -6,7 +6,9 @@
   },
   "form": {
     "objectType": "Object type",
-    "objectId": "Object id",
+    "objectId": "Object",
+    "object": "Object",
+    "selectObject": "Select object",
     "personnel": "Personnel",
     "resources": "Resources",
     "alerts": "Alerts",
@@ -18,7 +20,7 @@
     "exporting": "Exporting"
   },
   "states": {
-    "invalidObject": "Object id must be a positive number",
+    "invalidObject": "Select an object from the available scope",
     "generateError": "Unable to generate report for selected scope",
     "exportError": "Unable to export CSV report",
     "previewReady": "Report preview is ready for generation",

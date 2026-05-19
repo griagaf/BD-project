@@ -13,6 +13,8 @@ import { Table, TableShell, tableCellClass, tableHeadClass, tableRowClass } from
 import { EmptyState, ErrorState, LoadingState } from "@/shared/ui/state"
 import { toast } from "@/shared/ui/toast"
 import { cn } from "@/shared/lib/cn"
+import { lookupApi, type LookupOption } from "@/shared/api/lookupApi"
+import { SearchableSelect } from "@/shared/ui/searchable-select"
 
 type PageResponse<T> = {
   content: T[]
@@ -29,6 +31,7 @@ type AdminUser = {
   username: string
   displayName: string
   personnelId: number | null
+  personnelLabel: string | null
   active: boolean
   roles: string[]
   createdAt: string
@@ -45,7 +48,7 @@ type Role = {
 type UserForm = {
   username: string
   displayName: string
-  personnelId: string
+  personnelId: number | null
   password: string
   roles: string[]
   active: boolean
@@ -54,7 +57,7 @@ type UserForm = {
 const initialForm: UserForm = {
   username: "",
   displayName: "",
-  personnelId: "",
+  personnelId: null,
   password: "",
   roles: ["SOLDIER"],
   active: true,
@@ -77,6 +80,12 @@ export function AdminUsersPage() {
   const rolesQuery = useQuery({
     queryKey: ["admin-roles"],
     queryFn: () => apiClient<Role[]>("/api/users/roles"),
+    staleTime: 5 * 60_000,
+  })
+  const personnelLookupQuery = useQuery({
+    queryKey: ["lookups", "personnel", "admin-users"],
+    queryFn: () => lookupApi.personnel(),
+    staleTime: 5 * 60_000,
   })
   const saveMutation = useMutation({
     mutationFn: (form: UserForm) => saveUser(editing, form),
@@ -161,7 +170,7 @@ export function AdminUsersPage() {
               <thead className={tableHeadClass}>
                 <tr>
                   <th className={tableCellClass}>{t("admin:table.user")}</th>
-                  <th className={tableCellClass}>{t("admin:table.personnelId")}</th>
+                  <th className={tableCellClass}>{t("admin:table.personnel")}</th>
                   <th className={tableCellClass}>{t("admin:table.roles")}</th>
                   <th className={tableCellClass}>{t("table.status")}</th>
                   <th className={tableCellClass}>{t("admin:table.created")}</th>
@@ -175,7 +184,11 @@ export function AdminUsersPage() {
                       <div className="max-w-64 truncate font-medium text-zinc-100" title={user.displayName}>{user.displayName}</div>
                       <div className="max-w-64 truncate text-xs text-zinc-500" title={user.username}>{user.username}</div>
                     </td>
-                    <td className={cn(tableCellClass, "text-zinc-400")}>{user.personnelId ?? t("states.notAvailable")}</td>
+                    <td className={cn(tableCellClass, "text-zinc-400")}>
+                      <span className="block max-w-64 truncate" title={user.personnelLabel ?? t("states.notAvailable")}>
+                        {user.personnelLabel ?? t("states.notAvailable")}
+                      </span>
+                    </td>
                     <td className={tableCellClass}>
                       <div className="flex max-w-80 flex-wrap gap-1">
                         {user.roles.map((role) => (
@@ -223,6 +236,7 @@ export function AdminUsersPage() {
         open={dialogOpen}
         user={editing}
         roles={rolesQuery.data ?? []}
+        personnelOptions={personnelLookupQuery.data ?? []}
         saving={saveMutation.isPending}
         onClose={() => {
           setDialogOpen(false)
@@ -234,10 +248,11 @@ export function AdminUsersPage() {
   )
 }
 
-function UserDialog({ open, user, roles, saving, onClose, onSubmit }: {
+function UserDialog({ open, user, roles, personnelOptions, saving, onClose, onSubmit }: {
   open: boolean
   user: AdminUser | null
   roles: Role[]
+  personnelOptions: LookupOption[]
   saving: boolean
   onClose: () => void
   onSubmit: (form: UserForm) => void
@@ -252,7 +267,7 @@ function UserDialog({ open, user, roles, saving, onClose, onSubmit }: {
     setForm(user ? {
       username: user.username,
       displayName: user.displayName,
-      personnelId: user.personnelId ? String(user.personnelId) : "",
+      personnelId: user.personnelId,
       password: "",
       roles: user.roles,
       active: user.active,
@@ -278,7 +293,13 @@ function UserDialog({ open, user, roles, saving, onClose, onSubmit }: {
         <div className="grid gap-4 p-5 md:grid-cols-2">
           <Field label={t("admin:form.username")} value={form.username} disabled={Boolean(user)} onChange={(value) => setForm({ ...form, username: value })} />
           <Field label={t("admin:form.displayName")} value={form.displayName} onChange={(value) => setForm({ ...form, displayName: value })} />
-          <Field label={t("admin:form.personnelId")} value={form.personnelId} type="number" optional onChange={(value) => setForm({ ...form, personnelId: value })} />
+          <SearchableSelect
+            label={t("admin:form.personnel")}
+            value={form.personnelId}
+            options={personnelOptions}
+            placeholder={t("admin:form.selectPersonnel")}
+            onChange={(value) => setForm({ ...form, personnelId: value })}
+          />
           <Field label={t("admin:form.password")} value={form.password} type="password" optional={Boolean(user)} hint={user ? t("admin:form.passwordHint") : undefined} onChange={(value) => setForm({ ...form, password: value })} />
           <label className="flex items-center gap-2 text-sm text-zinc-300 md:col-span-2">
             <input
@@ -350,7 +371,7 @@ function Field({ label, value, onChange, type = "text", disabled = false, option
 function saveUser(user: AdminUser | null, form: UserForm) {
   const payload = {
     displayName: form.displayName.trim(),
-    personnelId: form.personnelId ? Number(form.personnelId) : null,
+    personnelId: form.personnelId,
     password: form.password || undefined,
     roles: form.roles,
     active: form.active,

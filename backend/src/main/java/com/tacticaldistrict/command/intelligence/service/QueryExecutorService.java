@@ -62,7 +62,7 @@ public class QueryExecutorService {
     @Transactional(readOnly = true)
     public ResponseEntity<byte[]> exportCsv(QueryTemplate template, ExecuteQueryRequest request) {
         QueryResultDto result = execute(template, request);
-        StringBuilder csv = new StringBuilder();
+        StringBuilder csv = new StringBuilder("\uFEFF");
         csv.append(String.join(",", result.columns())).append("\n");
         for (Map<String, Object> row : result.rows()) {
             csv.append(result.columns().stream()

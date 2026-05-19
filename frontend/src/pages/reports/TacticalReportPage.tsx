@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { FileText, Radar } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useExportSmartMissionReportCsvMutation, useGenerateSmartMissionReportMutation } from "@/features/report/api/reportQueries"
@@ -8,6 +9,8 @@ import { ReportViewer } from "@/features/report/ui/ReportViewer"
 import { Card } from "@/shared/ui/card"
 import { PageHeader } from "@/shared/ui/page"
 import { ErrorState, EmptyState } from "@/shared/ui/state"
+import { lookupApi } from "@/shared/api/lookupApi"
+import { SearchableSelect } from "@/shared/ui/searchable-select"
 
 const objectTypes: ReportObjectType[] = [
   "ARMY",
@@ -21,17 +24,28 @@ const objectTypes: ReportObjectType[] = [
 export function TacticalReportPage() {
   const { t } = useTranslation("reports")
   const [objectType, setObjectType] = useState<ReportObjectType>("MILITARY_UNIT")
-  const [objectId, setObjectId] = useState("11101")
+  const [objectId, setObjectId] = useState<number | null>(11101)
   const [includePersonnel, setIncludePersonnel] = useState(true)
   const [includeResources, setIncludeResources] = useState(true)
   const [includeAlerts, setIncludeAlerts] = useState(true)
   const [includeRecommendations, setIncludeRecommendations] = useState(true)
   const generateReport = useGenerateSmartMissionReportMutation()
   const exportReport = useExportSmartMissionReportCsvMutation()
+  const lookupQuery = useQuery({
+    queryKey: ["lookups", "report-object", objectType],
+    queryFn: () => {
+      if (objectType === "MILITARY_UNIT") return lookupApi.units()
+      if (objectType === "COMPANY" || objectType === "PLATOON") return lookupApi.subdivisions()
+      if (objectType === "ARMY") return lookupApi.formations("", "ARMY")
+      if (objectType === "BRIGADE") return lookupApi.formations("", "BRIGADE")
+      return lookupApi.formations("", "CORPS,DIVISION,BRIGADE")
+    },
+    staleTime: 5 * 60_000,
+  })
 
   const request = useMemo<SmartMissionReportRequest>(() => ({
     objectType,
-    objectId: Number(objectId || 0),
+    objectId: objectId ?? 0,
     includePersonnel,
     includeResources,
     includeAlerts,
@@ -80,7 +94,10 @@ export function TacticalReportPage() {
           <span className="text-xs uppercase text-zinc-500">{t("form.objectType")}</span>
           <select
             value={objectType}
-            onChange={(event) => setObjectType(event.target.value as ReportObjectType)}
+            onChange={(event) => {
+              setObjectType(event.target.value as ReportObjectType)
+              setObjectId(null)
+            }}
             className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
           >
             {objectTypes.map((type) => (
@@ -88,15 +105,14 @@ export function TacticalReportPage() {
             ))}
           </select>
         </label>
-        <label className="space-y-2">
-          <span className="text-xs uppercase text-zinc-500">{t("form.objectId")}</span>
-          <input
-            value={objectId}
-            onChange={(event) => setObjectId(event.target.value)}
-            inputMode="numeric"
-            className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
-          />
-        </label>
+        <SearchableSelect
+          label={t("form.object")}
+          value={objectId}
+          options={lookupQuery.data ?? []}
+          placeholder={t("form.selectObject")}
+          disabled={lookupQuery.isLoading}
+          onChange={setObjectId}
+        />
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <ReportOption label={t("form.personnel")} checked={includePersonnel} onChange={setIncludePersonnel} />
           <ReportOption label={t("form.resources")} checked={includeResources} onChange={setIncludeResources} />
