@@ -76,7 +76,15 @@
     "unitsCount": "Units",
     "adoptionYear": "Adoption year",
     "manufacturer": "Manufacturer",
-    "distribution": "Distribution by units"
+    "distribution": "Distribution by units",
+    "attributes": "Database schema attributes",
+    "crewSize": "Crew",
+    "weightTons": "Weight, t",
+    "maxSpeedKmh": "Speed, km/h",
+    "operationalRangeKm": "Operational range, km",
+    "caliber": "Caliber",
+    "effectiveRangeM": "Effective range, m",
+    "description": "Description"
   },
   "placeholders": {
     "selectUnit": "Select military unit",

@@ -192,6 +192,13 @@ function InventoryTypeDialog({
   const [purpose, setPurpose] = useState("")
   const [manufacturer, setManufacturer] = useState("")
   const [adoptionYear, setAdoptionYear] = useState("")
+  const [crewSize, setCrewSize] = useState("")
+  const [weightTons, setWeightTons] = useState("")
+  const [maxSpeedKmh, setMaxSpeedKmh] = useState("")
+  const [operationalRangeKm, setOperationalRangeKm] = useState("")
+  const [caliber, setCaliber] = useState("")
+  const [effectiveRangeM, setEffectiveRangeM] = useState("")
+  const [description, setDescription] = useState("")
 
   if (!open) {
     return null
@@ -214,20 +221,64 @@ function InventoryTypeDialog({
                 <Field label={t(`${namespace}:dictionary.purpose`)} value={purpose} optional onChange={setPurpose} />
                 <Field label={t(`${namespace}:dictionary.manufacturer`)} value={manufacturer} optional onChange={setManufacturer} />
                 <Field label={t(`${namespace}:dictionary.adoptionYear`)} value={adoptionYear} type="number" optional onChange={setAdoptionYear} />
+                {kind === "equipment" ? (
+                  <>
+                    <Field label={t("fields.crewSize")} value={crewSize} type="number" optional onChange={setCrewSize} />
+                    <Field label={t("fields.weightTons")} value={weightTons} type="number" optional onChange={setWeightTons} />
+                    <Field label={t("fields.maxSpeedKmh")} value={maxSpeedKmh} type="number" optional onChange={setMaxSpeedKmh} />
+                    <Field label={t("fields.operationalRangeKm")} value={operationalRangeKm} type="number" optional onChange={setOperationalRangeKm} />
+                  </>
+                ) : (
+                  <>
+                    <Field label={t("fields.caliber")} value={caliber} optional onChange={setCaliber} />
+                    <Field label={t("fields.effectiveRangeM")} value={effectiveRangeM} type="number" optional onChange={setEffectiveRangeM} />
+                  </>
+                )}
+                <label className="space-y-2 md:col-span-2">
+                  <span className="text-xs uppercase text-zinc-500">{t("fields.description")}</span>
+                  <textarea
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    rows={3}
+                    className="w-full resize-none rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500"
+                  />
+                </label>
               </div>
               <Button className="mt-4" disabled={saving || !typeName.trim() || !categoryId} onClick={() => {
                 if (!categoryId) return
-                onCreateType({
+                const common = {
                   name: typeName,
                   categoryId,
                   purpose: purpose || null,
                   manufacturer: manufacturer || null,
                   adoptionYear: adoptionYear ? Number(adoptionYear) : null,
-                })
+                  description: description || null,
+                }
+                const request = kind === "equipment"
+                  ? {
+                    ...common,
+                    crewSize: crewSize ? Number(crewSize) : null,
+                    weightTons: weightTons ? Number(weightTons) : null,
+                    maxSpeedKmh: maxSpeedKmh ? Number(maxSpeedKmh) : null,
+                    operationalRangeKm: operationalRangeKm ? Number(operationalRangeKm) : null,
+                  } satisfies EquipmentTypeRequest
+                  : {
+                    ...common,
+                    caliber: caliber || null,
+                    effectiveRangeM: effectiveRangeM ? Number(effectiveRangeM) : null,
+                  } satisfies WeaponTypeRequest
+                onCreateType(request)
                 setTypeName("")
                 setPurpose("")
                 setManufacturer("")
                 setAdoptionYear("")
+                setCrewSize("")
+                setWeightTons("")
+                setMaxSpeedKmh("")
+                setOperationalRangeKm("")
+                setCaliber("")
+                setEffectiveRangeM("")
+                setDescription("")
               }}>
                 <Plus className="h-4 w-4 shrink-0" />
                 {t("actions.create")}
@@ -287,6 +338,19 @@ function TypePassportDialog({ open, loading, passport, onClose }: { open: boolea
               <Metric label={t("fields.adoptionYear")} value={passport.adoptionYear ?? t("states.notAvailable")} />
               <Metric label={t("fields.manufacturer")} value={passport.manufacturer ?? t("states.notAvailable")} />
             </div>
+            {passport.attributes?.length ? (
+              <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
+                <div className="mb-3 text-sm font-medium text-zinc-100">{t("fields.attributes")}</div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {passport.attributes.map((attribute) => (
+                    <div key={attribute.id} className="min-w-0 rounded border border-zinc-800 bg-zinc-950 px-3 py-2">
+                      <div className="truncate text-xs uppercase text-zinc-500" title={attribute.name}>{attribute.name}</div>
+                      <div className="mt-1 break-words text-sm text-zinc-100">{attribute.displayValue}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
               <div className="mb-3 text-sm font-medium text-zinc-100">{t("fields.distribution")}</div>
               <div className="space-y-2">

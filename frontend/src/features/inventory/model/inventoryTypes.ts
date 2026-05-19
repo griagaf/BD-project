@@ -44,6 +44,13 @@ export type InventoryCategoryRequest = {
   name: string
 }
 
+export type AttributeValue = {
+  id: number
+  name: string
+  dataType: string
+  displayValue: string
+}
+
 export type EquipmentTypeRequest = {
   name: string
   categoryId: number
@@ -79,6 +86,7 @@ export type EquipmentTypePassport = InventoryType & {
   description?: string | null
   totalQuantity: number
   unitsCount: number
+  attributes: AttributeValue[]
   distribution: InventoryRow[]
 }
 
@@ -91,6 +99,7 @@ export type WeaponTypePassport = InventoryType & {
   description?: string | null
   totalQuantity: number
   unitsCount: number
+  attributes: AttributeValue[]
   distribution: InventoryRow[]
 }
 

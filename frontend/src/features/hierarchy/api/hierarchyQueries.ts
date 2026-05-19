@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { hierarchyApi } from "@/features/hierarchy/api/hierarchyApi"
 import type { HierarchySelection, TreeMode } from "@/features/hierarchy/model/hierarchyTypes"
 
@@ -56,5 +56,21 @@ export function useUnitPassportQuery(unitId: number) {
     queryFn: () => hierarchyApi.unitPassport(unitId),
     enabled: Number.isFinite(unitId) && unitId > 0,
     staleTime: 30_000,
+  })
+}
+
+export function useAssignCommanderMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ selection, commanderId }: { selection: HierarchySelection; commanderId: number }) =>
+      hierarchyApi.assignCommander(selection.type, selection.id, commanderId),
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["hierarchy"] }),
+        queryClient.invalidateQueries({ queryKey: ["units"] }),
+        queryClient.invalidateQueries({ queryKey: ["hierarchy", "passport", variables.selection.type, variables.selection.id] }),
+        queryClient.invalidateQueries({ queryKey: ["hierarchy", "context", variables.selection.type, variables.selection.id] }),
+      ])
+    },
   })
 }

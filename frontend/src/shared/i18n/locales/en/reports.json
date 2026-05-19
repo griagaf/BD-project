@@ -27,12 +27,14 @@
     "previewDescription": "Select scoped object and generate tactical report."
   },
   "objectTypes": {
+    "DISTRICT": "District",
     "ARMY": "Army",
     "FORMATION": "Formation",
     "BRIGADE": "Brigade",
     "MILITARY_UNIT": "Military Unit",
     "COMPANY": "Company",
-    "PLATOON": "Platoon"
+    "PLATOON": "Platoon",
+    "SQUAD": "Squad"
   },
   "sections": {
     "commanders": "Commanders",

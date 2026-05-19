@@ -27,12 +27,14 @@
     "previewDescription": "Выберите объект в доступной области и сформируйте тактический отчёт."
   },
   "objectTypes": {
+    "DISTRICT": "Округ",
     "ARMY": "Армия",
     "FORMATION": "Соединение",
     "BRIGADE": "Бригада",
     "MILITARY_UNIT": "Военная часть",
     "COMPANY": "Рота",
-    "PLATOON": "Взвод"
+    "PLATOON": "Взвод",
+    "SQUAD": "Отделение"
   },
   "sections": {
     "commanders": "Командиры",

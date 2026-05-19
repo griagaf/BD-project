@@ -1,6 +1,7 @@
 package com.tacticaldistrict.command.equipment.service;
 
 import com.tacticaldistrict.command.audit.AuditService;
+import com.tacticaldistrict.command.common.dto.AttributeValueResponse;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.equipment.dto.EquipmentCategoryResponse;
 import com.tacticaldistrict.command.equipment.dto.EquipmentFilter;
@@ -21,6 +22,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -180,6 +182,7 @@ public class EquipmentService {
                 )
                 RETURNING type_id
                 """, typeParams(request), Long.class);
+        syncTypeAttributes(id, request);
         auditService.created(user, ObjectType.EQUIPMENT, id, "Equipment type created");
         return typeById(id);
     }
@@ -208,6 +211,7 @@ public class EquipmentService {
         if (updated == 0) {
             throw new EntityNotFoundException("Equipment type not found: " + id);
         }
+        syncTypeAttributes(id, request);
         auditService.updated(user, ObjectType.EQUIPMENT, id, "Equipment type updated");
         return typeById(id);
     }
@@ -249,12 +253,87 @@ public class EquipmentService {
                 .toList();
         long totalQuantity = distribution.stream().mapToLong(UnitEquipmentResponse::quantity).sum();
         long unitsCount = distribution.stream().map(UnitEquipmentResponse::unitId).distinct().count();
+        List<AttributeValueResponse> attributes = typeAttributes(id);
         return new EquipmentTypePassportResponse(
                 base.id(), base.name(), base.categoryId(), base.categoryName(), base.purpose(),
                 base.crewSize(), base.weightTons(), base.maxSpeedKmh(), base.operationalRangeKm(),
                 base.adoptionYear(), base.manufacturer(), base.description(),
-                totalQuantity, unitsCount, distribution
+                totalQuantity, unitsCount, attributes, distribution
         );
+    }
+
+    private List<AttributeValueResponse> typeAttributes(Long typeId) {
+        return jdbcTemplate.query("""
+                SELECT eat.attribute_id,
+                       eat.name,
+                       eat.data_type,
+                       COALESCE(
+                           etav.value_text,
+                           trim(to_char(etav.value_number, 'FM999999990.99')),
+                           to_char(etav.value_date, 'YYYY-MM-DD'),
+                           CASE WHEN etav.value_boolean IS NULL THEN NULL ELSE etav.value_boolean::TEXT END
+                       ) AS display_value
+                FROM equipment_type_attribute_values etav
+                JOIN equipment_attribute_types eat ON eat.attribute_id = etav.attribute_id
+                WHERE etav.type_id = :typeId
+                  AND COALESCE(
+                      etav.value_text,
+                      etav.value_number::TEXT,
+                      etav.value_date::TEXT,
+                      etav.value_boolean::TEXT
+                  ) IS NOT NULL
+                ORDER BY eat.attribute_id
+                """, Map.of("typeId", typeId), (rs, rowNum) -> new AttributeValueResponse(
+                rs.getLong("attribute_id"),
+                rs.getString("name"),
+                rs.getString("data_type"),
+                rs.getString("display_value")
+        ));
+    }
+
+    private void syncTypeAttributes(Long typeId, EquipmentTypeRequest request) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("назначение", blankToNull(request.purpose()));
+        values.put("экипаж", request.crewSize());
+        values.put("масса, т", request.weightTons());
+        values.put("скорость, км/ч", request.maxSpeedKmh());
+        values.put("запас хода, км", request.operationalRangeKm());
+        values.put("год принятия", request.adoptionYear());
+        values.put("производитель", blankToNull(request.manufacturer()));
+        values.put("описание", blankToNull(request.description()));
+        syncAttributeValues(typeId, values);
+    }
+
+    private void syncAttributeValues(Long typeId, Map<String, Object> values) {
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
+            Long attributeId = jdbcTemplate.queryForObject(
+                    "SELECT attribute_id FROM equipment_attribute_types WHERE name = :name",
+                    Map.of("name", entry.getKey()),
+                    Long.class
+            );
+            Object value = entry.getValue();
+            if (value == null) {
+                jdbcTemplate.update("""
+                        DELETE FROM equipment_type_attribute_values
+                        WHERE type_id = :typeId AND attribute_id = :attributeId
+                        """, Map.of("typeId", typeId, "attributeId", attributeId));
+                continue;
+            }
+            Map<String, Object> params = new HashMap<>();
+            params.put("typeId", typeId);
+            params.put("attributeId", attributeId);
+            params.put("valueText", value instanceof Number ? null : value.toString());
+            params.put("valueNumber", value instanceof Number ? value : null);
+            jdbcTemplate.update("""
+                    INSERT INTO equipment_type_attribute_values (type_id, attribute_id, value_text, value_number)
+                    VALUES (:typeId, :attributeId, :valueText, :valueNumber)
+                    ON CONFLICT (type_id, attribute_id) DO UPDATE SET
+                        value_text = EXCLUDED.value_text,
+                        value_number = EXCLUDED.value_number,
+                        value_date = NULL,
+                        value_boolean = NULL
+                    """, params);
+        }
     }
 
     private List<UnitEquipmentResponse> queryInventory(EquipmentFilter filter) {
@@ -360,6 +439,7 @@ public class EquipmentService {
                 rs.getString("description"),
                 rs.getLong("total_quantity"),
                 rs.getLong("units_count"),
+                List.of(),
                 List.of()
         );
     }

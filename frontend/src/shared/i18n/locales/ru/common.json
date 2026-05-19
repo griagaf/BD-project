@@ -76,7 +76,15 @@
     "unitsCount": "Частей",
     "adoptionYear": "Год принятия",
     "manufacturer": "Производитель",
-    "distribution": "Распределение по частям"
+    "distribution": "Распределение по частям",
+    "attributes": "Атрибуты по схеме БД",
+    "crewSize": "Экипаж",
+    "weightTons": "Масса, т",
+    "maxSpeedKmh": "Скорость, км/ч",
+    "operationalRangeKm": "Запас хода, км",
+    "caliber": "Калибр",
+    "effectiveRangeM": "Дальность, м",
+    "description": "Описание"
   },
   "placeholders": {
     "selectUnit": "Выберите военную часть",

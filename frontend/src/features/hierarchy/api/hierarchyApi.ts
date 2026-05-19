@@ -14,4 +14,15 @@ export const hierarchyApi = {
     apiClient<HierarchyContext>(`/api/hierarchy/nodes/${nodeType}/${nodeId}/context`),
   unitPassport: (unitId: number) => apiClient<ObjectPassport>(`/api/units/${unitId}/passport`),
   units: () => apiClient<Unit[]>("/api/units"),
+  assignCommander: (nodeType: string, nodeId: number, commanderId: number) => {
+    const resource = nodeType === "MILITARY_UNIT"
+      ? "units"
+      : nodeType === "COMPANY" || nodeType === "PLATOON" || nodeType === "SQUAD" || nodeType === "BATTALION"
+        ? "subdivisions"
+        : "formations"
+    return apiClient(`/api/${resource}/${nodeId}/commander`, {
+      method: "PUT",
+      body: JSON.stringify({ commanderId }),
+    })
+  },
 }

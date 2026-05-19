@@ -1,5 +1,6 @@
 package com.tacticaldistrict.command.equipment.dto;
 
+import com.tacticaldistrict.command.common.dto.AttributeValueResponse;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public record EquipmentTypePassportResponse(
         String description,
         Long totalQuantity,
         Long unitsCount,
+        List<AttributeValueResponse> attributes,
         List<UnitEquipmentResponse> distribution
 ) {
 }

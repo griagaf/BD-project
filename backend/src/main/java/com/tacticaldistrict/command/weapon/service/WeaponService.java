@@ -1,6 +1,7 @@
 package com.tacticaldistrict.command.weapon.service;
 
 import com.tacticaldistrict.command.audit.AuditService;
+import com.tacticaldistrict.command.common.dto.AttributeValueResponse;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.equipment.dto.InventoryQuantityRequest;
 import com.tacticaldistrict.command.equipment.dto.InventoryStatisticsResponse;
@@ -20,6 +21,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -179,6 +181,7 @@ public class WeaponService {
                 )
                 RETURNING type_id
                 """, typeParams(request), Long.class);
+        syncTypeAttributes(id, request);
         auditService.created(user, ObjectType.WEAPON, id, "Weapon type created");
         return typeById(id);
     }
@@ -205,6 +208,7 @@ public class WeaponService {
         if (updated == 0) {
             throw new EntityNotFoundException("Weapon type not found: " + id);
         }
+        syncTypeAttributes(id, request);
         auditService.updated(user, ObjectType.WEAPON, id, "Weapon type updated");
         return typeById(id);
     }
@@ -246,11 +250,84 @@ public class WeaponService {
                 .toList();
         long totalQuantity = distribution.stream().mapToLong(UnitWeaponResponse::quantity).sum();
         long unitsCount = distribution.stream().map(UnitWeaponResponse::unitId).distinct().count();
+        List<AttributeValueResponse> attributes = typeAttributes(id);
         return new WeaponTypePassportResponse(
                 base.id(), base.name(), base.categoryId(), base.categoryName(), base.purpose(),
                 base.caliber(), base.effectiveRangeM(), base.adoptionYear(), base.manufacturer(),
-                base.description(), totalQuantity, unitsCount, distribution
+                base.description(), totalQuantity, unitsCount, attributes, distribution
         );
+    }
+
+    private List<AttributeValueResponse> typeAttributes(Long typeId) {
+        return jdbcTemplate.query("""
+                SELECT wat.attribute_id,
+                       wat.name,
+                       wat.data_type,
+                       COALESCE(
+                           wtav.value_text,
+                           trim(to_char(wtav.value_number, 'FM999999990.99')),
+                           to_char(wtav.value_date, 'YYYY-MM-DD'),
+                           CASE WHEN wtav.value_boolean IS NULL THEN NULL ELSE wtav.value_boolean::TEXT END
+                       ) AS display_value
+                FROM weapon_type_attribute_values wtav
+                JOIN weapon_attribute_types wat ON wat.attribute_id = wtav.attribute_id
+                WHERE wtav.type_id = :typeId
+                  AND COALESCE(
+                      wtav.value_text,
+                      wtav.value_number::TEXT,
+                      wtav.value_date::TEXT,
+                      wtav.value_boolean::TEXT
+                  ) IS NOT NULL
+                ORDER BY wat.attribute_id
+                """, Map.of("typeId", typeId), (rs, rowNum) -> new AttributeValueResponse(
+                rs.getLong("attribute_id"),
+                rs.getString("name"),
+                rs.getString("data_type"),
+                rs.getString("display_value")
+        ));
+    }
+
+    private void syncTypeAttributes(Long typeId, WeaponTypeRequest request) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("назначение", blankToNull(request.purpose()));
+        values.put("калибр", blankToNull(request.caliber()));
+        values.put("дальность, м", request.effectiveRangeM());
+        values.put("год принятия", request.adoptionYear());
+        values.put("производитель", blankToNull(request.manufacturer()));
+        values.put("описание", blankToNull(request.description()));
+        syncAttributeValues(typeId, values);
+    }
+
+    private void syncAttributeValues(Long typeId, Map<String, Object> values) {
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
+            Long attributeId = jdbcTemplate.queryForObject(
+                    "SELECT attribute_id FROM weapon_attribute_types WHERE name = :name",
+                    Map.of("name", entry.getKey()),
+                    Long.class
+            );
+            Object value = entry.getValue();
+            if (value == null) {
+                jdbcTemplate.update("""
+                        DELETE FROM weapon_type_attribute_values
+                        WHERE type_id = :typeId AND attribute_id = :attributeId
+                        """, Map.of("typeId", typeId, "attributeId", attributeId));
+                continue;
+            }
+            Map<String, Object> params = new HashMap<>();
+            params.put("typeId", typeId);
+            params.put("attributeId", attributeId);
+            params.put("valueText", value instanceof Number ? null : value.toString());
+            params.put("valueNumber", value instanceof Number ? value : null);
+            jdbcTemplate.update("""
+                    INSERT INTO weapon_type_attribute_values (type_id, attribute_id, value_text, value_number)
+                    VALUES (:typeId, :attributeId, :valueText, :valueNumber)
+                    ON CONFLICT (type_id, attribute_id) DO UPDATE SET
+                        value_text = EXCLUDED.value_text,
+                        value_number = EXCLUDED.value_number,
+                        value_date = NULL,
+                        value_boolean = NULL
+                    """, params);
+        }
     }
 
     private List<UnitWeaponResponse> queryInventory(WeaponFilter filter) {
@@ -353,6 +430,7 @@ public class WeaponService {
                 rs.getString("description"),
                 rs.getLong("total_quantity"),
                 rs.getLong("units_count"),
+                List.of(),
                 List.of()
         );
     }
