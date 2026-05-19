@@ -1,5 +1,6 @@
 import type { QueryParameterMetadata, QueryScope } from "@/features/intelligence/model/intelligenceTypes"
 import { Card } from "@/shared/ui/card"
+import { useTranslation } from "react-i18next"
 
 type QueryParamsFormProps = {
   parameters: QueryParameterMetadata[]
@@ -10,20 +11,22 @@ type QueryParamsFormProps = {
 }
 
 export function QueryParamsForm({ parameters, values, scope, onValuesChange, onScopeChange }: QueryParamsFormProps) {
+  const { t } = useTranslation("intelligence")
+
   return (
     <Card className="space-y-4">
       <div>
-        <div className="text-xs uppercase text-emerald-300">Scope</div>
+        <div className="text-xs uppercase text-emerald-300">{t("builder.scope")}</div>
         <div className="mt-3 grid gap-3 md:grid-cols-[180px_140px_1fr]">
           <select
             value={scope.type}
             onChange={(event) => onScopeChange({ ...scope, type: event.target.value })}
             className="h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
           >
-            <option value="FORMATION">Formation</option>
-            <option value="MILITARY_UNIT">Unit</option>
-            <option value="PERSONNEL">Personnel</option>
-            <option value="GLOBAL">Global</option>
+            <option value="FORMATION">{t("builder.formation")}</option>
+            <option value="MILITARY_UNIT">{t("builder.unit")}</option>
+            <option value="PERSONNEL">{t("builder.personnel")}</option>
+            <option value="GLOBAL">{t("builder.global")}</option>
           </select>
           <input
             type="number"
@@ -34,14 +37,14 @@ export function QueryParamsForm({ parameters, values, scope, onValuesChange, onS
           <input
             value={scope.name ?? ""}
             onChange={(event) => onScopeChange({ ...scope, name: event.target.value })}
-            placeholder="Display name"
+            placeholder={t("builder.displayName")}
             className="h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
           />
         </div>
       </div>
 
       <div>
-        <div className="text-xs uppercase text-emerald-300">Parameters</div>
+        <div className="text-xs uppercase text-emerald-300">{t("builder.parameters")}</div>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           {parameters.map((parameter) => (
             <label key={parameter.name} className="block">
@@ -67,7 +70,7 @@ export function QueryParamsForm({ parameters, values, scope, onValuesChange, onS
               )}
             </label>
           ))}
-          {!parameters.length ? <div className="text-sm text-zinc-500">No additional parameters required</div> : null}
+          {!parameters.length ? <div className="text-sm text-zinc-500">{t("builder.noParameters")}</div> : null}
         </div>
       </div>
     </Card>

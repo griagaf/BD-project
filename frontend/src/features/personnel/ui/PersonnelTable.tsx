@@ -1,8 +1,12 @@
 import { Eye, Pencil, Trash2 } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import type { Personnel } from "@/features/personnel/model/personnelTypes"
 import { Button } from "@/shared/ui/button"
+import { Badge } from "@/shared/ui/badge"
 import { cn } from "@/shared/lib/cn"
+import { EmptyState } from "@/shared/ui/state"
+import { Table, TableShell, tableCellClass, tableHeadClass, tableRowClass } from "@/shared/ui/table"
 
 type PersonnelTableProps = {
   rows: Personnel[]
@@ -13,76 +17,87 @@ type PersonnelTableProps = {
 }
 
 export function PersonnelTable({ rows, canEdit, canDelete, onEdit, onDelete }: PersonnelTableProps) {
+  const { t } = useTranslation(["common", "personnel"])
+  if (!rows.length) {
+    return <EmptyState title={t("personnel:table.emptyTitle")} description={t("personnel:table.emptyDescription")} />
+  }
+
   return (
-    <div className="overflow-hidden rounded-md border border-zinc-800 bg-zinc-950">
-      <table className="w-full border-collapse text-left text-sm">
-        <thead className="bg-zinc-900 text-xs uppercase text-zinc-500">
+    <TableShell>
+      <Table>
+        <thead className={tableHeadClass}>
           <tr>
-            <th className="px-4 py-3">Personnel</th>
-            <th className="px-4 py-3">Rank</th>
-            <th className="px-4 py-3">Unit</th>
-            <th className="px-4 py-3">Specialties</th>
-            <th className="w-36 px-4 py-3 text-right">Actions</th>
+            <th className={tableCellClass}>{t("personnel:table.personnel")}</th>
+            <th className={tableCellClass}>{t("personnel:table.rank")}</th>
+            <th className={tableCellClass}>{t("personnel:table.unit")}</th>
+            <th className={tableCellClass}>{t("personnel:table.specialties")}</th>
+            <th className={cn(tableCellClass, "w-36 text-right")}>{t("table.actions")}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((personnel) => (
-            <tr key={personnel.id} className="border-t border-zinc-900">
-              <td className="px-4 py-3">
-                <div className="font-medium text-zinc-100">{personnel.fullName}</div>
-                <div className="text-xs text-zinc-500">{personnel.personalNumber}</div>
+            <tr key={personnel.id} className={tableRowClass}>
+              <td className={tableCellClass}>
+                <div className="max-w-64 truncate font-medium text-zinc-100" title={personnel.fullName}>{personnel.fullName}</div>
+                <div className="truncate text-xs text-zinc-500">{personnel.personalNumber}</div>
               </td>
-              <td className="px-4 py-3 text-zinc-300">{personnel.rank?.name ?? "No rank"}</td>
-              <td className="px-4 py-3">
-                <div className="text-zinc-300">{personnel.unitName}</div>
-                <div className="text-xs text-zinc-500">{personnel.subdivisionName}</div>
+              <td className={cn(tableCellClass, "text-zinc-300")}>
+                <span className="block max-w-40 truncate" title={personnel.rank?.name ?? t("personnel:table.noRank")}>
+                  {personnel.rank?.name ?? t("personnel:table.noRank")}
+                </span>
               </td>
-              <td className="px-4 py-3">
+              <td className={tableCellClass}>
+                <div className="max-w-56 truncate text-zinc-300" title={personnel.unitName}>{personnel.unitName}</div>
+                <div className="max-w-56 truncate text-xs text-zinc-500" title={personnel.subdivisionName}>{personnel.subdivisionName}</div>
+              </td>
+              <td className={tableCellClass}>
                 <div className="flex flex-wrap gap-1">
                   {personnel.specialties.map((specialty) => (
-                    <span key={specialty.id} className="rounded border border-emerald-500/30 px-2 py-0.5 text-xs text-emerald-300">
+                    <Badge key={specialty.id}>
                       {specialty.name}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               </td>
-              <td className="px-4 py-3">
+              <td className={tableCellClass}>
                 <div className="flex justify-end gap-1">
                   <Link
                     to={`/personnel/${personnel.id}`}
                     className={cn(
-                      "inline-flex size-9 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
+                      "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
                     )}
-                    title="Open profile"
+                    title={t("actions.open")}
                   >
-                    <Eye className="size-4" />
+                    <Eye className="h-4 w-4 shrink-0" />
                   </Link>
                   <Button
                     type="button"
                     variant="ghost"
-                    className="size-9 px-0"
-                    title="Edit"
+                    className="h-9 w-9 shrink-0 px-0"
+                    title={t("actions.edit")}
+                    size="icon"
                     disabled={!canEdit}
                     onClick={() => onEdit(personnel)}
                   >
-                    <Pencil className="size-4" />
+                    <Pencil className="h-4 w-4 shrink-0" />
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
-                    className="size-9 px-0"
-                    title="Delete"
+                    className="h-9 w-9 shrink-0 px-0"
+                    title={t("actions.delete")}
+                    size="icon"
                     disabled={!canDelete}
                     onClick={() => onDelete(personnel.id)}
                   >
-                    <Trash2 className="size-4" />
+                    <Trash2 className="h-4 w-4 shrink-0" />
                   </Button>
                 </div>
               </td>
             </tr>
           ))}
         </tbody>
-      </table>
-    </div>
+      </Table>
+    </TableShell>
   )
 }

@@ -1,5 +1,7 @@
 import { Plus, ShieldCheck } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
 import {
   useCreatePersonnelMutation,
@@ -13,7 +15,12 @@ import { PersonnelEditModal } from "@/features/personnel/ui/PersonnelEditModal"
 import { PersonnelFilters } from "@/features/personnel/ui/PersonnelFilters"
 import { PersonnelTable } from "@/features/personnel/ui/PersonnelTable"
 import { Button } from "@/shared/ui/button"
-import { Card } from "@/shared/ui/card"
+import { PageHeader } from "@/shared/ui/page"
+import { TableSkeleton } from "@/shared/ui/skeleton"
+import { ErrorState } from "@/shared/ui/state"
+import { toast } from "@/shared/ui/toast"
+import { Pagination } from "@/shared/ui/pagination"
+import { lookupApi } from "@/shared/api/lookupApi"
 
 const initialFilters: PersonnelFilter = {
   page: 0,
@@ -22,12 +29,23 @@ const initialFilters: PersonnelFilter = {
 }
 
 export function PersonnelPage() {
+  const { t } = useTranslation(["common", "personnel"])
   const [filters, setFilters] = useState<PersonnelFilter>(initialFilters)
   const [editing, setEditing] = useState<Personnel | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const { data: user } = useCurrentUserQuery()
   const { data, isLoading, error } = usePersonnelQuery(filters)
   const { data: dictionaries } = usePersonnelDictionariesQuery()
+  const { data: subdivisionOptions = [] } = useQuery({
+    queryKey: ["lookups", "subdivisions", "personnel-form"],
+    queryFn: () => lookupApi.subdivisions(),
+    staleTime: 5 * 60_000,
+  })
+  const { data: unitOptions = [] } = useQuery({
+    queryKey: ["lookups", "units", "personnel-filters"],
+    queryFn: () => lookupApi.units(),
+    staleTime: 5 * 60_000,
+  })
   const createMutation = useCreatePersonnelMutation()
   const updateMutation = useUpdatePersonnelMutation(editing?.id ?? 0)
   const deleteMutation = useDeletePersonnelMutation()
@@ -39,33 +57,31 @@ export function PersonnelPage() {
 
   const statusText = useMemo(() => {
     if (isLoading) {
-      return "Loading scoped personnel"
+      return t("personnel:page.loading")
     }
-    return `${data?.totalElements ?? 0} records visible`
-  }, [data?.totalElements, isLoading])
+    return t("personnel:page.recordsVisible", { count: data?.totalElements ?? 0 })
+  }, [data?.totalElements, isLoading, t])
 
   function submit(request: PersonnelRequest) {
     const mutation = editing ? updateMutation : createMutation
     mutation.mutate(request, {
       onSuccess: () => {
+        toast.success(editing ? t("personnel:toast.updated") : t("personnel:toast.created"))
         setModalOpen(false)
         setEditing(null)
       },
+      onError: () => toast.error(t("personnel:toast.saveFailed")),
     })
   }
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
-            <ShieldCheck className="size-4" />
-            Personnel Registry
-          </div>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">Military Personnel</h1>
-          <p className="mt-1 text-sm text-zinc-500">{statusText}</p>
-        </div>
-        <Button
+      <PageHeader
+        icon={ShieldCheck}
+        eyebrow={t("personnel:page.eyebrow")}
+        title={t("personnel:page.title")}
+        description={statusText}
+        actions={<Button
           type="button"
           disabled={!canCreate}
           onClick={() => {
@@ -73,19 +89,23 @@ export function PersonnelPage() {
             setModalOpen(true)
           }}
         >
-          <Plus className="size-4" />
-          Create
-        </Button>
-      </div>
+          <Plus className="h-4 w-4 shrink-0" />
+          {t("actions.create")}
+        </Button>}
+      />
 
       <PersonnelFilters
         filters={filters}
         specialties={dictionaries?.specialties ?? []}
+        unitOptions={unitOptions}
+        subdivisionOptions={subdivisionOptions}
         onChange={(nextFilters) => setFilters({ ...filters, ...nextFilters })}
       />
 
-      {error ? (
-        <Card className="border-red-950 bg-red-950/20 text-sm text-red-200">Unable to load personnel data</Card>
+      {isLoading ? (
+        <TableSkeleton columns={5} />
+      ) : error ? (
+        <ErrorState title={t("personnel:error")} />
       ) : (
         <PersonnelTable
           rows={data?.content ?? []}
@@ -96,40 +116,29 @@ export function PersonnelPage() {
             setModalOpen(true)
           }}
           onDelete={(id) => {
-            deleteMutation.mutate(id)
+            deleteMutation.mutate(id, {
+              onSuccess: () => toast.success(t("personnel:toast.deleted")),
+              onError: () => toast.error(t("personnel:toast.deleteFailed")),
+            })
           }}
         />
       )}
 
-      <div className="flex items-center justify-between text-sm text-zinc-500">
-        <span>
-          Page {(data?.page ?? 0) + 1} of {Math.max(data?.totalPages ?? 1, 1)}
-        </span>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={data?.first ?? true}
-            onClick={() => setFilters({ ...filters, page: Math.max((filters.page ?? 0) - 1, 0) })}
-          >
-            Previous
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={data?.last ?? true}
-            onClick={() => setFilters({ ...filters, page: (filters.page ?? 0) + 1 })}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+      <Pagination
+        page={data?.page ?? filters.page ?? 0}
+        size={data?.size ?? filters.size ?? 10}
+        totalElements={data?.totalElements ?? 0}
+        totalPages={data?.totalPages ?? 1}
+        onPageChange={(page) => setFilters({ ...filters, page })}
+        onSizeChange={(size) => setFilters({ ...filters, page: 0, size })}
+      />
 
       <PersonnelEditModal
         open={modalOpen}
         personnel={editing}
         ranks={dictionaries?.ranks ?? []}
         specialties={dictionaries?.specialties ?? []}
+        subdivisionOptions={subdivisionOptions}
         saving={createMutation.isPending || updateMutation.isPending}
         onClose={() => {
           setModalOpen(false)

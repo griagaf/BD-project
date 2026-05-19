@@ -32,8 +32,8 @@ public class SqlAccessControlService implements AccessControlService {
         if (scope.unrestricted()) {
             return true;
         }
-        if (scope.soldierId() == null) {
-            return objectType == ObjectType.PERSONNEL && scope.selfAssignmentIds().contains(objectId);
+        if (scope.soldierId() == null && objectType == ObjectType.PERSONNEL && scope.selfAssignmentIds().contains(objectId)) {
+            return true;
         }
         if (objectType == ObjectType.SELF) {
             return scope.soldierId().equals(objectId) || scope.selfAssignmentIds().contains(objectId);
@@ -180,7 +180,7 @@ public class SqlAccessControlService implements AccessControlService {
     }
 
     private boolean isPersonnelInScope(UserScope scope, Long personnelId) {
-        if (scope.soldierId().equals(personnelId)) {
+        if (scope.soldierId() != null && scope.soldierId().equals(personnelId)) {
             return true;
         }
         if (scope.selfAssignmentIds().contains(personnelId)) {

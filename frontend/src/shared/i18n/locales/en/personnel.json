@@ -1,0 +1,62 @@
+{
+  "page": {
+    "eyebrow": "Personnel Registry",
+    "title": "Military Personnel",
+    "recordsVisible": "{{count}} records visible",
+    "loading": "Loading scoped personnel"
+  },
+  "table": {
+    "personnel": "Personnel",
+    "rank": "Rank",
+    "unit": "Unit",
+    "specialties": "Specialties",
+    "noRank": "No rank",
+    "emptyTitle": "No personnel visible",
+    "emptyDescription": "Current filters and command scope returned no personnel records."
+  },
+  "filters": {
+    "search": "Search",
+    "searchPlaceholder": "Name or personal number",
+    "unit": "Unit",
+    "unitPlaceholder": "Select unit",
+    "subdivision": "Subdivision",
+    "subdivisionPlaceholder": "Select subdivision",
+    "specialty": "Specialty",
+    "all": "All"
+  },
+  "form": {
+    "edit": "Edit personnel",
+    "create": "Create personnel",
+    "record": "Personnel record",
+    "lastName": "Last name",
+    "firstName": "First name",
+    "middleName": "Middle name",
+    "personalNumber": "Personal number",
+    "birthDate": "Birth date",
+    "serviceStart": "Service start",
+    "subdivisionId": "Subdivision",
+    "subdivision": "Subdivision",
+    "selectSubdivision": "Select subdivision",
+    "rank": "Rank",
+    "specialties": "Specialties"
+  },
+  "profile": {
+    "loading": "Loading personnel profile",
+    "unavailable": "Personnel profile unavailable",
+    "eyebrow": "Personnel profile",
+    "formation": "Formation",
+    "noFormation": "No formation",
+    "timeline": "Service timeline",
+    "profileDate": "Profile date",
+    "chainOfCommand": "Chain of Command",
+    "noCommander": "No commander"
+  },
+  "toast": {
+    "created": "Personnel created",
+    "updated": "Personnel updated",
+    "deleted": "Personnel deleted",
+    "saveFailed": "Personnel save failed",
+    "deleteFailed": "Personnel delete failed"
+  },
+  "error": "Unable to load personnel data"
+}

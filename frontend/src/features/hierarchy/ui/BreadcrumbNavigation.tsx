@@ -22,7 +22,7 @@ export function BreadcrumbNavigation({ nodes, onSelect }: BreadcrumbNavigationPr
           >
             {node.label}
           </button>
-          {index < nodes.length - 1 ? <ChevronRight className="size-3 text-zinc-700" /> : null}
+          {index < nodes.length - 1 ? <ChevronRight className="h-3 w-3 shrink-0 text-zinc-700" /> : null}
         </div>
       ))}
     </div>

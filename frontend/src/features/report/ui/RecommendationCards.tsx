@@ -21,11 +21,11 @@ export function RecommendationCards({ recommendations }: { recommendations: Repo
             className={cn("rounded-md border p-4 transition-colors hover:bg-zinc-900/80", severityClass[recommendation.severity])}
           >
             <div className="flex items-start gap-3">
-              <Icon className="mt-0.5 size-4 shrink-0" />
-              <div>
-                <div className="text-sm font-semibold">{recommendation.title}</div>
-                <p className="mt-1 text-sm text-zinc-400">{recommendation.description}</p>
-                <div className="mt-3 text-xs uppercase text-zinc-500">{recommendation.actionLabel}</div>
+              <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="min-w-0">
+                <div className="break-words text-sm font-semibold">{recommendation.title}</div>
+                <p className="mt-1 break-words text-sm text-zinc-400">{recommendation.description}</p>
+                <div className="mt-3 truncate text-xs uppercase text-zinc-500" title={recommendation.actionLabel}>{recommendation.actionLabel}</div>
               </div>
             </div>
           </a>

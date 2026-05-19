@@ -3,12 +3,17 @@ import type {
   BuildingFilter,
   BuildingRow,
   BuildingStats,
+  EquipmentTypePassport,
+  EquipmentTypeRequest,
+  InventoryCategoryRequest,
   InventoryCategory,
   InventoryFilter,
   InventoryRow,
   InventoryStats,
   InventoryType,
   PageResponse,
+  WeaponTypePassport,
+  WeaponTypeRequest,
 } from "@/features/inventory/model/inventoryTypes"
 
 function queryString(filters: Record<string, unknown>) {
@@ -29,6 +34,36 @@ function inventoryApi(resource: "equipment" | "weapons") {
     stats: () => apiClient<InventoryStats>(`/api/${resource}/statistics`),
     categories: () => apiClient<InventoryCategory[]>(`/api/${resource}/categories`),
     types: () => apiClient<InventoryType[]>(`/api/${resource}/types`),
+    createCategory: (request: InventoryCategoryRequest) =>
+      apiClient<InventoryCategory>(`/api/${resource}/categories`, {
+        method: "POST",
+        body: JSON.stringify(request),
+      }),
+    updateCategory: (id: number, request: InventoryCategoryRequest) =>
+      apiClient<InventoryCategory>(`/api/${resource}/categories/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(request),
+      }),
+    deleteCategory: (id: number) =>
+      apiClient<void>(`/api/${resource}/categories/${id}`, {
+        method: "DELETE",
+      }),
+    createType: (request: EquipmentTypeRequest | WeaponTypeRequest) =>
+      apiClient<InventoryType>(`/api/${resource}/types`, {
+        method: "POST",
+        body: JSON.stringify(request),
+      }),
+    updateType: (id: number, request: EquipmentTypeRequest | WeaponTypeRequest) =>
+      apiClient<InventoryType>(`/api/${resource}/types/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(request),
+      }),
+    deleteType: (id: number) =>
+      apiClient<void>(`/api/${resource}/types/${id}`, {
+        method: "DELETE",
+      }),
+    typePassport: (id: number) =>
+      apiClient<EquipmentTypePassport | WeaponTypePassport>(`/api/${resource}/types/${id}/passport`),
     update: (unitId: number, typeId: number, quantity: number) =>
       apiClient<InventoryRow>(`/api/units/${unitId}/${unitSegment}/${typeId}`, {
         method: "PUT",

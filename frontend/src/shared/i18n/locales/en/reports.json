@@ -1,0 +1,74 @@
+{
+  "page": {
+    "eyebrow": "Tactical reporting",
+    "title": "Smart Mission Report",
+    "description": "Aggregated readiness, resources, alerts and rule-based recommendations."
+  },
+  "form": {
+    "objectType": "Object type",
+    "objectId": "Object",
+    "object": "Object",
+    "selectObject": "Select object",
+    "personnel": "Personnel",
+    "resources": "Resources",
+    "alerts": "Alerts",
+    "recommendations": "Recommendations"
+  },
+  "actions": {
+    "generate": "Generate Tactical Report",
+    "generating": "Generating",
+    "exporting": "Exporting"
+  },
+  "states": {
+    "invalidObject": "Select an object from the available scope",
+    "generateError": "Unable to generate report for selected scope",
+    "exportError": "Unable to export CSV report",
+    "previewReady": "Report preview is ready for generation",
+    "previewDescription": "Select scoped object and generate tactical report."
+  },
+  "objectTypes": {
+    "ARMY": "Army",
+    "FORMATION": "Formation",
+    "BRIGADE": "Brigade",
+    "MILITARY_UNIT": "Military Unit",
+    "COMPANY": "Company",
+    "PLATOON": "Platoon"
+  },
+  "sections": {
+    "commanders": "Commanders",
+    "commandersEmpty": "No commanders in selected chain",
+    "personnel": "Personnel",
+    "personnelEmpty": "No personnel grouped by subdivision",
+    "resources": "Resources",
+    "infrastructure": "Infrastructure",
+    "buildingsEmpty": "No building issues detected",
+    "specialties": "Specialties",
+    "specialtiesEmpty": "No specialties covered in selected scope",
+    "alerts": "Alerts",
+    "alertsEmpty": "No alerts in selected report scope"
+  },
+  "object": {
+    "noParent": "No parent"
+  },
+  "readiness": {
+    "personnel": "Personnel",
+    "equipment": "Equipment",
+    "weapons": "Weapons",
+    "specialists": "Specialists",
+    "infrastructure": "Infrastructure"
+  },
+  "metrics": {
+    "total": "Total",
+    "officers": "Officers",
+    "enlisted": "Enlisted",
+    "unused": "Unused",
+    "overloaded": "Overloaded",
+    "subdivisions": "{{count}} subdivisions",
+    "totalSpecialties": "Total specialties",
+    "covered": "Covered",
+    "missing": "Missing",
+    "quantity": "Quantity",
+    "types": "Types",
+    "gaps": "Gaps"
+  }
+}

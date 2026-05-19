@@ -1,0 +1,140 @@
+{
+  "app": {
+    "name": "TACTICAL DISTRICT COMMAND",
+    "shortName": "Tactical District",
+    "subtitle": "Command Center"
+  },
+  "actions": {
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "reset": "Reset",
+    "retry": "Retry",
+    "previous": "Previous",
+    "next": "Next",
+    "open": "Open",
+    "exportCsv": "CSV",
+    "execute": "Execute",
+    "login": "Login",
+    "logout": "Logout",
+    "viewAs": "View as",
+    "dismiss": "Dismiss notification",
+    "close": "Close"
+  },
+  "states": {
+    "loading": "Loading data",
+    "loadingDescription": "Fetching data for the current command scope",
+    "empty": "No data",
+    "error": "Unable to load data",
+    "errorDescription": "The backend rejected the request or the service is unavailable.",
+    "notAvailable": "n/a"
+  },
+  "pagination": {
+    "pageOf": "Page {{page}} of {{total}}",
+    "range": "{{from}}–{{to}} of {{total}} records",
+    "rowsPerPage": "Rows per page",
+    "first": "First",
+    "last": "Last",
+    "ellipsis": "…"
+  },
+  "session": {
+    "label": "Session",
+    "scope": "Active command scope",
+    "unscoped": "unscoped",
+    "closed": "Session closed",
+    "closedDescription": "Authentication state has been cleared"
+  },
+  "language": {
+    "label": "Language",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "table": {
+    "actions": "Actions",
+    "status": "Status",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "category": "Category",
+    "type": "Type"
+  },
+  "dialog": {
+    "inventoryUpdate": "Inventory update",
+    "inventoryAdd": "Add inventory row",
+    "inventoryPosition": "Inventory position",
+    "inventoryPositionDescription": "Select unit, type, and quantity without entering technical IDs.",
+    "buildingRegistry": "Building registry",
+    "editBuilding": "Edit building",
+    "createBuilding": "Create building",
+    "name": "Name",
+    "unitId": "Military unit"
+  },
+  "fields": {
+    "unit": "Military unit",
+    "resourceType": "Type",
+    "unitsCount": "Units",
+    "adoptionYear": "Adoption year",
+    "manufacturer": "Manufacturer",
+    "distribution": "Distribution by units"
+  },
+  "placeholders": {
+    "selectUnit": "Select military unit",
+    "selectResourceType": "Select type"
+  },
+  "roles": {
+    "ADMIN_DISTRICT": "District Administrator",
+    "STAFF_ANALYST": "Staff Analyst",
+    "ARMY_COMMANDER": "Army Commander",
+    "FORMATION_COMMANDER": "Formation Commander",
+    "UNIT_COMMANDER": "Unit Commander",
+    "COMPANY_COMMANDER": "Company Commander",
+    "PLATOON_COMMANDER": "Platoon Commander",
+    "SQUAD_COMMANDER": "Squad Commander",
+    "SOLDIER": "Soldier"
+  },
+  "objectTypes": {
+    "DISTRICT": "District",
+    "ARMY": "Army",
+    "FORMATION": "Formation",
+    "CORPS": "Corps",
+    "DIVISION": "Division",
+    "BRIGADE": "Brigade",
+    "MILITARY_UNIT": "Military Unit",
+    "BATTALION": "Battalion",
+    "COMPANY": "Company",
+    "PLATOON": "Platoon",
+    "SQUAD": "Squad",
+    "PERSONNEL": "Personnel",
+    "SELF": "Personal Card",
+    "BUILDING": "Building",
+    "SPECIALTY": "Specialty",
+    "EQUIPMENT": "Equipment",
+    "WEAPON": "Weapon",
+    "ALERT": "Alert",
+    "REPORT": "Report",
+    "USER": "User",
+    "COMMAND_ASSIGNMENT": "Command Assignment"
+  },
+  "status": {
+    "ACTIVE": "Active",
+    "OPERATIONAL": "Operational",
+    "OPERATIONAL_WITH_WARNINGS": "Operational with warnings",
+    "LIMITED": "Limited readiness",
+    "LOW": "Low",
+    "WARNING": "Warning",
+    "OVERLOADED": "Overloaded",
+    "HIGH": "High",
+    "CRITICAL": "Critical",
+    "MEDIUM": "Medium",
+    "INFO": "Info"
+  },
+  "toasts": {
+    "accessGranted": "Access granted",
+    "signedInAs": "Signed in as {{name}}",
+    "saveFailed": "Save failed",
+    "deleteFailed": "Delete failed",
+    "csvExported": "CSV exported",
+    "csvFailed": "CSV export failed"
+  }
+}

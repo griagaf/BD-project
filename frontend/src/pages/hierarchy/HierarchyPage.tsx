@@ -1,13 +1,16 @@
 import { Network } from "lucide-react"
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useFocusTreeQuery, useHierarchyContextQuery, useHierarchyRootsQuery, useObjectPassportQuery } from "@/features/hierarchy/api/hierarchyQueries"
 import type { HierarchySelection, TreeMode, TreeNode } from "@/features/hierarchy/model/hierarchyTypes"
 import { ActionPanel } from "@/features/hierarchy/ui/ActionPanel"
 import { HierarchySidebar } from "@/features/hierarchy/ui/HierarchySidebar"
 import { ObjectPassport } from "@/features/hierarchy/ui/ObjectPassport"
 import { Card } from "@/shared/ui/card"
+import { PageHeader } from "@/shared/ui/page"
 
 export function HierarchyPage() {
+  const { t } = useTranslation("hierarchy")
   const [mode, setMode] = useState<TreeMode>("STRATEGIC")
   const [selection, setSelection] = useState<HierarchySelection | null>(null)
   const { data: roots = [], isLoading } = useHierarchyRootsQuery(mode)
@@ -31,17 +34,10 @@ export function HierarchyPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
-          <Network className="size-4" />
-          Tactical hierarchy
-        </div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-100">Focus Tree</h1>
-        <p className="mt-1 text-sm text-zinc-500">Lazy-loaded command structure with scope-aware passports.</p>
-      </div>
+      <PageHeader icon={Network} eyebrow={t("page.eyebrow")} title={t("page.title")} description={t("page.description")} />
 
       {isLoading ? (
-        <Card className="text-sm text-zinc-500">Loading strategic structure</Card>
+        <Card className="text-sm text-zinc-500">{t("page.loading")}</Card>
       ) : (
         <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)_300px]">
           <HierarchySidebar

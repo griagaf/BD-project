@@ -1,0 +1,19 @@
+{
+  "simulation": {
+    "bannerTitle": "Access Simulation Mode",
+    "bannerDescription": "viewing as {{role}} in {{scope}}",
+    "roleLabel": "Simulation role",
+    "scopeLabel": "Simulation scope",
+    "reset": "Reset",
+    "scopeLabels": {
+      "district": "District / 1",
+      "army": "Army / 11",
+      "formation": "Corps / 1101",
+      "unit": "Military Unit / 11101",
+      "company": "Company / 1110101",
+      "platoon": "Platoon / 11101011",
+      "squad": "Squad / 111010111",
+      "soldier": "Soldier / 1110101111"
+    }
+  }
+}

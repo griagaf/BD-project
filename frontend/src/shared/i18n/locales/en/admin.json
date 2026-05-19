@@ -1,0 +1,47 @@
+{
+  "page": {
+    "eyebrow": "Administration",
+    "title": "Users",
+    "description": "User accounts, roles and access state."
+  },
+  "filters": {
+    "search": "Search users",
+    "allStatuses": "All statuses",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "table": {
+    "user": "User",
+    "personnelId": "Personnel",
+    "personnel": "Personnel",
+    "roles": "Roles",
+    "created": "Created",
+    "emptyTitle": "No users found",
+    "emptyDescription": "Change filters or create a new account."
+  },
+  "form": {
+    "create": "Create user",
+    "edit": "Edit user",
+    "username": "Username",
+    "displayName": "Display name",
+    "personnelId": "Personnel",
+    "personnel": "Personnel",
+    "selectPersonnel": "Select personnel",
+    "password": "Password",
+    "passwordHint": "Leave empty to keep current password",
+    "roles": "Roles",
+    "active": "Active"
+  },
+  "actions": {
+    "activate": "Activate",
+    "deactivate": "Deactivate"
+  },
+  "toast": {
+    "created": "User created",
+    "updated": "User updated",
+    "statusChanged": "User status changed",
+    "saveFailed": "Unable to save user",
+    "statusFailed": "Unable to change status"
+  },
+  "error": "Unable to load users"
+}

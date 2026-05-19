@@ -4,6 +4,7 @@ import com.tacticaldistrict.command.report.dto.SmartMissionReportDto;
 import com.tacticaldistrict.command.report.dto.SmartMissionReportRequest;
 import com.tacticaldistrict.command.report.service.ReportService;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -33,9 +34,9 @@ public class SmartMissionReportController {
     public ResponseEntity<byte[]> exportCsv(@Valid @RequestBody SmartMissionReportRequest request) {
         byte[] csv = reportService.exportCsv(request);
         return ResponseEntity.ok()
-                .contentType(new MediaType("text", "csv"))
+                .contentType(new MediaType("text", "csv", java.nio.charset.StandardCharsets.UTF_8))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-                        .filename("smart-mission-report.csv")
+                        .filename("smart-mission-report-" + LocalDate.now() + ".csv")
                         .build()
                         .toString())
                 .body(csv);

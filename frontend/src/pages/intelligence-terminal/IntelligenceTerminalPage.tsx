@@ -1,5 +1,6 @@
 import { Download, Play, Radar } from "lucide-react"
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useExecuteQueryMutation, useExportQueryMutation, useQueryTemplatesQuery } from "@/features/intelligence/api/intelligenceQueries"
 import type { ExecuteQueryRequest, QueryScope } from "@/features/intelligence/model/intelligenceTypes"
 import { QueryParamsForm } from "@/features/intelligence/ui/QueryParamsForm"
@@ -7,13 +8,16 @@ import { QueryPreviewTerminal } from "@/features/intelligence/ui/QueryPreviewTer
 import { QueryResultTable } from "@/features/intelligence/ui/QueryResultTable"
 import { QueryTemplateSelector } from "@/features/intelligence/ui/QueryTemplateSelector"
 import { Button } from "@/shared/ui/button"
-import { Card } from "@/shared/ui/card"
+import { PageHeader } from "@/shared/ui/page"
+import { ErrorState, LoadingState } from "@/shared/ui/state"
+import { toast } from "@/shared/ui/toast"
 
 export function IntelligenceTerminalPage() {
+  const { t } = useTranslation(["common", "intelligence"])
   const { data: templates = [], isLoading } = useQueryTemplatesQuery()
   const [selectedCode, setSelectedCode] = useState("FIND_UNITS_IN_FORMATION")
-  const [scope, setScope] = useState<QueryScope>({ type: "FORMATION", id: 1, name: "Siberian Tactical District" })
-  const [parameters, setParameters] = useState<Record<string, string | number>>({ formationId: 1 })
+  const [scope, setScope] = useState<QueryScope>({ type: "FORMATION", id: 1101, name: "11-й армейский корпус" })
+  const [parameters, setParameters] = useState<Record<string, string | number>>({ formationId: 1101 })
   const executeMutation = useExecuteQueryMutation()
   const exportMutation = useExportQueryMutation()
 
@@ -41,35 +45,38 @@ export function IntelligenceTerminalPage() {
         anchor.download = `${selectedCode.toLowerCase()}.csv`
         anchor.click()
         URL.revokeObjectURL(url)
+        toast.success(t("intelligence:toast.exported"), t("intelligence:toast.exportedDescription", { code: selectedCode }))
       },
+      onError: () => toast.error(t("common:toasts.csvFailed")),
     })
   }
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase text-emerald-300">
-            <Radar className="size-4" />
-            Intelligence Query Terminal
-          </div>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-100">Template-driven Query Builder</h1>
-          <p className="mt-1 text-sm text-zinc-500">Structured analytical SQL execution with role and scope checks.</p>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        icon={Radar}
+        eyebrow={t("intelligence:page.eyebrow")}
+        title={t("intelligence:page.title")}
+        description={t("intelligence:page.description")}
+        actions={
+          <>
           <Button type="button" variant="secondary" disabled={!selectedTemplate || exportMutation.isPending} onClick={exportCsv}>
-            <Download className="size-4" />
-            CSV
+            <Download className="h-4 w-4 shrink-0" />
+            {t("actions.exportCsv")}
           </Button>
-          <Button type="button" disabled={!selectedTemplate || executeMutation.isPending} onClick={() => executeMutation.mutate({ code: selectedCode, request })}>
-            <Play className="size-4" />
-            Execute
+          <Button type="button" disabled={!selectedTemplate || executeMutation.isPending} onClick={() => executeMutation.mutate({ code: selectedCode, request }, {
+            onSuccess: (result) => toast.success(t("intelligence:toast.executed"), t("intelligence:toast.rowsReturned", { count: result.rowCount })),
+            onError: () => toast.error(t("intelligence:toast.failed")),
+          })}>
+            <Play className="h-4 w-4 shrink-0" />
+            {t("actions.execute")}
           </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {isLoading ? (
-        <Card className="text-sm text-zinc-500">Loading query templates</Card>
+        <LoadingState title={t("intelligence:states.loadingTemplates")} />
       ) : (
         <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
           <QueryTemplateSelector templates={templates} selectedCode={selectedCode} onSelect={selectTemplate} />
@@ -83,7 +90,7 @@ export function IntelligenceTerminalPage() {
             />
             <QueryPreviewTerminal command={command} />
             {executeMutation.error ? (
-              <Card className="border-red-950 bg-red-950/20 text-sm text-red-200">Query execution failed</Card>
+              <ErrorState title={t("intelligence:error")} />
             ) : null}
             <QueryResultTable result={executeMutation.data} />
           </div>

@@ -1,0 +1,32 @@
+{
+  "page": {
+    "eyebrow": "Weapons inventory",
+    "title": "Weapons",
+    "description": "Scoped inventory view with readiness indicators."
+  },
+  "actions": {
+    "addInventory": "Add weapon",
+    "manageTypes": "Weapons dictionary"
+  },
+  "dictionary": {
+    "title": "Weapons dictionary",
+    "newType": "New weapon type",
+    "newCategory": "New category",
+    "currentTypes": "Current types",
+    "typeName": "Type name",
+    "selectCategory": "Select category",
+    "purpose": "Purpose",
+    "manufacturer": "Manufacturer",
+    "adoptionYear": "Adoption year"
+  },
+  "toast": {
+    "created": "Weapon added to unit",
+    "updated": "Weapon row updated",
+    "deleted": "Weapon row deleted",
+    "categoryCreated": "Weapon category created",
+    "typeCreated": "Weapon type created",
+    "updateFailed": "Weapon update failed",
+    "deleteFailed": "Weapon delete failed"
+  },
+  "error": "Unable to load weapons"
+}

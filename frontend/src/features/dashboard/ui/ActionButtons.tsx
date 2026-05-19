@@ -13,9 +13,9 @@ export function ActionButtons({ actions }: ActionButtonsProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {actions.map((action) => (
-        <Button key={`${action.label}:${action.route}`} type="button" variant="secondary" className="h-8 px-3 text-xs" onClick={() => navigate(action.route)}>
-          {action.queryTemplate ? <Radar className="size-3" /> : <ExternalLink className="size-3" />}
-          {action.label}
+        <Button key={`${action.label}:${action.route}`} type="button" variant="secondary" className="h-8 min-w-0 px-3 text-xs" onClick={() => navigate(action.route)}>
+          {action.queryTemplate ? <Radar className="h-4 w-4 shrink-0" /> : <ExternalLink className="h-4 w-4 shrink-0" />}
+          <span className="truncate" title={action.label}>{action.label}</span>
         </Button>
       ))}
     </div>

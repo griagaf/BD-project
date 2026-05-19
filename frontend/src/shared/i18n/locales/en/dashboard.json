@@ -1,0 +1,32 @@
+{
+  "page": {
+    "eyebrow": "Operational overview",
+    "title": "Tactical Dashboard",
+    "description": "Scoped command summary, alerts and readiness posture."
+  },
+  "stats": {
+    "formations": "Formations",
+    "units": "Units",
+    "personnel": "Personnel",
+    "equipment": "Equipment",
+    "weapons": "Weapons",
+    "buildings": "Buildings",
+    "openAlerts": "Open alerts"
+  },
+  "readiness": {
+    "title": "Operational readiness",
+    "eyebrow": "Readiness Radar"
+  },
+  "events": {
+    "title": "Latest events",
+    "empty": "No audit events in current scope"
+  },
+  "problems": {
+    "title": "Problem zones",
+    "empty": "No problem zones detected",
+    "noCritical": "No critical alerts in current scope"
+  },
+  "loading": "Loading tactical dashboard",
+  "loadingDescription": "Compiling scoped command metrics",
+  "error": "Unable to load dashboard"
+}

@@ -1,58 +1,60 @@
 import { Search, SlidersHorizontal } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { PersonnelFilter, Specialty } from "@/features/personnel/model/personnelTypes"
+import type { LookupOption } from "@/shared/api/lookupApi"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
+import { SearchableSelect } from "@/shared/ui/searchable-select"
 
 type PersonnelFiltersProps = {
   filters: PersonnelFilter
   specialties: Specialty[]
+  unitOptions: LookupOption[]
+  subdivisionOptions: LookupOption[]
   onChange: (filters: PersonnelFilter) => void
 }
 
-export function PersonnelFilters({ filters, specialties, onChange }: PersonnelFiltersProps) {
+export function PersonnelFilters({ filters, specialties, unitOptions, subdivisionOptions, onChange }: PersonnelFiltersProps) {
+  const { t } = useTranslation(["common", "personnel"])
   return (
-    <Card className="grid gap-3 md:grid-cols-[1.4fr_0.7fr_0.7fr_0.8fr_auto] md:items-end">
+    <Card className="grid gap-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,0.8fr)_auto] md:items-end">
       <label className="space-y-2">
-        <span className="text-xs uppercase text-zinc-500">Search</span>
+        <span className="text-xs uppercase text-zinc-500">{t("personnel:filters.search")}</span>
         <div className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3">
-          <Search className="size-4 text-zinc-500" />
+          <Search className="h-4 w-4 shrink-0 text-zinc-500" />
           <input
             className="h-10 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-600"
             value={filters.search ?? ""}
             onChange={(event) => onChange({ ...filters, search: event.target.value, page: 0 })}
-            placeholder="Name or personal number"
+            placeholder={t("personnel:filters.searchPlaceholder")}
           />
         </div>
       </label>
 
-      <label className="space-y-2">
-        <span className="text-xs uppercase text-zinc-500">Unit</span>
-        <input
-          className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
-          value={filters.unitId ?? ""}
-          onChange={(event) => onChange({ ...filters, unitId: event.target.value, page: 0 })}
-          placeholder="Unit ID"
-        />
-      </label>
+      <SearchableSelect
+        label={t("personnel:filters.unit")}
+        value={filters.unitId ? Number(filters.unitId) : null}
+        options={unitOptions}
+        placeholder={t("personnel:filters.unitPlaceholder")}
+        onChange={(value) => onChange({ ...filters, unitId: value ? String(value) : undefined, page: 0 })}
+      />
+
+      <SearchableSelect
+        label={t("personnel:filters.subdivision")}
+        value={filters.subdivisionId ? Number(filters.subdivisionId) : null}
+        options={subdivisionOptions}
+        placeholder={t("personnel:filters.subdivisionPlaceholder")}
+        onChange={(value) => onChange({ ...filters, subdivisionId: value ? String(value) : undefined, page: 0 })}
+      />
 
       <label className="space-y-2">
-        <span className="text-xs uppercase text-zinc-500">Subdivision</span>
-        <input
-          className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
-          value={filters.subdivisionId ?? ""}
-          onChange={(event) => onChange({ ...filters, subdivisionId: event.target.value, page: 0 })}
-          placeholder="Subdivision ID"
-        />
-      </label>
-
-      <label className="space-y-2">
-        <span className="text-xs uppercase text-zinc-500">Specialty</span>
+        <span className="text-xs uppercase text-zinc-500">{t("personnel:filters.specialty")}</span>
         <select
           className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
           value={filters.specialtyId ?? ""}
           onChange={(event) => onChange({ ...filters, specialtyId: event.target.value, page: 0 })}
         >
-          <option value="">All</option>
+          <option value="">{t("personnel:filters.all")}</option>
           {specialties.map((specialty) => (
             <option key={specialty.id} value={specialty.id}>
               {specialty.name}
@@ -66,8 +68,8 @@ export function PersonnelFilters({ filters, specialties, onChange }: PersonnelFi
         variant="secondary"
         onClick={() => onChange({ page: 0, size: filters.size ?? 10, sort: filters.sort ?? "lastName,asc" })}
       >
-        <SlidersHorizontal className="size-4" />
-        Reset
+        <SlidersHorizontal className="h-4 w-4 shrink-0" />
+        {t("actions.reset")}
       </Button>
     </Card>
   )

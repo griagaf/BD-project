@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Focus Tree",
+    "eyebrow": "Tactical hierarchy",
+    "description": "Lazy-loaded command structure with scope-aware passports.",
+    "loading": "Loading strategic structure"
+  },
+  "passport": {
+    "unit": "Unit Passport",
+    "fallbackUnit": "Military Unit",
+    "description": "Scoped operational passport",
+    "back": "Hierarchy",
+    "error": "Unable to load unit passport",
+    "loading": "Loading object passport",
+    "select": "Select hierarchy object",
+    "operationalObject": "Operational object",
+    "notAvailable": "n/a",
+    "noCommander": "No commander assigned",
+    "commanderSlot": "Commander slot"
+  },
+  "panel": {
+    "actions": "Actions",
+    "commandPanel": "Command Panel",
+    "assignCommander": "Assign commander",
+    "unitPassport": "Unit passport",
+    "tacticalReport": "Tactical report",
+    "statistics": "Statistics",
+    "personnel": "Personnel",
+    "readiness": "Readiness",
+    "units": "Units",
+    "subdivisions": "Subdivisions"
+  },
+  "tree": {
+    "empty": "No hierarchy nodes visible",
+    "navigation": "Structure Navigation",
+    "loadingChildren": "Loading children"
+  }
+}

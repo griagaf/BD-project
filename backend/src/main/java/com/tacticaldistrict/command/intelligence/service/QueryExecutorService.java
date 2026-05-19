@@ -62,7 +62,7 @@ public class QueryExecutorService {
     @Transactional(readOnly = true)
     public ResponseEntity<byte[]> exportCsv(QueryTemplate template, ExecuteQueryRequest request) {
         QueryResultDto result = execute(template, request);
-        StringBuilder csv = new StringBuilder();
+        StringBuilder csv = new StringBuilder("\uFEFF");
         csv.append(String.join(",", result.columns())).append("\n");
         for (Map<String, Object> row : result.rows()) {
             csv.append(result.columns().stream()
@@ -472,7 +472,7 @@ public class QueryExecutorService {
                     GROUP BY fc.root_formation_id, fc.root_formation_name, fc.root_formation_type
                 ),
                 ranked AS (
-                    SELECT uc.*, RANK() OVER (ORDER BY uc.units_count """ + order + """
+                    SELECT uc.*, RANK() OVER (ORDER BY uc.units_count """ + " " + order + " " + """
                     ) AS rank_no
                     FROM units_count uc
                 )

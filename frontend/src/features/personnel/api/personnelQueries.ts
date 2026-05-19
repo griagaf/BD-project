@@ -6,6 +6,7 @@ export function usePersonnelQuery(filters: PersonnelFilter) {
   return useQuery({
     queryKey: ["personnel", filters],
     queryFn: () => personnelApi.search(filters),
+    staleTime: 30_000,
   })
 }
 
@@ -13,6 +14,7 @@ export function usePersonnelProfileQuery(id: number) {
   return useQuery({
     queryKey: ["personnel", id, "profile"],
     queryFn: () => personnelApi.profile(id),
+    staleTime: 30_000,
   })
 }
 
@@ -23,6 +25,7 @@ export function usePersonnelDictionariesQuery() {
       const [ranks, specialties] = await Promise.all([personnelApi.ranks(), personnelApi.specialties()])
       return { ranks, specialties }
     },
+    staleTime: 5 * 60_000,
   })
 }
 

@@ -1,0 +1,140 @@
+{
+  "app": {
+    "name": "TACTICAL DISTRICT COMMAND",
+    "shortName": "Тактический округ",
+    "subtitle": "Центр командования"
+  },
+  "actions": {
+    "create": "Создать",
+    "edit": "Изменить",
+    "delete": "Удалить",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "reset": "Сбросить",
+    "retry": "Повторить",
+    "previous": "Назад",
+    "next": "Вперёд",
+    "open": "Открыть",
+    "exportCsv": "CSV",
+    "execute": "Выполнить",
+    "login": "Войти",
+    "logout": "Выйти",
+    "viewAs": "Смотреть как",
+    "dismiss": "Закрыть уведомление",
+    "close": "Закрыть"
+  },
+  "states": {
+    "loading": "Загрузка данных",
+    "loadingDescription": "Получение данных текущей области доступа",
+    "empty": "Нет данных",
+    "error": "Не удалось загрузить данные",
+    "errorDescription": "Запрос отклонён сервером или сервис временно недоступен.",
+    "notAvailable": "н/д"
+  },
+  "pagination": {
+    "pageOf": "Страница {{page}} из {{total}}",
+    "range": "{{from}}–{{to}} из {{total}} записей",
+    "rowsPerPage": "Строк на странице",
+    "first": "Первая",
+    "last": "Последняя",
+    "ellipsis": "…"
+  },
+  "session": {
+    "label": "Сессия",
+    "scope": "Активная область",
+    "unscoped": "без области",
+    "closed": "Сессия закрыта",
+    "closedDescription": "Данные авторизации очищены"
+  },
+  "language": {
+    "label": "Язык",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "table": {
+    "actions": "Действия",
+    "status": "Статус",
+    "quantity": "Количество",
+    "unit": "Часть",
+    "category": "Категория",
+    "type": "Тип"
+  },
+  "dialog": {
+    "inventoryUpdate": "Обновление инвентаря",
+    "inventoryAdd": "Добавление позиции",
+    "inventoryPosition": "Позиция инвентаря",
+    "inventoryPositionDescription": "Выберите часть, тип и количество без ручного ввода технических ID.",
+    "buildingRegistry": "Реестр сооружений",
+    "editBuilding": "Изменить сооружение",
+    "createBuilding": "Создать сооружение",
+    "name": "Название",
+    "unitId": "Военная часть"
+  },
+  "fields": {
+    "unit": "Военная часть",
+    "resourceType": "Тип",
+    "unitsCount": "Частей",
+    "adoptionYear": "Год принятия",
+    "manufacturer": "Производитель",
+    "distribution": "Распределение по частям"
+  },
+  "placeholders": {
+    "selectUnit": "Выберите военную часть",
+    "selectResourceType": "Выберите тип"
+  },
+  "roles": {
+    "ADMIN_DISTRICT": "Администратор округа",
+    "STAFF_ANALYST": "Аналитик штаба",
+    "ARMY_COMMANDER": "Командующий армией",
+    "FORMATION_COMMANDER": "Командир соединения",
+    "UNIT_COMMANDER": "Командир военной части",
+    "COMPANY_COMMANDER": "Командир роты",
+    "PLATOON_COMMANDER": "Командир взвода",
+    "SQUAD_COMMANDER": "Командир отделения",
+    "SOLDIER": "Военнослужащий"
+  },
+  "objectTypes": {
+    "DISTRICT": "Округ",
+    "ARMY": "Армия",
+    "FORMATION": "Соединение",
+    "CORPS": "Корпус",
+    "DIVISION": "Дивизия",
+    "BRIGADE": "Бригада",
+    "MILITARY_UNIT": "Военная часть",
+    "BATTALION": "Батальон",
+    "COMPANY": "Рота",
+    "PLATOON": "Взвод",
+    "SQUAD": "Отделение",
+    "PERSONNEL": "Военнослужащий",
+    "SELF": "Личная карточка",
+    "BUILDING": "Сооружение",
+    "SPECIALTY": "Специальность",
+    "EQUIPMENT": "Техника",
+    "WEAPON": "Вооружение",
+    "ALERT": "Предупреждение",
+    "REPORT": "Отчёт",
+    "USER": "Пользователь",
+    "COMMAND_ASSIGNMENT": "Командное назначение"
+  },
+  "status": {
+    "ACTIVE": "Активен",
+    "OPERATIONAL": "Готов",
+    "OPERATIONAL_WITH_WARNINGS": "Готов с предупреждениями",
+    "LIMITED": "Ограниченная готовность",
+    "LOW": "Низкий",
+    "WARNING": "Предупреждение",
+    "OVERLOADED": "Перегружено",
+    "HIGH": "Высокий",
+    "CRITICAL": "Критический",
+    "MEDIUM": "Средний",
+    "INFO": "Информация"
+  },
+  "toasts": {
+    "accessGranted": "Доступ разрешён",
+    "signedInAs": "Вход выполнен: {{name}}",
+    "saveFailed": "Не удалось сохранить",
+    "deleteFailed": "Не удалось удалить",
+    "csvExported": "CSV экспортирован",
+    "csvFailed": "Не удалось экспортировать CSV"
+  }
+}

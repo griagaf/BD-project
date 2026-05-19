@@ -1,45 +1,55 @@
 import type { QueryResult } from "@/features/intelligence/model/intelligenceTypes"
+import { useTranslation } from "react-i18next"
 import { Card } from "@/shared/ui/card"
+import { EmptyState } from "@/shared/ui/state"
+import { Table, TableShell, tableCellClass, tableHeadClass, tableRowClass } from "@/shared/ui/table"
+import { cn } from "@/shared/lib/cn"
 
 type QueryResultTableProps = {
   result?: QueryResult
 }
 
 export function QueryResultTable({ result }: QueryResultTableProps) {
+  const { t } = useTranslation(["common", "intelligence"])
   if (!result) {
-    return <Card className="text-sm text-zinc-500">Execute a query to inspect scoped results</Card>
+    return <EmptyState title={t("intelligence:states.noQueryTitle")} description={t("intelligence:states.noQueryDescription")} />
   }
 
   return (
-    <Card className="overflow-hidden p-0">
+    <Card className="p-0">
       <div className="border-b border-zinc-800 px-4 py-3 text-sm text-zinc-400">
-        {result.rowCount} rows returned at {new Date(result.executedAt).toLocaleString()}
+        {t("intelligence:result.rowsReturned", { count: result.rowCount, time: new Date(result.executedAt).toLocaleString() })}
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-800 bg-zinc-900/60 text-xs uppercase text-zinc-500">
+      {result.rows.length ? (
+        <TableShell className="rounded-none border-0">
+        <Table>
+          <thead className={tableHeadClass}>
             <tr>
               {result.columns.map((column) => (
-                <th key={column} className="whitespace-nowrap px-4 py-3">{column}</th>
+                <th key={column} className={cn(tableCellClass, "whitespace-nowrap")}>
+                  <span className="block max-w-56 truncate" title={column}>{column}</span>
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {result.rows.map((row, index) => (
-              <tr key={index} className="border-b border-zinc-900">
+              <tr key={index} className={tableRowClass}>
                 {result.columns.map((column) => (
-                  <td key={column} className="whitespace-nowrap px-4 py-3 text-zinc-300">{String(row[column] ?? "")}</td>
+                  <td key={column} className={cn(tableCellClass, "text-zinc-300")}>
+                    <span className="block max-w-72 truncate" title={String(row[column] ?? "")}>{String(row[column] ?? "")}</span>
+                  </td>
                 ))}
               </tr>
             ))}
-            {!result.rows.length ? (
-              <tr>
-                <td className="px-4 py-8 text-center text-zinc-500" colSpan={Math.max(result.columns.length, 1)}>No rows in current scope</td>
-              </tr>
-            ) : null}
           </tbody>
-        </table>
-      </div>
+        </Table>
+      </TableShell>
+      ) : (
+        <div className="p-5">
+          <EmptyState title={t("intelligence:states.noRowsTitle")} description={t("intelligence:states.noRowsDescription")} />
+        </div>
+      )}
     </Card>
   )
 }
