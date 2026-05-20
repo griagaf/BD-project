@@ -1,9 +1,11 @@
 import type { QueryResult } from "@/features/intelligence/model/intelligenceTypes"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Card } from "@/shared/ui/card"
 import { EmptyState } from "@/shared/ui/state"
 import { Table, TableShell, tableCellClass, tableHeadClass, tableRowClass } from "@/shared/ui/table"
 import { cn } from "@/shared/lib/cn"
+import { Pagination } from "@/shared/ui/pagination"
 
 type QueryResultTableProps = {
   result?: QueryResult
@@ -11,6 +13,21 @@ type QueryResultTableProps = {
 
 export function QueryResultTable({ result }: QueryResultTableProps) {
   const { t } = useTranslation(["common", "intelligence"])
+  const [page, setPage] = useState(0)
+  const [size, setSize] = useState(25)
+
+  useEffect(() => {
+    setPage(0)
+  }, [result?.executedAt])
+
+  const rows = result?.rows ?? []
+  const totalPages = Math.max(1, Math.ceil(rows.length / size))
+  const currentPage = Math.min(page, totalPages - 1)
+  const visibleRows = useMemo(
+    () => rows.slice(currentPage * size, currentPage * size + size),
+    [currentPage, rows, size],
+  )
+
   if (!result) {
     return <EmptyState title={t("intelligence:states.noQueryTitle")} description={t("intelligence:states.noQueryDescription")} />
   }
@@ -20,7 +37,8 @@ export function QueryResultTable({ result }: QueryResultTableProps) {
       <div className="border-b border-zinc-800 px-4 py-3 text-sm text-zinc-400">
         {t("intelligence:result.rowsReturned", { count: result.rowCount, time: new Date(result.executedAt).toLocaleString() })}
       </div>
-      {result.rows.length ? (
+      {rows.length ? (
+        <>
         <TableShell className="rounded-none border-0">
         <Table>
           <thead className={tableHeadClass}>
@@ -33,8 +51,8 @@ export function QueryResultTable({ result }: QueryResultTableProps) {
             </tr>
           </thead>
           <tbody>
-            {result.rows.map((row, index) => (
-              <tr key={index} className={tableRowClass}>
+            {visibleRows.map((row, index) => (
+              <tr key={`${currentPage}:${index}`} className={tableRowClass}>
                 {result.columns.map((column) => (
                   <td key={column} className={cn(tableCellClass, "text-zinc-300")}>
                     <span className="block max-w-72 truncate" title={String(row[column] ?? "")}>{String(row[column] ?? "")}</span>
@@ -45,6 +63,19 @@ export function QueryResultTable({ result }: QueryResultTableProps) {
           </tbody>
         </Table>
       </TableShell>
+      <Pagination
+        className="rounded-none border-x-0 border-b-0"
+        page={currentPage}
+        size={size}
+        totalElements={rows.length}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        onSizeChange={(nextSize) => {
+          setSize(nextSize)
+          setPage(0)
+        }}
+      />
+      </>
       ) : (
         <div className="p-5">
           <EmptyState title={t("intelligence:states.noRowsTitle")} description={t("intelligence:states.noRowsDescription")} />

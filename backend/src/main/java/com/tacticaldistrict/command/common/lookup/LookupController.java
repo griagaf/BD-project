@@ -17,26 +17,31 @@ public class LookupController {
     @GetMapping("/units")
     public List<LookupOptionResponse> units(
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "50") int limit
+            @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(required = false) Long formationId
     ) {
-        return lookupService.units(search, limit);
+        return lookupService.units(search, limit, formationId);
     }
 
     @GetMapping("/formations")
     public List<LookupOptionResponse> formations(
             @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "") String types,
-            @RequestParam(defaultValue = "50") int limit
+            @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(required = false) Long parentId
     ) {
-        return lookupService.formations(search, types, limit);
+        return lookupService.formations(search, types, limit, parentId);
     }
 
     @GetMapping("/subdivisions")
     public List<LookupOptionResponse> subdivisions(
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "50") int limit
+            @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(required = false) Long unitId,
+            @RequestParam(required = false) Long parentId,
+            @RequestParam(defaultValue = "") String type
     ) {
-        return lookupService.subdivisions(search, limit);
+        return lookupService.subdivisions(search, limit, unitId, parentId, type);
     }
 
     @GetMapping("/ranks")

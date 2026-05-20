@@ -13,6 +13,7 @@
   },
   "builder": {
     "templates": "Templates",
+    "searchTemplates": "Search templates",
     "scope": "Scope",
     "parameters": "Parameters",
     "noParameters": "No additional parameters required",

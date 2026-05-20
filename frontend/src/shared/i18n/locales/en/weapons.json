@@ -8,8 +8,17 @@
     "addInventory": "Add weapon",
     "manageTypes": "Weapons dictionary"
   },
+  "tabs": {
+    "inventory": "Assigned inventory",
+    "types": "Type dictionary"
+  },
   "dictionary": {
     "title": "Weapons dictionary",
+    "typeDirectory": "Standalone dictionary",
+    "directoryDescription": "Weapon types are visible even when they are not assigned to a military unit.",
+    "searchTypes": "Search weapon type",
+    "openPassport": "Open type passport",
+    "noTypes": "No weapon types found. Adjust search or filters.",
     "newType": "New weapon type",
     "newCategory": "New category",
     "currentTypes": "Current types",

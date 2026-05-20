@@ -22,8 +22,17 @@
     "addInventory": "Add equipment",
     "manageTypes": "Equipment dictionary"
   },
+  "tabs": {
+    "inventory": "Assigned inventory",
+    "types": "Type dictionary"
+  },
   "dictionary": {
     "title": "Equipment dictionary",
+    "typeDirectory": "Standalone dictionary",
+    "directoryDescription": "Equipment types are visible even when they are not assigned to a military unit.",
+    "searchTypes": "Search equipment type",
+    "openPassport": "Open type passport",
+    "noTypes": "No equipment types found. Adjust search or filters.",
     "newType": "New equipment type",
     "newCategory": "New category",
     "currentTypes": "Current types",
