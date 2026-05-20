@@ -46,8 +46,8 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
   const typePassportQuery = useInventoryTypePassportQuery(kind, selectedTypeId)
   const { data: unitOptions = [] } = useQuery({
     queryKey: ["lookups", "units", kind],
-    queryFn: () => lookupApi.units(),
-    staleTime: 5 * 60_000,
+    queryFn: () => lookupApi.units("", { limit: 500 }),
+    staleTime: 0,
   })
   const typeOptions = (dictionaries?.types ?? []).map((type) => ({
     id: type.id,

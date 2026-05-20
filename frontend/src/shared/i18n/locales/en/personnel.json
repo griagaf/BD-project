@@ -63,6 +63,18 @@
     "selectPath": "Select a subdivision to see the assignment path.",
     "noRankAttributes": "Selected rank has no additional attributes."
   },
+  "placeholders": {
+    "lastName": "For example: Volkov",
+    "firstName": "For example: Alexander",
+    "middleName": "For example: Sergeevich",
+    "personalNumber": "For example: PN-42115-018",
+    "searchRank": "Search by rank or personnel category",
+    "searchSubdivision": "Search by company, platoon, squad, or unit"
+  },
+  "hints": {
+    "date": "Select a date in the calendar or enter it using the field format.",
+    "personalNumber": "Use a unique personal number without leading or trailing spaces."
+  },
   "profile": {
     "loading": "Loading personnel profile",
     "unavailable": "Personnel profile unavailable",

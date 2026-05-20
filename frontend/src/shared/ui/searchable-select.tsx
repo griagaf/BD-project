@@ -130,10 +130,13 @@ export function SearchableSelect({
     if (!rect) {
       return
     }
+    const viewportPadding = 12
+    const width = Math.min(Math.max(rect.width, 260), window.innerWidth - viewportPadding * 2)
+    const left = Math.min(Math.max(rect.left, viewportPadding), window.innerWidth - width - viewportPadding)
     setDropdownStyle({
       top: rect.bottom + 8,
-      left: rect.left,
-      width: rect.width,
+      left,
+      width,
     })
   }
 

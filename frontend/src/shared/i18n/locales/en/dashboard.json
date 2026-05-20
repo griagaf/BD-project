@@ -15,7 +15,34 @@
   },
   "readiness": {
     "title": "Operational readiness",
-    "eyebrow": "Readiness Radar"
+    "eyebrow": "Readiness Radar",
+    "criteria": {
+      "title": "Readiness criteria",
+      "personnel": {
+        "title": "Personnel",
+        "description": "High readiness means stable staffing, no critical personnel gaps, and enough assigned service members in the current scope."
+      },
+      "equipment": {
+        "title": "Equipment",
+        "description": "The score considers equipment presence, empty inventory gaps, and critical shortage or overflow alerts."
+      },
+      "weapons": {
+        "title": "Weapons",
+        "description": "The score reflects weapon availability, category coverage, and absence of critical no-weapon alerts."
+      },
+      "specialists": {
+        "title": "Specialists",
+        "description": "The score drops when specialties have no assigned personnel or visible staffing gaps."
+      },
+      "infrastructure": {
+        "title": "Infrastructure",
+        "description": "Only buildings intended for deployment are evaluated, including occupancy and overloaded facilities."
+      },
+      "alerts": {
+        "title": "Alerts",
+        "description": "Critical and high alerts reduce readiness; no active operational problems improves the final status."
+      }
+    }
   },
   "events": {
     "title": "Latest events",

@@ -261,7 +261,7 @@ public class LookupService {
         Map<String, Object> params = new HashMap<>();
         params.put("search", normalized);
         params.put("pattern", "%" + normalized + "%");
-        params.put("limit", Math.max(1, Math.min(limit, 100)));
+        params.put("limit", Math.max(1, Math.min(limit, 500)));
         return params;
     }
 

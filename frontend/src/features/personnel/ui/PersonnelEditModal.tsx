@@ -135,6 +135,14 @@ export function PersonnelEditModal({
     platoonsQuery.data?.find((item) => item.id === platoonId)?.label,
     squadsQuery.data?.find((item) => item.id === squadId)?.label,
   ].filter(Boolean).join(" → ")
+  const rankOptions = ranks
+    .map((rank) => ({
+      id: rank.id,
+      label: rank.name,
+      parentLabel: rankGroup(rank.category),
+      description: rank.category,
+    }))
+    .sort((left, right) => `${left.parentLabel} ${left.label}`.localeCompare(`${right.parentLabel} ${right.label}`, "ru"))
 
   function resetCascade() {
     setArmyId(null)
@@ -210,17 +218,18 @@ export function PersonnelEditModal({
         <div className="grid gap-4 p-5 md:grid-cols-2">
           {step === 0 ? (
             <>
-              <Field label={t("personnel:form.lastName")} value={form.lastName} onChange={(value) => setForm({ ...form, lastName: value })} />
-              <Field label={t("personnel:form.firstName")} value={form.firstName} onChange={(value) => setForm({ ...form, firstName: value })} />
-              <Field label={t("personnel:form.middleName")} optional value={form.middleName ?? ""} onChange={(value) => setForm({ ...form, middleName: value })} />
-              <Field label={t("personnel:form.personalNumber")} value={form.personalNumber} onChange={(value) => setForm({ ...form, personalNumber: value })} />
-              <Field label={t("personnel:form.birthDate")} type="date" value={form.birthDate} onChange={(value) => setForm({ ...form, birthDate: value })} />
-              <Field label={t("personnel:form.serviceStart")} type="date" value={form.serviceStart} onChange={(value) => setForm({ ...form, serviceStart: value })} />
+              <Field label={t("personnel:form.lastName")} placeholder={t("personnel:placeholders.lastName")} value={form.lastName} onChange={(value) => setForm({ ...form, lastName: value })} />
+              <Field label={t("personnel:form.firstName")} placeholder={t("personnel:placeholders.firstName")} value={form.firstName} onChange={(value) => setForm({ ...form, firstName: value })} />
+              <Field label={t("personnel:form.middleName")} placeholder={t("personnel:placeholders.middleName")} optional value={form.middleName ?? ""} onChange={(value) => setForm({ ...form, middleName: value })} />
+              <Field label={t("personnel:form.personalNumber")} placeholder={t("personnel:placeholders.personalNumber")} hint={t("personnel:hints.personalNumber")} value={form.personalNumber} onChange={(value) => setForm({ ...form, personalNumber: value })} />
+              <Field label={t("personnel:form.birthDate")} type="date" hint={t("personnel:hints.date")} value={form.birthDate} onChange={(value) => setForm({ ...form, birthDate: value })} />
+              <Field label={t("personnel:form.serviceStart")} type="date" hint={t("personnel:hints.date")} value={form.serviceStart} onChange={(value) => setForm({ ...form, serviceStart: value })} />
               <SearchableSelect
                 label={t("personnel:form.rank")}
                 value={form.rankId ?? null}
-                options={ranks.map((rank) => ({ id: rank.id, label: rank.name, description: rank.category }))}
+                options={rankOptions}
                 placeholder={t("personnel:table.noRank")}
+                searchPlaceholder={t("personnel:placeholders.searchRank")}
                 onChange={(value) => {
                   setForm({ ...form, rankId: value })
                   setRankAttributeValues({})
@@ -325,6 +334,8 @@ export function PersonnelEditModal({
                 value={form.subdivisionId}
                 options={subdivisionOptions}
                 placeholder={t("personnel:form.selectSubdivision")}
+                searchPlaceholder={t("personnel:placeholders.searchSubdivision")}
+                loadOptions={(search) => lookupApi.subdivisions(search, { limit: 500 })}
                 onChange={(value) => setForm({ ...form, subdivisionId: value ?? form.subdivisionId })}
               />
               <div className="rounded-md border border-zinc-800 bg-zinc-950 p-3 text-xs text-zinc-500">
@@ -423,12 +434,16 @@ function Field({
   value,
   type = "text",
   optional = false,
+  placeholder,
+  hint,
   onChange,
 }: {
   label: string
   value: string
   type?: string
   optional?: boolean
+  placeholder?: string
+  hint?: string
   onChange: (value: string) => void
 }) {
   return (
@@ -438,9 +453,11 @@ function Field({
         className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
         type={type}
         value={value}
+        placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         required={!optional}
       />
+      {hint ? <span className="block text-xs text-zinc-600">{hint}</span> : null}
     </label>
   )
 }
@@ -476,4 +493,13 @@ function DynamicRankAttributeField({
       onChange={onChange}
     />
   )
+}
+
+function rankGroup(category: string) {
+  const normalized = category.toLowerCase()
+  if (normalized.includes("высш") || normalized.includes("генерал")) return "Высший состав"
+  if (normalized.includes("офиц")) return "Офицеры"
+  if (normalized.includes("прапор")) return "Прапорщики"
+  if (normalized.includes("серж") || normalized.includes("старшин")) return "Сержанты и старшины"
+  return "Рядовой состав"
 }

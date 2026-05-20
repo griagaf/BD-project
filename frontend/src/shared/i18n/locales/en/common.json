@@ -90,7 +90,10 @@
   },
   "placeholders": {
     "selectUnit": "Select military unit",
-    "selectResourceType": "Select type"
+    "searchUnit": "Search by number, name, or formation",
+    "selectResourceType": "Select type",
+    "searchResourceType": "Search by name or category",
+    "quantity": "For example: 12"
   },
   "select": {
     "visibleLimit": "Showing first {{visible}} of {{total}}. Refine search."
