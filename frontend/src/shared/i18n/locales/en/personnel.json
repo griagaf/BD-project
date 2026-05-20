@@ -40,6 +40,15 @@
     "rank": "Rank",
     "specialties": "Specialties"
   },
+  "wizard": {
+    "basic": "Basic data",
+    "assignment": "Assignment",
+    "specialties": "Specialties",
+    "rankAttributes": "Rank attributes",
+    "confirm": "Confirmation",
+    "selectPath": "Select a subdivision to see the assignment path.",
+    "noRankAttributes": "Selected rank has no additional attributes."
+  },
   "profile": {
     "loading": "Loading personnel profile",
     "unavailable": "Personnel profile unavailable",

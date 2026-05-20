@@ -282,6 +282,10 @@ public class EquipmentService {
                            CASE WHEN etav.value_boolean IS NULL THEN NULL ELSE etav.value_boolean::TEXT END
                        ) AS display_value
                 FROM equipment_type_attribute_values etav
+                JOIN equipment_types et ON et.type_id = etav.type_id
+                JOIN equipment_category_attributes eca
+                  ON eca.category_id = et.category_id
+                 AND eca.attribute_id = etav.attribute_id
                 JOIN equipment_attribute_types eat ON eat.attribute_id = etav.attribute_id
                 WHERE etav.type_id = :typeId
                   AND COALESCE(

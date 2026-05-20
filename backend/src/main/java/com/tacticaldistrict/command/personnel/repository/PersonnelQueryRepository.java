@@ -111,6 +111,10 @@ public class PersonnelQueryRepository {
                            CASE WHEN rav.value_boolean IS NULL THEN NULL ELSE rav.value_boolean::TEXT END
                        ) AS display_value
                 FROM rank_attribute_values rav
+                JOIN personnel_ranks pr ON pr.personnel_id = rav.personnel_id
+                JOIN rank_type_attributes rta
+                  ON rta.rank_id = pr.rank_id
+                 AND rta.attribute_id = rav.attribute_id
                 JOIN rank_attribute_types rat ON rat.attribute_id = rav.attribute_id
                 WHERE rav.personnel_id = :personnelId
                   AND COALESCE(

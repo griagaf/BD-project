@@ -31,6 +31,24 @@
     "addToCategory": "Add to category",
     "noAttributes": "The selected category has no assigned attributes."
   },
+  "passport": {
+    "title": "Weapon Type Passport",
+    "tabs": {
+      "overview": "Overview",
+      "attributes": "Attributes",
+      "distribution": "Distribution",
+      "units": "Linked units",
+      "alerts": "Alerts",
+      "actions": "Actions"
+    },
+    "noAttributes": "No attributes are filled for this type.",
+    "noDistribution": "This weapon type is not assigned to visible units.",
+    "noLinkedAlerts": "No linked alerts detected.",
+    "noQuantityAlert": "No registered quantity for this weapon type.",
+    "addToUnit": "Add this type to a unit",
+    "openUnits": "Open units with this type",
+    "reportByType": "Generate report by type"
+  },
   "toast": {
     "created": "Weapon added to unit",
     "updated": "Weapon row updated",

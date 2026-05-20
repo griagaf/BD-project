@@ -1,8 +1,9 @@
-import { Boxes, Plus, Settings } from "lucide-react"
+import { Boxes, ExternalLink, FileText, Plus, Settings } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useSearchParams } from "react-router-dom"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
 import { useAssignInventoryAttributeMutation, useCreateInventoryAttributeTypeMutation, useDeleteInventoryMutation, useInventoryAttributeSchemaQuery, useInventoryAttributeTypesQuery, useInventoryDictionariesQuery, useInventoryQuery, useInventoryStatsQuery, useInventoryTypePassportQuery, useSaveInventoryCategoryMutation, useSaveInventoryTypeMutation, useUpdateInventoryMutation } from "@/features/inventory/api/inventoryQueries"
 import type { DynamicAttributeMetadata, EquipmentTypePassport, EquipmentTypeRequest, InventoryCategory, InventoryFilter, InventoryRow, InventoryType, WeaponTypePassport, WeaponTypeRequest } from "@/features/inventory/model/inventoryTypes"
@@ -28,9 +29,12 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
   const [filters, setFilters] = useState<InventoryFilter>({ page: 0, size: 10 })
   const [editing, setEditing] = useState<InventoryRow | null>(null)
   const [inventoryDialogOpen, setInventoryDialogOpen] = useState(false)
+  const [prefillUnitId, setPrefillUnitId] = useState<number | null>(null)
+  const [prefillTypeId, setPrefillTypeId] = useState<number | null>(null)
   const [typeDialogOpen, setTypeDialogOpen] = useState(false)
   const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null)
   const { data: user } = useCurrentUserQuery()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { data, error, isLoading } = useInventoryQuery(kind, filters)
   const { data: stats } = useInventoryStatsQuery(kind)
   const { data: dictionaries } = useInventoryDictionariesQuery(kind)
@@ -53,6 +57,23 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
   const canEdit = user?.permissions.includes(`${kind === "equipment" ? "equipment" : "weapon"}:update`) ?? false
   const canManageDictionary = user?.roles.includes("ADMIN_DISTRICT") ?? false
 
+  useEffect(() => {
+    const unitId = Number(searchParams.get("unitId"))
+    const action = searchParams.get("action")
+    if (Number.isFinite(unitId) && unitId > 0) {
+      setFilters((current) => ({ ...current, page: 0, unitId }))
+      setPrefillUnitId(unitId)
+      if (action === "add" && canEdit) {
+        setEditing(null)
+        setInventoryDialogOpen(true)
+        setSearchParams((current) => {
+          current.delete("action")
+          return current
+        }, { replace: true })
+      }
+    }
+  }, [canEdit, searchParams, setSearchParams])
+
   return (
     <div className="space-y-5">
       <Header
@@ -67,6 +88,8 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
           <div className="flex flex-wrap gap-2">
             <Button type="button" disabled={!canEdit} onClick={() => {
               setEditing(null)
+              setPrefillUnitId(filters.unitId ?? null)
+              setPrefillTypeId(null)
               setInventoryDialogOpen(true)
             }}>
               <Plus className="h-4 w-4 shrink-0" />
@@ -107,6 +130,8 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
         saving={updateMutation.isPending}
         unitOptions={unitOptions}
         typeOptions={typeOptions}
+        initialUnitId={prefillUnitId}
+        initialTypeId={prefillTypeId}
         onClose={() => {
           setInventoryDialogOpen(false)
           setEditing(null)
@@ -142,6 +167,19 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
         open={Boolean(selectedTypeId)}
         loading={typePassportQuery.isLoading}
         passport={typePassportQuery.data}
+        kind={kind}
+        canEdit={canEdit}
+        onAddToUnit={(typeId) => {
+          setPrefillTypeId(typeId)
+          setPrefillUnitId(filters.unitId ?? null)
+          setSelectedTypeId(null)
+          setEditing(null)
+          setInventoryDialogOpen(true)
+        }}
+        onOpenUnits={(typeId) => {
+          setFilters({ page: 0, size: filters.size ?? 10, typeId })
+          setSelectedTypeId(null)
+        }}
         onClose={() => setSelectedTypeId(null)}
       />
     </div>
@@ -380,53 +418,127 @@ function InventoryTypeDialog({
   )
 }
 
-function TypePassportDialog({ open, loading, passport, onClose }: { open: boolean; loading: boolean; passport?: EquipmentTypePassport | WeaponTypePassport; onClose: () => void }) {
-  const { t } = useTranslation(["common", "equipment"])
+function TypePassportDialog({
+  open,
+  loading,
+  passport,
+  kind,
+  canEdit,
+  onAddToUnit,
+  onOpenUnits,
+  onClose,
+}: {
+  open: boolean
+  loading: boolean
+  passport?: EquipmentTypePassport | WeaponTypePassport
+  kind: "equipment" | "weapons"
+  canEdit: boolean
+  onAddToUnit: (typeId: number) => void
+  onOpenUnits: (typeId: number) => void
+  onClose: () => void
+}) {
+  const namespace = kind === "equipment" ? "equipment" : "weapons"
+  const { t } = useTranslation(["common", "equipment", "weapons"])
+  const [tab, setTab] = useState("overview")
   if (!open) {
     return null
   }
+  const tabs = ["overview", "attributes", "distribution", "units", "alerts", "actions"]
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-md border border-zinc-800 bg-zinc-950 p-5 shadow-2xl">
+      <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-md border border-zinc-800 bg-zinc-950 p-5 shadow-2xl">
         {loading || !passport ? (
           <div className="text-sm text-zinc-400">{t("states.loading")}</div>
         ) : (
           <div className="space-y-5">
             <div>
-              <div className="text-xs uppercase text-emerald-300">{passport.categoryName}</div>
+              <div className="text-xs uppercase text-emerald-300">{t(`${namespace}:passport.title`)}</div>
               <h2 className="mt-1 break-words text-2xl font-semibold text-zinc-100">{passport.name}</h2>
-              <p className="mt-2 break-words text-sm text-zinc-500">{passport.description || passport.purpose || t("states.notAvailable")}</p>
+              <p className="mt-2 break-words text-sm text-zinc-500">{passport.categoryName} / {passport.description || passport.purpose || t("states.notAvailable")}</p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Metric label={t("table.quantity")} value={passport.totalQuantity} />
-              <Metric label={t("fields.unitsCount")} value={passport.unitsCount} />
-              <Metric label={t("fields.adoptionYear")} value={passport.adoptionYear ?? t("states.notAvailable")} />
-              <Metric label={t("fields.manufacturer")} value={passport.manufacturer ?? t("states.notAvailable")} />
+
+            <div className="flex gap-2 overflow-x-auto border-b border-zinc-800 pb-2">
+              {tabs.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setTab(item)}
+                  className={`shrink-0 rounded-md px-3 py-2 text-xs transition ${tab === item ? "bg-emerald-500 text-zinc-950" : "bg-zinc-900 text-zinc-400 hover:text-zinc-100"}`}
+                >
+                  {t(`${namespace}:passport.tabs.${item}`)}
+                </button>
+              ))}
             </div>
-            {passport.attributes?.length ? (
+
+            {tab === "overview" ? (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <Metric label={t("table.quantity")} value={passport.totalQuantity} />
+                  <Metric label={t("fields.unitsCount")} value={passport.unitsCount} />
+                  <Metric label={t("fields.adoptionYear")} value={passport.adoptionYear ?? t("states.notAvailable")} />
+                  <Metric label={t("fields.manufacturer")} value={passport.manufacturer ?? t("states.notAvailable")} />
+                </div>
+                <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
+                  <div className="mb-2 text-sm font-medium text-zinc-100">{t("fields.description")}</div>
+                  <p className="break-words text-sm text-zinc-400">{passport.description || passport.purpose || t("states.notAvailable")}</p>
+                </div>
+              </>
+            ) : null}
+
+            {tab === "attributes" ? (
               <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
                 <div className="mb-3 text-sm font-medium text-zinc-100">{t("fields.attributes")}</div>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {passport.attributes.map((attribute) => (
+                  {passport.attributes?.length ? passport.attributes.map((attribute) => (
                     <div key={attribute.id} className="min-w-0 rounded border border-zinc-800 bg-zinc-950 px-3 py-2">
                       <div className="truncate text-xs uppercase text-zinc-500" title={attribute.name}>{attribute.name}</div>
-                      <div className="mt-1 break-words text-sm text-zinc-100">{attribute.displayValue}</div>
+                      <div className="mt-1 break-words text-sm text-zinc-100">{attribute.displayValue || t("states.notAvailable")}</div>
                     </div>
-                  ))}
+                  )) : <div className="text-sm text-zinc-500">{t(`${namespace}:passport.noAttributes`)}</div>}
                 </div>
               </div>
             ) : null}
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
+
+            {tab === "distribution" || tab === "units" ? (
+              <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
               <div className="mb-3 text-sm font-medium text-zinc-100">{t("fields.distribution")}</div>
-              <div className="space-y-2">
-                {passport.distribution?.slice(0, 12).map((row: InventoryRow) => (
+              <div className="max-h-96 space-y-2 overflow-y-auto">
+                {passport.distribution?.map((row: InventoryRow) => (
                   <div key={`${row.unitId}:${row.typeId}`} className="flex items-center justify-between gap-3 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm">
-                    <span className="truncate text-zinc-300" title={row.unitName}>{row.unitName}</span>
-                    <span className="shrink-0 font-medium text-zinc-100">{row.quantity}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-zinc-300" title={row.unitName}>{row.unitName}</span>
+                      <span className="block truncate text-xs text-zinc-500" title={row.categoryName}>{row.categoryName}</span>
+                    </span>
+                    <span className="shrink-0 rounded border border-zinc-800 bg-zinc-900 px-2 py-1 font-medium text-zinc-100">{row.quantity}</span>
                   </div>
                 ))}
+                {!passport.distribution?.length ? <div className="text-sm text-zinc-500">{t(`${namespace}:passport.noDistribution`)}</div> : null}
               </div>
-            </div>
+              </div>
+            ) : null}
+
+            {tab === "alerts" ? (
+              <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4 text-sm text-zinc-400">
+                {passport.totalQuantity <= 0 ? t(`${namespace}:passport.noQuantityAlert`) : t(`${namespace}:passport.noLinkedAlerts`)}
+              </div>
+            ) : null}
+
+            {tab === "actions" ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button type="button" disabled={!canEdit} onClick={() => onAddToUnit(passport.id)}>
+                  <Plus className="h-4 w-4 shrink-0" />
+                  {t(`${namespace}:passport.addToUnit`)}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => onOpenUnits(passport.id)}>
+                  <ExternalLink className="h-4 w-4 shrink-0" />
+                  {t(`${namespace}:passport.openUnits`)}
+                </Button>
+                <Button type="button" variant="secondary" disabled>
+                  <FileText className="h-4 w-4 shrink-0" />
+                  {t(`${namespace}:passport.reportByType`)}
+                </Button>
+              </div>
+            ) : null}
           </div>
         )}
         <div className="mt-5 flex justify-end">

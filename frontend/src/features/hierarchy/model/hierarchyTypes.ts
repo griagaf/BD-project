@@ -86,3 +86,19 @@ export type SubdivisionRequest = {
   parentId?: number | null
   commanderId?: number | null
 }
+
+export type FormationRequest = {
+  name: string
+  formationType: string
+  parentId?: number | null
+  formationDate?: string | null
+  status?: string | null
+  commanderId?: number | null
+}
+
+export type UnitRequest = {
+  name: string
+  formationId: number
+  locationId?: number | null
+  commanderId?: number | null
+}

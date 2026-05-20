@@ -1,5 +1,5 @@
 import { apiClient } from "@/shared/api/apiClient"
-import type { FocusTreeResponse, HierarchyContext, ObjectPassport, SubdivisionRequest, TreeMode, TreeNode, Unit } from "@/features/hierarchy/model/hierarchyTypes"
+import type { FocusTreeResponse, FormationRequest, HierarchyContext, ObjectPassport, SubdivisionRequest, TreeMode, TreeNode, Unit, UnitRequest } from "@/features/hierarchy/model/hierarchyTypes"
 
 export const hierarchyApi = {
   roots: (mode: TreeMode) => apiClient<TreeNode[]>(`/api/hierarchy/roots?mode=${mode}`),
@@ -14,6 +14,16 @@ export const hierarchyApi = {
     apiClient<HierarchyContext>(`/api/hierarchy/nodes/${nodeType}/${nodeId}/context`),
   unitPassport: (unitId: number) => apiClient<ObjectPassport>(`/api/units/${unitId}/passport`),
   units: () => apiClient<Unit[]>("/api/units"),
+  createFormation: (request: FormationRequest) =>
+    apiClient("/api/formations", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+  createUnit: (request: UnitRequest) =>
+    apiClient("/api/units", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
   createSubdivision: (request: SubdivisionRequest) =>
     apiClient("/api/subdivisions", {
       method: "POST",

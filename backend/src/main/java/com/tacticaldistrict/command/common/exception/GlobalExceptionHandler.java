@@ -124,8 +124,17 @@ public class GlobalExceptionHandler {
         if (raw.contains("BUILDING_NOT_ASSIGNABLE")) {
             return "Невозможно назначить подразделение: выбранное сооружение не предназначено для размещения подразделений.";
         }
-        if (raw.contains("Subdivision and building must belong to the same military unit")) {
+        if (raw.contains("SUBDIVISION_BUILDING_UNIT_MISMATCH") || raw.contains("Subdivision and building must belong to the same military unit")) {
             return "Подразделение и сооружение должны относиться к одной военной части.";
+        }
+        if (raw.contains("ux_subdivision_single_building_assignment")) {
+            return "Подразделение уже размещено в другом сооружении. Сначала снимите текущее закрепление.";
+        }
+        if (raw.contains("SUBDIVISION_NOT_FOUND")) {
+            return "Выбранное подразделение не найдено или недоступно.";
+        }
+        if (raw.contains("BUILDING_NOT_FOUND")) {
+            return "Выбранное сооружение не найдено или недоступно.";
         }
         if (raw.contains("foreign key")) {
             return "Связанная запись не найдена или недоступна в текущей области.";

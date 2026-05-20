@@ -11,11 +11,13 @@ type InventoryDialogProps = {
   saving: boolean
   unitOptions: LookupOption[]
   typeOptions: LookupOption[]
+  initialUnitId?: number | null
+  initialTypeId?: number | null
   onClose: () => void
   onSubmit: (request: { unitId: number; typeId: number; quantity: number }) => void
 }
 
-export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, onClose, onSubmit }: InventoryDialogProps) {
+export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, initialUnitId, initialTypeId, onClose, onSubmit }: InventoryDialogProps) {
   const { t } = useTranslation("common")
   const [unitId, setUnitId] = useState<number | null>(null)
   const [typeId, setTypeId] = useState<number | null>(null)
@@ -27,11 +29,11 @@ export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, o
       setTypeId(row.typeId)
       setQuantity(row.quantity)
     } else if (open) {
-      setUnitId(null)
-      setTypeId(null)
+      setUnitId(initialUnitId ?? null)
+      setTypeId(initialTypeId ?? null)
       setQuantity(1)
     }
-  }, [open, row])
+  }, [initialTypeId, initialUnitId, open, row])
 
   if (!open) {
     return null

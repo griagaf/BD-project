@@ -64,6 +64,7 @@ public class AlertService {
                 Map.of("unitName", rs.getString("unit_name")),
                 List.of(
                         new AlertActionDto("Открыть часть", "/units/" + rs.getLong("unit_id"), null),
+                        new AlertActionDto("Добавить технику", "/equipment?unitId=" + rs.getLong("unit_id") + "&action=add", null),
                         new AlertActionDto("Показать технику", "/equipment?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_EQUIPMENT"),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_EQUIPMENT_AVAILABILITY")
                 )
@@ -88,6 +89,7 @@ public class AlertService {
                 Map.of("unitName", rs.getString("unit_name")),
                 List.of(
                         new AlertActionDto("Открыть часть", "/units/" + rs.getLong("unit_id"), null),
+                        new AlertActionDto("Добавить вооружение", "/weapons?unitId=" + rs.getLong("unit_id") + "&action=add", null),
                         new AlertActionDto("Показать вооружение", "/weapons?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_WEAPONS"),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_WEAPON_AVAILABILITY")
                 )

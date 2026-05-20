@@ -1,5 +1,6 @@
 import { Bell, LogOut, Menu } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useAuthStore } from "@/features/auth/model/authStore"
 import { RolePreview } from "@/features/auth/ui/RolePreview"
@@ -10,11 +11,13 @@ import { LanguageSwitcher } from "@/shared/ui/language-switcher"
 
 export function Topbar() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { t } = useTranslation("common")
   const clearTokens = useAuthStore((state) => state.clearTokens)
 
   function logout() {
     clearTokens()
+    queryClient.clear()
     toast.info(t("session.closed"), t("session.closedDescription"))
     navigate("/login", { replace: true })
   }

@@ -279,6 +279,10 @@ public class WeaponService {
                            CASE WHEN wtav.value_boolean IS NULL THEN NULL ELSE wtav.value_boolean::TEXT END
                        ) AS display_value
                 FROM weapon_type_attribute_values wtav
+                JOIN weapon_types wt ON wt.type_id = wtav.type_id
+                JOIN weapon_category_attributes wca
+                  ON wca.category_id = wt.category_id
+                 AND wca.attribute_id = wtav.attribute_id
                 JOIN weapon_attribute_types wat ON wat.attribute_id = wtav.attribute_id
                 WHERE wtav.type_id = :typeId
                   AND COALESCE(

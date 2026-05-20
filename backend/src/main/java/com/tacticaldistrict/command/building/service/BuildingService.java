@@ -153,6 +153,14 @@ public class BuildingService {
         if (!Boolean.TRUE.equals(building.assignable())) {
             throw new IllegalArgumentException("Невозможно назначить подразделение: выбранное сооружение не предназначено для размещения подразделений.");
         }
+        Long currentBuildingId = jdbcTemplate.query("""
+                SELECT building_id
+                FROM subdivision_buildings
+                WHERE subdivision_id = :subdivisionId
+                """, Map.of("subdivisionId", subdivisionId), rs -> rs.next() ? rs.getLong("building_id") : null);
+        if (currentBuildingId != null && !currentBuildingId.equals(buildingId)) {
+            throw new IllegalArgumentException("Подразделение уже размещено в другом сооружении. Сначала снимите текущее закрепление.");
+        }
         jdbcTemplate.update("""
                 INSERT INTO subdivision_buildings (subdivision_id, building_id)
                 VALUES (:subdivisionId, :buildingId)

@@ -46,6 +46,7 @@ export function PersonnelEditModal({
   const { t } = useTranslation(["common", "personnel"])
   const [form, setForm] = useState<PersonnelRequest>(emptyForm)
   const [rankAttributeValues, setRankAttributeValues] = useState<Record<number, string>>({})
+  const [step, setStep] = useState(0)
   const rankSchemaQuery = useQuery({
     queryKey: ["attributes", "rank", form.rankId],
     queryFn: () => apiClient<Array<{ id: number; name: string; dataType: "text" | "number" | "date" | "boolean"; required: boolean }>>(`/api/attributes/ranks/${form.rankId}`),
@@ -59,6 +60,7 @@ export function PersonnelEditModal({
     }
     if (!personnel) {
       setForm(emptyForm)
+      setStep(0)
       return
     }
     setForm({
@@ -75,9 +77,17 @@ export function PersonnelEditModal({
       rankAttributes: [],
     })
     setRankAttributeValues({})
+    setStep(0)
   }, [open, personnel])
 
   const title = useMemo(() => (personnel ? t("personnel:form.edit") : t("personnel:form.create")), [personnel, t])
+  const steps = [
+    t("personnel:wizard.basic"),
+    t("personnel:wizard.assignment"),
+    t("personnel:wizard.specialties"),
+    t("personnel:wizard.rankAttributes"),
+    t("personnel:wizard.confirm"),
+  ]
 
   if (!open) {
     return null
@@ -108,31 +118,85 @@ export function PersonnelEditModal({
           </Button>
         </div>
 
+        <div className="border-b border-zinc-800 px-5 py-3">
+          <div className="flex gap-2 overflow-x-auto">
+            {steps.map((label, index) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setStep(index)}
+                className={`shrink-0 rounded-md px-3 py-2 text-xs transition ${step === index ? "bg-emerald-500 text-zinc-950" : "bg-zinc-900 text-zinc-400 hover:text-zinc-100"}`}
+              >
+                {index + 1}. {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="grid gap-4 p-5 md:grid-cols-2">
-          <Field label={t("personnel:form.lastName")} value={form.lastName} onChange={(value) => setForm({ ...form, lastName: value })} />
-          <Field label={t("personnel:form.firstName")} value={form.firstName} onChange={(value) => setForm({ ...form, firstName: value })} />
-          <Field label={t("personnel:form.middleName")} optional value={form.middleName ?? ""} onChange={(value) => setForm({ ...form, middleName: value })} />
-          <Field label={t("personnel:form.personalNumber")} value={form.personalNumber} onChange={(value) => setForm({ ...form, personalNumber: value })} />
-          <Field label={t("personnel:form.birthDate")} type="date" value={form.birthDate} onChange={(value) => setForm({ ...form, birthDate: value })} />
-          <Field label={t("personnel:form.serviceStart")} type="date" value={form.serviceStart} onChange={(value) => setForm({ ...form, serviceStart: value })} />
-          <SearchableSelect
-            label={t("personnel:form.subdivision")}
-            value={form.subdivisionId}
-            options={subdivisionOptions}
-            placeholder={t("personnel:form.selectSubdivision")}
-            onChange={(value) => setForm({ ...form, subdivisionId: value ?? form.subdivisionId })}
-          />
-          <SearchableSelect
-            label={t("personnel:form.rank")}
-            value={form.rankId ?? null}
-            options={ranks.map((rank) => ({ id: rank.id, label: rank.name, description: rank.category }))}
-            placeholder={t("personnel:table.noRank")}
-            onChange={(value) => {
-              setForm({ ...form, rankId: value })
-              setRankAttributeValues({})
-            }}
-          />
-          {rankSchemaQuery.data?.length ? (
+          {step === 0 ? (
+            <>
+              <Field label={t("personnel:form.lastName")} value={form.lastName} onChange={(value) => setForm({ ...form, lastName: value })} />
+              <Field label={t("personnel:form.firstName")} value={form.firstName} onChange={(value) => setForm({ ...form, firstName: value })} />
+              <Field label={t("personnel:form.middleName")} optional value={form.middleName ?? ""} onChange={(value) => setForm({ ...form, middleName: value })} />
+              <Field label={t("personnel:form.personalNumber")} value={form.personalNumber} onChange={(value) => setForm({ ...form, personalNumber: value })} />
+              <Field label={t("personnel:form.birthDate")} type="date" value={form.birthDate} onChange={(value) => setForm({ ...form, birthDate: value })} />
+              <Field label={t("personnel:form.serviceStart")} type="date" value={form.serviceStart} onChange={(value) => setForm({ ...form, serviceStart: value })} />
+              <SearchableSelect
+                label={t("personnel:form.rank")}
+                value={form.rankId ?? null}
+                options={ranks.map((rank) => ({ id: rank.id, label: rank.name, description: rank.category }))}
+                placeholder={t("personnel:table.noRank")}
+                onChange={(value) => {
+                  setForm({ ...form, rankId: value })
+                  setRankAttributeValues({})
+                }}
+              />
+            </>
+          ) : null}
+
+          {step === 1 ? (
+            <div className="md:col-span-2">
+              <SearchableSelect
+                label={t("personnel:form.subdivision")}
+                value={form.subdivisionId}
+                options={subdivisionOptions}
+                placeholder={t("personnel:form.selectSubdivision")}
+                onChange={(value) => setForm({ ...form, subdivisionId: value ?? form.subdivisionId })}
+              />
+              <div className="mt-3 rounded-md border border-zinc-800 bg-zinc-900/50 p-3 text-sm text-zinc-400">
+                {subdivisionOptions.find((option) => option.id === form.subdivisionId)?.description
+                  ?? subdivisionOptions.find((option) => option.id === form.subdivisionId)?.parentLabel
+                  ?? t("personnel:wizard.selectPath")}
+              </div>
+            </div>
+          ) : null}
+
+          {step === 2 ? (
+            <label className="space-y-2 md:col-span-2">
+              <span className="text-xs uppercase text-zinc-500">{t("personnel:form.specialties")}</span>
+              <div className="grid gap-2 rounded-md border border-zinc-800 bg-zinc-900 p-3 sm:grid-cols-2">
+                {specialties.map((specialty) => (
+                  <label key={specialty.id} className="flex min-w-0 items-center gap-2 text-sm text-zinc-300">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 shrink-0 accent-emerald-400"
+                      checked={form.specialtyIds.includes(specialty.id)}
+                      onChange={(event) => {
+                        const specialtyIds = event.target.checked
+                          ? [...form.specialtyIds, specialty.id]
+                          : form.specialtyIds.filter((id) => id !== specialty.id)
+                        setForm({ ...form, specialtyIds })
+                      }}
+                    />
+                    <span className="truncate" title={specialty.name}>{specialty.name}</span>
+                  </label>
+                ))}
+              </div>
+            </label>
+          ) : null}
+
+          {step === 3 ? rankSchemaQuery.data?.length ? (
             <div className="grid gap-3 rounded-md border border-zinc-800 bg-zinc-900/50 p-3 md:col-span-2 md:grid-cols-2">
               {rankSchemaQuery.data.map((attribute) => (
                 <DynamicRankAttributeField
@@ -143,40 +207,52 @@ export function PersonnelEditModal({
                 />
               ))}
             </div>
-          ) : null}
-          <label className="space-y-2 md:col-span-2">
-            <span className="text-xs uppercase text-zinc-500">{t("personnel:form.specialties")}</span>
-            <div className="grid gap-2 rounded-md border border-zinc-800 bg-zinc-900 p-3 sm:grid-cols-2">
-              {specialties.map((specialty) => (
-                <label key={specialty.id} className="flex min-w-0 items-center gap-2 text-sm text-zinc-300">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 shrink-0 accent-emerald-400"
-                    checked={form.specialtyIds.includes(specialty.id)}
-                    onChange={(event) => {
-                      const specialtyIds = event.target.checked
-                        ? [...form.specialtyIds, specialty.id]
-                        : form.specialtyIds.filter((id) => id !== specialty.id)
-                      setForm({ ...form, specialtyIds })
-                    }}
-                  />
-                  <span className="truncate" title={specialty.name}>{specialty.name}</span>
-                </label>
-              ))}
+          ) : (
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-3 text-sm text-zinc-500 md:col-span-2">
+              {t("personnel:wizard.noRankAttributes")}
             </div>
-          </label>
+          ) : null}
+
+          {step === 4 ? (
+            <div className="space-y-3 rounded-md border border-zinc-800 bg-zinc-900/50 p-4 text-sm md:col-span-2">
+              <Summary label={t("personnel:form.lastName")} value={`${form.lastName} ${form.firstName} ${form.middleName ?? ""}`} />
+              <Summary label={t("personnel:form.rank")} value={ranks.find((rank) => rank.id === form.rankId)?.name ?? t("personnel:table.noRank")} />
+              <Summary label={t("personnel:form.subdivision")} value={subdivisionOptions.find((option) => option.id === form.subdivisionId)?.label ?? t("personnel:form.selectSubdivision")} />
+              <Summary label={t("personnel:form.specialties")} value={`${form.specialtyIds.length}`} />
+            </div>
+          ) : null}
         </div>
 
         <div className="flex flex-col-reverse gap-2 border-t border-zinc-800 px-5 py-4 sm:flex-row sm:justify-end">
           <Button type="button" variant="secondary" onClick={onClose}>
             {t("actions.cancel")}
           </Button>
+          {step > 0 ? (
+            <Button type="button" variant="secondary" onClick={() => setStep((current) => Math.max(0, current - 1))}>
+              {t("actions.previous")}
+            </Button>
+          ) : null}
+          {step < steps.length - 1 ? (
+            <Button type="button" onClick={() => setStep((current) => Math.min(steps.length - 1, current + 1))}>
+              {t("actions.next")}
+            </Button>
+          ) : (
           <Button type="submit" disabled={saving}>
             <Save className="h-4 w-4 shrink-0" />
             {t("actions.save")}
           </Button>
+          )}
         </div>
       </form>
+    </div>
+  )
+}
+
+function Summary({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex gap-3 rounded border border-zinc-800 bg-zinc-950 px-3 py-2">
+      <span className="w-40 shrink-0 truncate text-zinc-500" title={label}>{label}</span>
+      <span className="min-w-0 break-words text-zinc-100">{value}</span>
     </div>
   )
 }

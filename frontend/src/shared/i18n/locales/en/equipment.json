@@ -45,6 +45,24 @@
     "addToCategory": "Add to category",
     "noAttributes": "The selected category has no assigned attributes."
   },
+  "passport": {
+    "title": "Equipment Type Passport",
+    "tabs": {
+      "overview": "Overview",
+      "attributes": "Attributes",
+      "distribution": "Distribution",
+      "units": "Linked units",
+      "alerts": "Alerts",
+      "actions": "Actions"
+    },
+    "noAttributes": "No attributes are filled for this type.",
+    "noDistribution": "This equipment type is not assigned to visible units.",
+    "noLinkedAlerts": "No linked alerts detected.",
+    "noQuantityAlert": "No registered quantity for this equipment type.",
+    "addToUnit": "Add this type to a unit",
+    "openUnits": "Open units with this type",
+    "reportByType": "Generate report by type"
+  },
   "toast": {
     "created": "Equipment added to unit",
     "updated": "Equipment row updated",
