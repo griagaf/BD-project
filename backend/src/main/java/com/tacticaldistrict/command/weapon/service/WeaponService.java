@@ -1,6 +1,7 @@
 package com.tacticaldistrict.command.weapon.service;
 
 import com.tacticaldistrict.command.audit.AuditService;
+import com.tacticaldistrict.command.common.attribute.DynamicAttributeValueRequest;
 import com.tacticaldistrict.command.common.dto.AttributeValueResponse;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.equipment.dto.InventoryQuantityRequest;
@@ -20,8 +21,8 @@ import com.tacticaldistrict.command.weapon.dto.WeaponTypeResponse;
 import jakarta.persistence.EntityNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -90,6 +91,10 @@ public class WeaponService {
 
     @Transactional(readOnly = true)
     public List<WeaponCategoryResponse> categories() {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("weapon:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
         return jdbcTemplate.query("""
                 SELECT category_id, name
                 FROM weapon_categories
@@ -100,6 +105,10 @@ public class WeaponService {
 
     @Transactional(readOnly = true)
     public List<WeaponTypeResponse> types() {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("weapon:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
         return jdbcTemplate.query("""
                 SELECT wt.type_id, wt.name, wc.category_id, wc.name AS category_name
                 FROM weapon_types wt
@@ -227,7 +236,7 @@ public class WeaponService {
         if (!user.hasPermission("weapon:read")) {
             throw new AccessDeniedException("Access denied");
         }
-        WeaponTypePassportResponse base = jdbcTemplate.queryForObject("""
+        WeaponTypePassportResponse base = jdbcTemplate.query("""
                 SELECT wt.type_id, wt.name, wc.category_id, wc.name AS category_name,
                        wt.purpose, wt.caliber, wt.effective_range_m, wt.adoption_year,
                        wt.manufacturer, wt.description,
@@ -240,10 +249,10 @@ public class WeaponService {
                 GROUP BY wt.type_id, wt.name, wc.category_id, wc.name,
                          wt.purpose, wt.caliber, wt.effective_range_m, wt.adoption_year,
                          wt.manufacturer, wt.description
-                """, Map.of("id", id), this::mapTypePassport);
-        if (base == null) {
-            throw new EntityNotFoundException("Weapon type not found: " + id);
-        }
+                """, Map.of("id", id), this::mapTypePassport)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Weapon type not found: " + id));
         List<UnitWeaponResponse> distribution = queryInventory(new WeaponFilter(null, null, null, id))
                 .stream()
                 .filter(row -> permissionService.canRead(user, ObjectType.MILITARY_UNIT, row.unitId()))
@@ -288,44 +297,34 @@ public class WeaponService {
     }
 
     private void syncTypeAttributes(Long typeId, WeaponTypeRequest request) {
-        Map<String, Object> values = new LinkedHashMap<>();
-        values.put("назначение", blankToNull(request.purpose()));
-        values.put("калибр", blankToNull(request.caliber()));
-        values.put("дальность, м", request.effectiveRangeM());
-        values.put("год принятия", request.adoptionYear());
-        values.put("производитель", blankToNull(request.manufacturer()));
-        values.put("описание", blankToNull(request.description()));
-        syncAttributeValues(typeId, values);
+        if (request.attributes() != null) {
+            syncDynamicAttributeValues(typeId, request.attributes());
+        }
     }
 
-    private void syncAttributeValues(Long typeId, Map<String, Object> values) {
-        for (Map.Entry<String, Object> entry : values.entrySet()) {
-            Long attributeId = jdbcTemplate.queryForObject(
-                    "SELECT attribute_id FROM weapon_attribute_types WHERE name = :name",
-                    Map.of("name", entry.getKey()),
-                    Long.class
-            );
-            Object value = entry.getValue();
-            if (value == null) {
+    private void syncDynamicAttributeValues(Long typeId, List<DynamicAttributeValueRequest> attributes) {
+        for (DynamicAttributeValueRequest attribute : attributes) {
+            String dataType = jdbcTemplate.queryForObject("""
+                    SELECT data_type
+                    FROM weapon_attribute_types
+                    WHERE attribute_id = :attributeId
+                    """, Map.of("attributeId", attribute.attributeId()), String.class);
+            if (attribute.value() == null || attribute.value().isBlank()) {
                 jdbcTemplate.update("""
                         DELETE FROM weapon_type_attribute_values
                         WHERE type_id = :typeId AND attribute_id = :attributeId
-                        """, Map.of("typeId", typeId, "attributeId", attributeId));
+                        """, Map.of("typeId", typeId, "attributeId", attribute.attributeId()));
                 continue;
             }
-            Map<String, Object> params = new HashMap<>();
-            params.put("typeId", typeId);
-            params.put("attributeId", attributeId);
-            params.put("valueText", value instanceof Number ? null : value.toString());
-            params.put("valueNumber", value instanceof Number ? value : null);
+            Map<String, Object> params = attributeParams(typeId, attribute.attributeId(), dataType, attribute.value().trim());
             jdbcTemplate.update("""
-                    INSERT INTO weapon_type_attribute_values (type_id, attribute_id, value_text, value_number)
-                    VALUES (:typeId, :attributeId, :valueText, :valueNumber)
+                    INSERT INTO weapon_type_attribute_values (type_id, attribute_id, value_text, value_number, value_date, value_boolean)
+                    VALUES (:typeId, :attributeId, :valueText, :valueNumber, :valueDate, :valueBoolean)
                     ON CONFLICT (type_id, attribute_id) DO UPDATE SET
                         value_text = EXCLUDED.value_text,
                         value_number = EXCLUDED.value_number,
-                        value_date = NULL,
-                        value_boolean = NULL
+                        value_date = EXCLUDED.value_date,
+                        value_boolean = EXCLUDED.value_boolean
                     """, params);
         }
     }
@@ -456,6 +455,17 @@ public class WeaponService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private Map<String, Object> attributeParams(Long typeId, Long attributeId, String dataType, String value) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("typeId", typeId);
+        params.put("attributeId", attributeId);
+        params.put("valueText", "text".equals(dataType) ? value : null);
+        params.put("valueNumber", "number".equals(dataType) ? new BigDecimal(value.replace(',', '.')) : null);
+        params.put("valueDate", "date".equals(dataType) ? java.time.LocalDate.parse(value) : null);
+        params.put("valueBoolean", "boolean".equals(dataType) ? Boolean.valueOf(value) : null);
+        return params;
     }
 
     private PageResponse<UnitWeaponResponse> page(List<UnitWeaponResponse> rows, Pageable pageable) {

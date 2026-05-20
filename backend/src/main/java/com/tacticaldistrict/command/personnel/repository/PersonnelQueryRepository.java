@@ -1,6 +1,7 @@
 package com.tacticaldistrict.command.personnel.repository;
 
 import com.tacticaldistrict.command.common.dto.PageResponse;
+import com.tacticaldistrict.command.common.dto.AttributeValueResponse;
 import com.tacticaldistrict.command.personnel.dto.ChainOfCommandNodeResponse;
 import com.tacticaldistrict.command.personnel.dto.PersonnelFilter;
 import com.tacticaldistrict.command.personnel.dto.PersonnelProfileResponse;
@@ -93,8 +94,38 @@ public class PersonnelQueryRepository {
                 formationName,
                 assignmentPath,
                 LocalDate.now(),
+                rankAttributes(personnel.id()),
                 chain
         );
+    }
+
+    private List<AttributeValueResponse> rankAttributes(Long personnelId) {
+        return jdbcTemplate.query("""
+                SELECT rat.attribute_id,
+                       rat.name,
+                       rat.data_type,
+                       COALESCE(
+                           rav.value_text,
+                           trim(to_char(rav.value_number, 'FM999999990.99')),
+                           to_char(rav.value_date, 'YYYY-MM-DD'),
+                           CASE WHEN rav.value_boolean IS NULL THEN NULL ELSE rav.value_boolean::TEXT END
+                       ) AS display_value
+                FROM rank_attribute_values rav
+                JOIN rank_attribute_types rat ON rat.attribute_id = rav.attribute_id
+                WHERE rav.personnel_id = :personnelId
+                  AND COALESCE(
+                      rav.value_text,
+                      rav.value_number::TEXT,
+                      rav.value_date::TEXT,
+                      rav.value_boolean::TEXT
+                  ) IS NOT NULL
+                ORDER BY rat.attribute_id
+                """, Map.of("personnelId", personnelId), (rs, rowNum) -> new AttributeValueResponse(
+                rs.getLong("attribute_id"),
+                rs.getString("name"),
+                rs.getString("data_type"),
+                rs.getString("display_value")
+        ));
     }
 
     public List<ChainOfCommandNodeResponse> chainOfCommand(Long personnelId) {

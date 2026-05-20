@@ -9,6 +9,13 @@ export type Specialty = {
   name: string
 }
 
+export type AttributeValue = {
+  id: number
+  name: string
+  dataType: string
+  displayValue: string
+}
+
 export type Personnel = {
   id: number
   lastName: string
@@ -58,6 +65,7 @@ export type PersonnelRequest = {
   rankId?: number | null
   rankAssignmentDate?: string | null
   specialtyIds: number[]
+  rankAttributes?: { attributeId: number; value: string }[]
 }
 
 export type ChainOfCommandNode = {
@@ -73,5 +81,6 @@ export type PersonnelProfile = {
   formationName: string | null
   assignmentPath: string
   profileGeneratedAt: string
+  rankAttributes: AttributeValue[]
   chainOfCommand: ChainOfCommandNode[]
 }

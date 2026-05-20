@@ -1,6 +1,7 @@
 package com.tacticaldistrict.command.personnel.service;
 
 import com.tacticaldistrict.command.audit.AuditService;
+import com.tacticaldistrict.command.common.attribute.DynamicAttributeValueRequest;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.personnel.dto.ChainOfCommandNodeResponse;
 import com.tacticaldistrict.command.personnel.dto.CreatePersonnelRequest;
@@ -28,10 +29,13 @@ import com.tacticaldistrict.command.user.service.UserContext;
 import com.tacticaldistrict.command.user.service.UserContextProvider;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +51,7 @@ public class PersonnelService {
     private final SpecialtyRepository specialtyRepository;
     private final PersonnelQueryRepository personnelQueryRepository;
     private final PersonnelMapper personnelMapper;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
     private final UserContextProvider userContextProvider;
     private final PermissionService permissionService;
     private final AuditService auditService;
@@ -92,6 +97,7 @@ public class PersonnelService {
         PersonnelEntity entity = personnelMapper.toEntity(request);
         PersonnelEntity saved = personnelRepository.save(entity);
         updateRank(saved.getId(), request.rankId(), request.rankAssignmentDate());
+        syncRankAttributes(saved.getId(), request.rankAttributes());
         replaceSpecialties(saved.getId(), request.specialtyIds());
         auditService.created(user, ObjectType.PERSONNEL, saved.getId(), "Personnel created");
 
@@ -114,6 +120,7 @@ public class PersonnelService {
         personnelMapper.updateEntity(request, entity);
         PersonnelEntity saved = personnelRepository.save(entity);
         updateRank(saved.getId(), request.rankId(), request.rankAssignmentDate());
+        syncRankAttributes(saved.getId(), request.rankAttributes());
         replaceSpecialties(saved.getId(), request.specialtyIds());
         auditService.updated(user, ObjectType.PERSONNEL, saved.getId(), "Personnel updated");
 
@@ -209,6 +216,47 @@ public class PersonnelService {
             entity.setSpecialtyId(specialtyId);
             personnelSpecialtyRepository.save(entity);
         }
+    }
+
+    private void syncRankAttributes(Long personnelId, List<DynamicAttributeValueRequest> attributes) {
+        if (attributes == null) {
+            return;
+        }
+        for (DynamicAttributeValueRequest attribute : attributes) {
+            String dataType = jdbcTemplate.queryForObject("""
+                    SELECT data_type
+                    FROM rank_attribute_types
+                    WHERE attribute_id = :attributeId
+                    """, java.util.Map.of("attributeId", attribute.attributeId()), String.class);
+            if (attribute.value() == null || attribute.value().isBlank()) {
+                jdbcTemplate.update("""
+                        DELETE FROM rank_attribute_values
+                        WHERE personnel_id = :personnelId AND attribute_id = :attributeId
+                        """, java.util.Map.of("personnelId", personnelId, "attributeId", attribute.attributeId()));
+                continue;
+            }
+            java.util.Map<String, Object> params = attributeParams(personnelId, attribute.attributeId(), dataType, attribute.value().trim());
+            jdbcTemplate.update("""
+                    INSERT INTO rank_attribute_values (personnel_id, attribute_id, value_text, value_number, value_date, value_boolean)
+                    VALUES (:personnelId, :attributeId, :valueText, :valueNumber, :valueDate, :valueBoolean)
+                    ON CONFLICT (personnel_id, attribute_id) DO UPDATE SET
+                        value_text = EXCLUDED.value_text,
+                        value_number = EXCLUDED.value_number,
+                        value_date = EXCLUDED.value_date,
+                        value_boolean = EXCLUDED.value_boolean
+                    """, params);
+        }
+    }
+
+    private java.util.Map<String, Object> attributeParams(Long personnelId, Long attributeId, String dataType, String value) {
+        java.util.Map<String, Object> params = new HashMap<>();
+        params.put("personnelId", personnelId);
+        params.put("attributeId", attributeId);
+        params.put("valueText", "text".equals(dataType) ? value : null);
+        params.put("valueNumber", "number".equals(dataType) ? new BigDecimal(value.replace(',', '.')) : null);
+        params.put("valueDate", "date".equals(dataType) ? LocalDate.parse(value) : null);
+        params.put("valueBoolean", "boolean".equals(dataType) ? Boolean.valueOf(value) : null);
+        return params;
     }
 
     private RankResponse toRankResponse(MilitaryRankEntity entity) {

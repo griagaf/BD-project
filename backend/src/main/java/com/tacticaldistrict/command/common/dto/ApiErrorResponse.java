@@ -8,8 +8,10 @@ public record ApiErrorResponse(
         int status,
         String code,
         String message,
+        String details,
         String path,
+        String traceId,
+        Map<String, String> fieldErrors,
         Map<String, String> validationErrors
 ) {
 }
-

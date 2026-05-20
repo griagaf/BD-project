@@ -1,11 +1,11 @@
 import { Boxes, Plus, Settings } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import type { ReactNode } from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
-import { useDeleteInventoryMutation, useInventoryDictionariesQuery, useInventoryQuery, useInventoryStatsQuery, useInventoryTypePassportQuery, useSaveInventoryCategoryMutation, useSaveInventoryTypeMutation, useUpdateInventoryMutation } from "@/features/inventory/api/inventoryQueries"
-import type { EquipmentTypePassport, EquipmentTypeRequest, InventoryCategory, InventoryFilter, InventoryRow, InventoryType, WeaponTypePassport, WeaponTypeRequest } from "@/features/inventory/model/inventoryTypes"
+import { useAssignInventoryAttributeMutation, useCreateInventoryAttributeTypeMutation, useDeleteInventoryMutation, useInventoryAttributeSchemaQuery, useInventoryAttributeTypesQuery, useInventoryDictionariesQuery, useInventoryQuery, useInventoryStatsQuery, useInventoryTypePassportQuery, useSaveInventoryCategoryMutation, useSaveInventoryTypeMutation, useUpdateInventoryMutation } from "@/features/inventory/api/inventoryQueries"
+import type { DynamicAttributeMetadata, EquipmentTypePassport, EquipmentTypeRequest, InventoryCategory, InventoryFilter, InventoryRow, InventoryType, WeaponTypePassport, WeaponTypeRequest } from "@/features/inventory/model/inventoryTypes"
 import { FiltersPanel } from "@/features/inventory/ui/FiltersPanel"
 import { InventoryDialog } from "@/features/inventory/ui/InventoryDialog"
 import { InventoryTable } from "@/features/inventory/ui/InventoryTable"
@@ -189,22 +189,30 @@ function InventoryTypeDialog({
   const [categoryName, setCategoryName] = useState("")
   const [typeName, setTypeName] = useState("")
   const [categoryId, setCategoryId] = useState<number | null>(categories[0]?.id ?? null)
-  const [purpose, setPurpose] = useState("")
-  const [manufacturer, setManufacturer] = useState("")
-  const [adoptionYear, setAdoptionYear] = useState("")
-  const [crewSize, setCrewSize] = useState("")
-  const [weightTons, setWeightTons] = useState("")
-  const [maxSpeedKmh, setMaxSpeedKmh] = useState("")
-  const [operationalRangeKm, setOperationalRangeKm] = useState("")
-  const [caliber, setCaliber] = useState("")
-  const [effectiveRangeM, setEffectiveRangeM] = useState("")
-  const [description, setDescription] = useState("")
+  const [attributeValues, setAttributeValues] = useState<Record<number, string>>({})
+  const [attributeName, setAttributeName] = useState("")
+  const [attributeType, setAttributeType] = useState<DynamicAttributeMetadata["dataType"]>("text")
+  const [assignAttributeId, setAssignAttributeId] = useState<number | null>(null)
+  const [assignRequired, setAssignRequired] = useState(false)
+  const schemaQuery = useInventoryAttributeSchemaQuery(kind, categoryId)
+  const attributeTypesQuery = useInventoryAttributeTypesQuery(kind)
+  const createAttributeMutation = useCreateInventoryAttributeTypeMutation(kind)
+  const assignAttributeMutation = useAssignInventoryAttributeMutation(kind)
+
+  useEffect(() => {
+    if (!categoryId && categories[0]?.id) {
+      setCategoryId(categories[0].id)
+    }
+  }, [categories, categoryId])
 
   if (!open) {
     return null
   }
 
   const categoryOptions = categories.map((category) => ({ id: category.id, label: category.name }))
+  const selectedCategory = categories.find((category) => category.id === categoryId) ?? null
+  const categoryTypes = types.filter((type) => type.categoryId === categoryId)
+  const categoryAttributes = schemaQuery.data ?? []
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
@@ -218,67 +226,36 @@ function InventoryTypeDialog({
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 <Field label={t(`${namespace}:dictionary.typeName`)} value={typeName} onChange={setTypeName} />
                 <SearchableSelect label={t("table.category")} value={categoryId} options={categoryOptions} placeholder={t(`${namespace}:dictionary.selectCategory`)} onChange={setCategoryId} />
-                <Field label={t(`${namespace}:dictionary.purpose`)} value={purpose} optional onChange={setPurpose} />
-                <Field label={t(`${namespace}:dictionary.manufacturer`)} value={manufacturer} optional onChange={setManufacturer} />
-                <Field label={t(`${namespace}:dictionary.adoptionYear`)} value={adoptionYear} type="number" optional onChange={setAdoptionYear} />
-                {kind === "equipment" ? (
-                  <>
-                    <Field label={t("fields.crewSize")} value={crewSize} type="number" optional onChange={setCrewSize} />
-                    <Field label={t("fields.weightTons")} value={weightTons} type="number" optional onChange={setWeightTons} />
-                    <Field label={t("fields.maxSpeedKmh")} value={maxSpeedKmh} type="number" optional onChange={setMaxSpeedKmh} />
-                    <Field label={t("fields.operationalRangeKm")} value={operationalRangeKm} type="number" optional onChange={setOperationalRangeKm} />
-                  </>
+                {schemaQuery.isLoading ? (
+                  <div className="text-sm text-zinc-500">{t("states.loading")}</div>
+                ) : schemaQuery.data?.length ? (
+                  schemaQuery.data.map((attribute) => (
+                    <DynamicAttributeField
+                      key={attribute.id}
+                      attribute={attribute}
+                      value={attributeValues[attribute.id] ?? ""}
+                      onChange={(value) => setAttributeValues((current) => ({ ...current, [attribute.id]: value }))}
+                    />
+                  ))
                 ) : (
-                  <>
-                    <Field label={t("fields.caliber")} value={caliber} optional onChange={setCaliber} />
-                    <Field label={t("fields.effectiveRangeM")} value={effectiveRangeM} type="number" optional onChange={setEffectiveRangeM} />
-                  </>
+                  <div className="rounded-md border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-500 md:col-span-2">
+                    {t(`${namespace}:dictionary.noAttributes`)}
+                  </div>
                 )}
-                <label className="space-y-2 md:col-span-2">
-                  <span className="text-xs uppercase text-zinc-500">{t("fields.description")}</span>
-                  <textarea
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                    rows={3}
-                    className="w-full resize-none rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500"
-                  />
-                </label>
               </div>
               <Button className="mt-4" disabled={saving || !typeName.trim() || !categoryId} onClick={() => {
                 if (!categoryId) return
-                const common = {
+                const request = {
                   name: typeName,
                   categoryId,
-                  purpose: purpose || null,
-                  manufacturer: manufacturer || null,
-                  adoptionYear: adoptionYear ? Number(adoptionYear) : null,
-                  description: description || null,
-                }
-                const request = kind === "equipment"
-                  ? {
-                    ...common,
-                    crewSize: crewSize ? Number(crewSize) : null,
-                    weightTons: weightTons ? Number(weightTons) : null,
-                    maxSpeedKmh: maxSpeedKmh ? Number(maxSpeedKmh) : null,
-                    operationalRangeKm: operationalRangeKm ? Number(operationalRangeKm) : null,
-                  } satisfies EquipmentTypeRequest
-                  : {
-                    ...common,
-                    caliber: caliber || null,
-                    effectiveRangeM: effectiveRangeM ? Number(effectiveRangeM) : null,
-                  } satisfies WeaponTypeRequest
+                  attributes: (schemaQuery.data ?? []).map((attribute) => ({
+                    attributeId: attribute.id,
+                    value: attributeValues[attribute.id] ?? "",
+                  })),
+                } satisfies EquipmentTypeRequest | WeaponTypeRequest
                 onCreateType(request)
                 setTypeName("")
-                setPurpose("")
-                setManufacturer("")
-                setAdoptionYear("")
-                setCrewSize("")
-                setWeightTons("")
-                setMaxSpeedKmh("")
-                setOperationalRangeKm("")
-                setCaliber("")
-                setEffectiveRangeM("")
-                setDescription("")
+                setAttributeValues({})
               }}>
                 <Plus className="h-4 w-4 shrink-0" />
                 {t("actions.create")}
@@ -294,16 +271,104 @@ function InventoryTypeDialog({
                 }}>{t("actions.create")}</Button>
               </div>
             </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="text-sm font-medium text-zinc-100">{t(`${namespace}:dictionary.attributes`)}</div>
+              <div className="mt-3 grid gap-3 md:grid-cols-[1fr_150px]">
+                <Field label={t(`${namespace}:dictionary.attributeName`)} value={attributeName} onChange={setAttributeName} />
+                <label className="space-y-2">
+                  <span className="text-xs uppercase text-zinc-500">{t(`${namespace}:dictionary.attributeType`)}</span>
+                  <select value={attributeType} onChange={(event) => setAttributeType(event.target.value as DynamicAttributeMetadata["dataType"])} className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500">
+                    <option value="text">text</option>
+                    <option value="number">number</option>
+                    <option value="date">date</option>
+                    <option value="boolean">boolean</option>
+                  </select>
+                </label>
+              </div>
+              <Button className="mt-3" variant="secondary" disabled={createAttributeMutation.isPending || !attributeName.trim()} onClick={() => {
+                createAttributeMutation.mutate({ name: attributeName, dataType: attributeType }, {
+                  onSuccess: () => {
+                    toast.success(t(`${namespace}:toast.attributeCreated`))
+                    setAttributeName("")
+                  },
+                  onError: () => toast.error(t(`${namespace}:toast.updateFailed`)),
+                })
+              }}>{t(`${namespace}:dictionary.createAttribute`)}</Button>
+              <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+                <SearchableSelect
+                  label={t(`${namespace}:dictionary.assignAttribute`)}
+                  value={assignAttributeId}
+                  options={(attributeTypesQuery.data ?? []).map((attribute) => ({ id: attribute.id, label: attribute.name, description: attribute.dataType }))}
+                  placeholder={t(`${namespace}:dictionary.selectAttribute`)}
+                  onChange={setAssignAttributeId}
+                />
+                <label className="mt-6 flex h-10 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-300">
+                  <input type="checkbox" checked={assignRequired} onChange={(event) => setAssignRequired(event.target.checked)} className="h-4 w-4 shrink-0 accent-emerald-400" />
+                  {t(`${namespace}:dictionary.required`)}
+                </label>
+              </div>
+              <Button className="mt-3" variant="secondary" disabled={assignAttributeMutation.isPending || !categoryId || !assignAttributeId} onClick={() => {
+                if (!categoryId || !assignAttributeId) return
+                assignAttributeMutation.mutate({ categoryId, attributeId: assignAttributeId, required: assignRequired }, {
+                  onSuccess: () => {
+                    toast.success(t(`${namespace}:toast.attributeAssigned`))
+                    setAssignAttributeId(null)
+                    setAssignRequired(false)
+                  },
+                  onError: () => toast.error(t(`${namespace}:toast.updateFailed`)),
+                })
+              }}>{t(`${namespace}:dictionary.addToCategory`)}</Button>
+            </div>
           </div>
-          <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
-            <div className="text-sm font-medium text-zinc-100">{t(`${namespace}:dictionary.currentTypes`)}</div>
-            <div className="mt-3 max-h-96 space-y-2 overflow-y-auto">
-              {types.map((type) => (
+          <div className="space-y-4">
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="text-sm font-medium text-zinc-100">{t(`${namespace}:dictionary.categoryPassport`)}</div>
+              <div className="mt-3 max-h-44 space-y-2 overflow-y-auto">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => setCategoryId(category.id)}
+                    className={`w-full rounded border px-3 py-2 text-left transition ${category.id === categoryId ? "border-emerald-500/50 bg-emerald-500/10" : "border-zinc-800 bg-zinc-950 hover:bg-zinc-900"}`}
+                  >
+                    <div className="truncate text-sm text-zinc-100" title={category.name}>{category.name}</div>
+                    <div className="text-xs text-zinc-500">{t(`${namespace}:dictionary.typesCount`, { count: types.filter((type) => type.categoryId === category.id).length })}</div>
+                  </button>
+                ))}
+              </div>
+              {selectedCategory ? (
+                <div className="mt-4 rounded border border-zinc-800 bg-zinc-950 p-3">
+                  <div className="truncate text-xs uppercase text-emerald-300" title={selectedCategory.name}>{selectedCategory.name}</div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-zinc-400">
+                    <div className="rounded border border-zinc-800 p-2">
+                      <div className="text-zinc-500">{t(`${namespace}:dictionary.currentTypes`)}</div>
+                      <div className="mt-1 text-lg font-semibold text-zinc-100">{categoryTypes.length}</div>
+                    </div>
+                    <div className="rounded border border-zinc-800 p-2">
+                      <div className="text-zinc-500">{t(`${namespace}:dictionary.attributes`)}</div>
+                      <div className="mt-1 text-lg font-semibold text-zinc-100">{categoryAttributes.length}</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {categoryAttributes.length ? categoryAttributes.map((attribute) => (
+                      <span key={attribute.id} className="rounded border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs text-zinc-300">
+                        {attribute.name}
+                      </span>
+                    )) : <span className="text-xs text-zinc-600">{t(`${namespace}:dictionary.noAttributes`)}</span>}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="text-sm font-medium text-zinc-100">{t(`${namespace}:dictionary.typesInCategory`)}</div>
+              <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
+                {(categoryId ? categoryTypes : types).map((type) => (
                 <div key={type.id} className="rounded border border-zinc-800 bg-zinc-950 px-3 py-2">
                   <div className="truncate text-sm text-zinc-100" title={type.name}>{type.name}</div>
                   <div className="truncate text-xs text-zinc-500" title={type.categoryName}>{type.categoryName}</div>
                 </div>
               ))}
+              </div>
             </div>
           </div>
         </div>
@@ -369,6 +434,32 @@ function TypePassportDialog({ open, loading, passport, onClose }: { open: boolea
         </div>
       </div>
     </div>
+  )
+}
+
+function DynamicAttributeField({ attribute, value, onChange }: { attribute: DynamicAttributeMetadata; value: string; onChange: (value: string) => void }) {
+  if (attribute.dataType === "boolean") {
+    return (
+      <label className="flex h-10 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-300">
+        <input
+          type="checkbox"
+          checked={value === "true"}
+          required={attribute.required}
+          onChange={(event) => onChange(event.target.checked ? "true" : "false")}
+          className="h-4 w-4 shrink-0 accent-emerald-400"
+        />
+        <span className="truncate" title={attribute.name}>{attribute.name}</span>
+      </label>
+    )
+  }
+  return (
+    <Field
+      label={attribute.required ? `${attribute.name} *` : attribute.name}
+      value={value}
+      type={attribute.dataType === "number" ? "number" : attribute.dataType === "date" ? "date" : "text"}
+      optional={!attribute.required}
+      onChange={onChange}
+    />
   )
 }
 

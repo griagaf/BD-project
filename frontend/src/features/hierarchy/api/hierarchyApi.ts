@@ -1,5 +1,5 @@
 import { apiClient } from "@/shared/api/apiClient"
-import type { FocusTreeResponse, HierarchyContext, ObjectPassport, TreeMode, TreeNode, Unit } from "@/features/hierarchy/model/hierarchyTypes"
+import type { FocusTreeResponse, HierarchyContext, ObjectPassport, SubdivisionRequest, TreeMode, TreeNode, Unit } from "@/features/hierarchy/model/hierarchyTypes"
 
 export const hierarchyApi = {
   roots: (mode: TreeMode) => apiClient<TreeNode[]>(`/api/hierarchy/roots?mode=${mode}`),
@@ -14,6 +14,11 @@ export const hierarchyApi = {
     apiClient<HierarchyContext>(`/api/hierarchy/nodes/${nodeType}/${nodeId}/context`),
   unitPassport: (unitId: number) => apiClient<ObjectPassport>(`/api/units/${unitId}/passport`),
   units: () => apiClient<Unit[]>("/api/units"),
+  createSubdivision: (request: SubdivisionRequest) =>
+    apiClient("/api/subdivisions", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
   assignCommander: (nodeType: string, nodeId: number, commanderId: number) => {
     const resource = nodeType === "MILITARY_UNIT"
       ? "units"

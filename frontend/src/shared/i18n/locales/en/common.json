@@ -78,6 +78,8 @@
     "manufacturer": "Manufacturer",
     "distribution": "Distribution by units",
     "attributes": "Database schema attributes",
+    "assignableBuilding": "Can host subdivisions",
+    "assignableBuildingHint": "Barracks, HQ and training buildings can host subdivisions; warehouses and hangars usually cannot.",
     "crewSize": "Crew",
     "weightTons": "Weight, t",
     "maxSpeedKmh": "Speed, km/h",
@@ -89,6 +91,9 @@
   "placeholders": {
     "selectUnit": "Select military unit",
     "selectResourceType": "Select type"
+  },
+  "select": {
+    "visibleLimit": "Showing first {{visible}} of {{total}}. Refine search."
   },
   "roles": {
     "ADMIN_DISTRICT": "District Administrator",

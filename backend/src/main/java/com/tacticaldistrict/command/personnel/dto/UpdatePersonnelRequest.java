@@ -1,11 +1,13 @@
 package com.tacticaldistrict.command.personnel.dto;
 
+import com.tacticaldistrict.command.common.attribute.DynamicAttributeValueRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 public record UpdatePersonnelRequest(
@@ -18,6 +20,7 @@ public record UpdatePersonnelRequest(
         @NotNull Long subdivisionId,
         Long rankId,
         @PastOrPresent LocalDate rankAssignmentDate,
-        Set<Long> specialtyIds
+        Set<Long> specialtyIds,
+        List<DynamicAttributeValueRequest> rankAttributes
 ) {
 }

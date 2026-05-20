@@ -13,11 +13,23 @@
     "newType": "New weapon type",
     "newCategory": "New category",
     "currentTypes": "Current types",
+    "categoryPassport": "Category passport",
+    "typesInCategory": "Types in category",
+    "typesCount": "{{count}} types",
     "typeName": "Type name",
     "selectCategory": "Select category",
     "purpose": "Purpose",
     "manufacturer": "Manufacturer",
-    "adoptionYear": "Adoption year"
+    "adoptionYear": "Adoption year",
+    "attributes": "Dynamic attributes",
+    "attributeName": "Attribute name",
+    "attributeType": "Data type",
+    "createAttribute": "Create attribute",
+    "assignAttribute": "Category attribute",
+    "selectAttribute": "Select attribute",
+    "required": "Required",
+    "addToCategory": "Add to category",
+    "noAttributes": "The selected category has no assigned attributes."
   },
   "toast": {
     "created": "Weapon added to unit",
@@ -25,6 +37,8 @@
     "deleted": "Weapon row deleted",
     "categoryCreated": "Weapon category created",
     "typeCreated": "Weapon type created",
+    "attributeCreated": "Attribute created",
+    "attributeAssigned": "Attribute added to category",
     "updateFailed": "Weapon update failed",
     "deleteFailed": "Weapon delete failed"
   },

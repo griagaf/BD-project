@@ -24,8 +24,18 @@ export type BuildingRow = {
   name: string
   unitId: number
   unitName: string
+  assignable: boolean
   subdivisionsCount: number
   status: string
+  assignedSubdivisions: BuildingAssignment[]
+}
+
+export type BuildingAssignment = {
+  id: number
+  name: string
+  type: string
+  unitId: number
+  unitName: string
 }
 
 export type InventoryType = {
@@ -51,6 +61,18 @@ export type AttributeValue = {
   displayValue: string
 }
 
+export type DynamicAttributeMetadata = {
+  id: number
+  name: string
+  dataType: "text" | "number" | "date" | "boolean"
+  required: boolean
+}
+
+export type DynamicAttributeValueRequest = {
+  attributeId: number
+  value: string
+}
+
 export type EquipmentTypeRequest = {
   name: string
   categoryId: number
@@ -62,6 +84,7 @@ export type EquipmentTypeRequest = {
   adoptionYear?: number | null
   manufacturer?: string | null
   description?: string | null
+  attributes?: DynamicAttributeValueRequest[]
 }
 
 export type WeaponTypeRequest = {
@@ -73,6 +96,7 @@ export type WeaponTypeRequest = {
   adoptionYear?: number | null
   manufacturer?: string | null
   description?: string | null
+  attributes?: DynamicAttributeValueRequest[]
 }
 
 export type EquipmentTypePassport = InventoryType & {

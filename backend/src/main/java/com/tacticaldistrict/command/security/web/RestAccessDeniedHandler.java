@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
@@ -31,10 +32,12 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
                 Instant.now(),
                 HttpServletResponse.SC_FORBIDDEN,
                 "FORBIDDEN",
-                "Access denied",
+                "Недостаточно прав для выполнения действия.",
+                null,
                 request.getRequestURI(),
+                UUID.randomUUID().toString(),
+                Map.of(),
                 Map.of()
         ));
     }
 }
-

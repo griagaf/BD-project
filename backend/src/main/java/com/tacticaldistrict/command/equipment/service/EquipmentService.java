@@ -1,6 +1,7 @@
 package com.tacticaldistrict.command.equipment.service;
 
 import com.tacticaldistrict.command.audit.AuditService;
+import com.tacticaldistrict.command.common.attribute.DynamicAttributeValueRequest;
 import com.tacticaldistrict.command.common.dto.AttributeValueResponse;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.equipment.dto.EquipmentCategoryResponse;
@@ -22,7 +23,6 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -91,6 +91,10 @@ public class EquipmentService {
 
     @Transactional(readOnly = true)
     public List<EquipmentCategoryResponse> categories() {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("equipment:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
         return jdbcTemplate.query("""
                 SELECT category_id, name
                 FROM equipment_categories
@@ -101,6 +105,10 @@ public class EquipmentService {
 
     @Transactional(readOnly = true)
     public List<EquipmentTypeResponse> types() {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("equipment:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
         return jdbcTemplate.query("""
                 SELECT et.type_id, et.name, ec.category_id, ec.name AS category_name
                 FROM equipment_types et
@@ -230,7 +238,7 @@ public class EquipmentService {
         if (!user.hasPermission("equipment:read")) {
             throw new AccessDeniedException("Access denied");
         }
-        EquipmentTypePassportResponse base = jdbcTemplate.queryForObject("""
+        EquipmentTypePassportResponse base = jdbcTemplate.query("""
                 SELECT et.type_id, et.name, ec.category_id, ec.name AS category_name,
                        et.purpose, et.crew_size, et.weight_tons, et.max_speed_kmh,
                        et.operational_range_km, et.adoption_year, et.manufacturer, et.description,
@@ -243,10 +251,10 @@ public class EquipmentService {
                 GROUP BY et.type_id, et.name, ec.category_id, ec.name,
                          et.purpose, et.crew_size, et.weight_tons, et.max_speed_kmh,
                          et.operational_range_km, et.adoption_year, et.manufacturer, et.description
-                """, Map.of("id", id), this::mapTypePassport);
-        if (base == null) {
-            throw new EntityNotFoundException("Equipment type not found: " + id);
-        }
+                """, Map.of("id", id), this::mapTypePassport)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Equipment type not found: " + id));
         List<UnitEquipmentResponse> distribution = queryInventory(new EquipmentFilter(null, null, null, id))
                 .stream()
                 .filter(row -> permissionService.canRead(user, ObjectType.MILITARY_UNIT, row.unitId()))
@@ -292,46 +300,34 @@ public class EquipmentService {
     }
 
     private void syncTypeAttributes(Long typeId, EquipmentTypeRequest request) {
-        Map<String, Object> values = new LinkedHashMap<>();
-        values.put("назначение", blankToNull(request.purpose()));
-        values.put("экипаж", request.crewSize());
-        values.put("масса, т", request.weightTons());
-        values.put("скорость, км/ч", request.maxSpeedKmh());
-        values.put("запас хода, км", request.operationalRangeKm());
-        values.put("год принятия", request.adoptionYear());
-        values.put("производитель", blankToNull(request.manufacturer()));
-        values.put("описание", blankToNull(request.description()));
-        syncAttributeValues(typeId, values);
+        if (request.attributes() != null) {
+            syncDynamicAttributeValues(typeId, request.attributes());
+        }
     }
 
-    private void syncAttributeValues(Long typeId, Map<String, Object> values) {
-        for (Map.Entry<String, Object> entry : values.entrySet()) {
-            Long attributeId = jdbcTemplate.queryForObject(
-                    "SELECT attribute_id FROM equipment_attribute_types WHERE name = :name",
-                    Map.of("name", entry.getKey()),
-                    Long.class
-            );
-            Object value = entry.getValue();
-            if (value == null) {
+    private void syncDynamicAttributeValues(Long typeId, List<DynamicAttributeValueRequest> attributes) {
+        for (DynamicAttributeValueRequest attribute : attributes) {
+            String dataType = jdbcTemplate.queryForObject("""
+                    SELECT data_type
+                    FROM equipment_attribute_types
+                    WHERE attribute_id = :attributeId
+                    """, Map.of("attributeId", attribute.attributeId()), String.class);
+            if (attribute.value() == null || attribute.value().isBlank()) {
                 jdbcTemplate.update("""
                         DELETE FROM equipment_type_attribute_values
                         WHERE type_id = :typeId AND attribute_id = :attributeId
-                        """, Map.of("typeId", typeId, "attributeId", attributeId));
+                        """, Map.of("typeId", typeId, "attributeId", attribute.attributeId()));
                 continue;
             }
-            Map<String, Object> params = new HashMap<>();
-            params.put("typeId", typeId);
-            params.put("attributeId", attributeId);
-            params.put("valueText", value instanceof Number ? null : value.toString());
-            params.put("valueNumber", value instanceof Number ? value : null);
+            Map<String, Object> params = attributeParams(typeId, attribute.attributeId(), dataType, attribute.value().trim());
             jdbcTemplate.update("""
-                    INSERT INTO equipment_type_attribute_values (type_id, attribute_id, value_text, value_number)
-                    VALUES (:typeId, :attributeId, :valueText, :valueNumber)
+                    INSERT INTO equipment_type_attribute_values (type_id, attribute_id, value_text, value_number, value_date, value_boolean)
+                    VALUES (:typeId, :attributeId, :valueText, :valueNumber, :valueDate, :valueBoolean)
                     ON CONFLICT (type_id, attribute_id) DO UPDATE SET
                         value_text = EXCLUDED.value_text,
                         value_number = EXCLUDED.value_number,
-                        value_date = NULL,
-                        value_boolean = NULL
+                        value_date = EXCLUDED.value_date,
+                        value_boolean = EXCLUDED.value_boolean
                     """, params);
         }
     }
@@ -467,6 +463,17 @@ public class EquipmentService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private Map<String, Object> attributeParams(Long typeId, Long attributeId, String dataType, String value) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("typeId", typeId);
+        params.put("attributeId", attributeId);
+        params.put("valueText", "text".equals(dataType) ? value : null);
+        params.put("valueNumber", "number".equals(dataType) ? new BigDecimal(value.replace(',', '.')) : null);
+        params.put("valueDate", "date".equals(dataType) ? java.time.LocalDate.parse(value) : null);
+        params.put("valueBoolean", "boolean".equals(dataType) ? Boolean.valueOf(value) : null);
+        return params;
     }
 
     private PageResponse<UnitEquipmentResponse> page(List<UnitEquipmentResponse> rows, Pageable pageable) {

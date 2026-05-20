@@ -34,5 +34,8 @@
     "exported": "CSV exported",
     "exportedDescription": "{{code}} result exported"
   },
-  "error": "Query execution failed"
+  "error": "Query execution failed",
+  "errorPanel": {
+    "title": "Query failed"
+  }
 }

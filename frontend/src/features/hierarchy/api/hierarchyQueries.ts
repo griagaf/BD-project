@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { hierarchyApi } from "@/features/hierarchy/api/hierarchyApi"
-import type { HierarchySelection, TreeMode } from "@/features/hierarchy/model/hierarchyTypes"
+import type { HierarchySelection, SubdivisionRequest, TreeMode } from "@/features/hierarchy/model/hierarchyTypes"
 
 export function useHierarchyRootsQuery(mode: TreeMode) {
   return useQuery({
@@ -70,6 +70,19 @@ export function useAssignCommanderMutation() {
         queryClient.invalidateQueries({ queryKey: ["units"] }),
         queryClient.invalidateQueries({ queryKey: ["hierarchy", "passport", variables.selection.type, variables.selection.id] }),
         queryClient.invalidateQueries({ queryKey: ["hierarchy", "context", variables.selection.type, variables.selection.id] }),
+      ])
+    },
+  })
+}
+
+export function useCreateSubdivisionMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: SubdivisionRequest) => hierarchyApi.createSubdivision(request),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["hierarchy"] }),
+        queryClient.invalidateQueries({ queryKey: ["lookups", "subdivisions"] }),
       ])
     },
   })

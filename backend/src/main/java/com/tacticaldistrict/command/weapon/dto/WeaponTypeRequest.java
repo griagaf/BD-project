@@ -1,10 +1,12 @@
 package com.tacticaldistrict.command.weapon.dto;
 
+import com.tacticaldistrict.command.common.attribute.DynamicAttributeValueRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 public record WeaponTypeRequest(
         @NotBlank @Size(max = 100) String name,
@@ -14,6 +16,7 @@ public record WeaponTypeRequest(
         @Min(0) Integer effectiveRangeM,
         @Min(1900) @Max(2100) Integer adoptionYear,
         @Size(max = 160) String manufacturer,
-        String description
+        String description,
+        List<DynamicAttributeValueRequest> attributes
 ) {
 }

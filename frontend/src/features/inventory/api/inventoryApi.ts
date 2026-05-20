@@ -3,6 +3,7 @@ import type {
   BuildingFilter,
   BuildingRow,
   BuildingStats,
+  DynamicAttributeMetadata,
   EquipmentTypePassport,
   EquipmentTypeRequest,
   InventoryCategoryRequest,
@@ -64,6 +65,20 @@ function inventoryApi(resource: "equipment" | "weapons") {
       }),
     typePassport: (id: number) =>
       apiClient<EquipmentTypePassport | WeaponTypePassport>(`/api/${resource}/types/${id}/passport`),
+    attributeSchema: (categoryId: number) =>
+      apiClient<DynamicAttributeMetadata[]>(`/api/attributes/${resource}/categories/${categoryId}`),
+    attributeTypes: () =>
+      apiClient<DynamicAttributeMetadata[]>(`/api/attributes/${resource}/types`),
+    createAttributeType: (request: { name: string; dataType: DynamicAttributeMetadata["dataType"] }) =>
+      apiClient<DynamicAttributeMetadata>(`/api/attributes/${resource}/types`, {
+        method: "POST",
+        body: JSON.stringify(request),
+      }),
+    assignAttribute: (categoryId: number, request: { attributeId: number; required?: boolean }) =>
+      apiClient<DynamicAttributeMetadata>(`/api/attributes/${resource}/categories/${categoryId}/attributes`, {
+        method: "POST",
+        body: JSON.stringify(request),
+      }),
     update: (unitId: number, typeId: number, quantity: number) =>
       apiClient<InventoryRow>(`/api/units/${unitId}/${unitSegment}/${typeId}`, {
         method: "PUT",
@@ -82,18 +97,26 @@ export const weaponsApi = inventoryApi("weapons")
 export const buildingsApi = {
   search: (filters: BuildingFilter) => apiClient<PageResponse<BuildingRow>>(`/api/buildings${queryString(filters)}`),
   stats: () => apiClient<BuildingStats>("/api/buildings/statistics"),
-  create: (request: { name: string; unitId: number }) =>
+  create: (request: { name: string; unitId: number; assignable?: boolean }) =>
     apiClient<BuildingRow>("/api/buildings", {
       method: "POST",
       body: JSON.stringify(request),
     }),
-  update: (id: number, request: { name: string; unitId: number }) =>
+  update: (id: number, request: { name: string; unitId: number; assignable?: boolean }) =>
     apiClient<BuildingRow>(`/api/buildings/${id}`, {
       method: "PUT",
       body: JSON.stringify(request),
     }),
   delete: (id: number) =>
     apiClient<void>(`/api/buildings/${id}`, {
+      method: "DELETE",
+    }),
+  assignSubdivision: (buildingId: number, subdivisionId: number) =>
+    apiClient<void>(`/api/buildings/${buildingId}/subdivisions/${subdivisionId}`, {
+      method: "POST",
+    }),
+  removeSubdivision: (buildingId: number, subdivisionId: number) =>
+    apiClient<void>(`/api/buildings/${buildingId}/subdivisions/${subdivisionId}`, {
       method: "DELETE",
     }),
 }

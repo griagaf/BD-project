@@ -7,6 +7,7 @@ import com.tacticaldistrict.command.intelligence.dto.QueryScopeDto;
 import com.tacticaldistrict.command.intelligence.model.QueryTemplate;
 import com.tacticaldistrict.command.security.access.PermissionService;
 import com.tacticaldistrict.command.security.model.ObjectType;
+import com.tacticaldistrict.command.security.model.RoleCode;
 import com.tacticaldistrict.command.user.service.UserContext;
 import com.tacticaldistrict.command.user.service.UserContextProvider;
 import java.nio.charset.StandardCharsets;
@@ -98,6 +99,15 @@ public class QueryExecutorService {
 
     private void checkScope(UserContext user, QueryScopeDto scope) {
         if (scope == null || scope.type() == null || scope.id() == null) {
+            if (!user.hasAnyRole(RoleCode.ADMIN_DISTRICT, RoleCode.STAFF_ANALYST)) {
+                throw new AccessDeniedException("Explicit query scope is required");
+            }
+            return;
+        }
+        if ("GLOBAL".equalsIgnoreCase(scope.type())) {
+            if (!user.hasAnyRole(RoleCode.ADMIN_DISTRICT, RoleCode.STAFF_ANALYST)) {
+                throw new AccessDeniedException("Global query scope is not allowed");
+            }
             return;
         }
         ObjectType objectType = objectType(scope.type());

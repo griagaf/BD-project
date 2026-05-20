@@ -1,7 +1,9 @@
 import { Save, X } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Personnel, PersonnelRequest, Rank, Specialty } from "@/features/personnel/model/personnelTypes"
+import { apiClient } from "@/shared/api/apiClient"
 import type { LookupOption } from "@/shared/api/lookupApi"
 import { Button } from "@/shared/ui/button"
 import { SearchableSelect } from "@/shared/ui/searchable-select"
@@ -28,6 +30,7 @@ const emptyForm: PersonnelRequest = {
   rankId: null,
   rankAssignmentDate: new Date().toISOString().slice(0, 10),
   specialtyIds: [],
+  rankAttributes: [],
 }
 
 export function PersonnelEditModal({
@@ -42,6 +45,13 @@ export function PersonnelEditModal({
 }: PersonnelEditModalProps) {
   const { t } = useTranslation(["common", "personnel"])
   const [form, setForm] = useState<PersonnelRequest>(emptyForm)
+  const [rankAttributeValues, setRankAttributeValues] = useState<Record<number, string>>({})
+  const rankSchemaQuery = useQuery({
+    queryKey: ["attributes", "rank", form.rankId],
+    queryFn: () => apiClient<Array<{ id: number; name: string; dataType: "text" | "number" | "date" | "boolean"; required: boolean }>>(`/api/attributes/ranks/${form.rankId}`),
+    enabled: Boolean(open && form.rankId),
+    staleTime: 5 * 60_000,
+  })
 
   useEffect(() => {
     if (!open) {
@@ -62,7 +72,9 @@ export function PersonnelEditModal({
       rankId: personnel.rank?.id ?? null,
       rankAssignmentDate: new Date().toISOString().slice(0, 10),
       specialtyIds: personnel.specialties.map((specialty) => specialty.id),
+      rankAttributes: [],
     })
+    setRankAttributeValues({})
   }, [open, personnel])
 
   const title = useMemo(() => (personnel ? t("personnel:form.edit") : t("personnel:form.create")), [personnel, t])
@@ -77,7 +89,13 @@ export function PersonnelEditModal({
         className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-md border border-zinc-800 bg-zinc-950 shadow-2xl"
         onSubmit={(event) => {
           event.preventDefault()
-          onSubmit(form)
+          onSubmit({
+            ...form,
+            rankAttributes: (rankSchemaQuery.data ?? []).map((attribute) => ({
+              attributeId: attribute.id,
+              value: rankAttributeValues[attribute.id] ?? "",
+            })),
+          })
         }}
       >
         <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
@@ -104,21 +122,28 @@ export function PersonnelEditModal({
             placeholder={t("personnel:form.selectSubdivision")}
             onChange={(value) => setForm({ ...form, subdivisionId: value ?? form.subdivisionId })}
           />
-          <label className="space-y-2">
-            <span className="text-xs uppercase text-zinc-500">{t("personnel:form.rank")}</span>
-            <select
-              className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
-              value={form.rankId ?? ""}
-              onChange={(event) => setForm({ ...form, rankId: event.target.value ? Number(event.target.value) : null })}
-            >
-              <option value="">{t("personnel:table.noRank")}</option>
-              {ranks.map((rank) => (
-                <option key={rank.id} value={rank.id}>
-                  {rank.name}
-                </option>
+          <SearchableSelect
+            label={t("personnel:form.rank")}
+            value={form.rankId ?? null}
+            options={ranks.map((rank) => ({ id: rank.id, label: rank.name, description: rank.category }))}
+            placeholder={t("personnel:table.noRank")}
+            onChange={(value) => {
+              setForm({ ...form, rankId: value })
+              setRankAttributeValues({})
+            }}
+          />
+          {rankSchemaQuery.data?.length ? (
+            <div className="grid gap-3 rounded-md border border-zinc-800 bg-zinc-900/50 p-3 md:col-span-2 md:grid-cols-2">
+              {rankSchemaQuery.data.map((attribute) => (
+                <DynamicRankAttributeField
+                  key={attribute.id}
+                  attribute={attribute}
+                  value={rankAttributeValues[attribute.id] ?? ""}
+                  onChange={(value) => setRankAttributeValues((current) => ({ ...current, [attribute.id]: value }))}
+                />
               ))}
-            </select>
-          </label>
+            </div>
+          ) : null}
           <label className="space-y-2 md:col-span-2">
             <span className="text-xs uppercase text-zinc-500">{t("personnel:form.specialties")}</span>
             <div className="grid gap-2 rounded-md border border-zinc-800 bg-zinc-900 p-3 sm:grid-cols-2">
@@ -180,5 +205,38 @@ function Field({
         required={!optional}
       />
     </label>
+  )
+}
+
+function DynamicRankAttributeField({
+  attribute,
+  value,
+  onChange,
+}: {
+  attribute: { id: number; name: string; dataType: "text" | "number" | "date" | "boolean"; required: boolean }
+  value: string
+  onChange: (value: string) => void
+}) {
+  if (attribute.dataType === "boolean") {
+    return (
+      <label className="flex h-10 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-300">
+        <input
+          type="checkbox"
+          checked={value === "true"}
+          onChange={(event) => onChange(event.target.checked ? "true" : "false")}
+          className="h-4 w-4 shrink-0 accent-emerald-400"
+        />
+        <span className="truncate" title={attribute.name}>{attribute.name}</span>
+      </label>
+    )
+  }
+  return (
+    <Field
+      label={attribute.required ? `${attribute.name} *` : attribute.name}
+      value={value}
+      type={attribute.dataType === "number" ? "number" : attribute.dataType === "date" ? "date" : "text"}
+      optional={!attribute.required}
+      onChange={onChange}
+    />
   )
 }

@@ -68,6 +68,15 @@ function QueryParameterField({
         value={currentValue}
         options={options}
         placeholder={parameter.placeholder}
+        loadOptions={(search) => {
+          if (lookupKind === "personnel") return lookupApi.personnel(search)
+          if (lookupKind === "formations") return lookupApi.formations(search, "DISTRICT,ARMY,CORPS,DIVISION,BRIGADE")
+          if (lookupKind === "units") return lookupApi.units(search)
+          if (lookupKind === "equipmentTypes") return lookupApi.equipmentTypes(search)
+          if (lookupKind === "weaponTypes") return lookupApi.weaponTypes(search)
+          if (lookupKind === "specialties") return lookupApi.specialties(search)
+          return lookupApi.ranks(search)
+        }}
         onChange={(id) => {
           const selected = options.find((option) => option.id === id)
           onValuesChange({
@@ -157,6 +166,11 @@ export function QueryParamsForm({ parameters, values, scope, onValuesChange, onS
                 value={scope.id || null}
                 options={scopeOptions}
                 placeholder={t("builder.selectScope")}
+                loadOptions={(search) => {
+                  if (scope.type === "MILITARY_UNIT") return lookupApi.units(search)
+                  if (scope.type === "PERSONNEL") return lookupApi.personnel(search)
+                  return lookupApi.formations(search, "DISTRICT,ARMY,CORPS,DIVISION,BRIGADE")
+                }}
                 onChange={(id) => {
                   const selected = scopeOptions.find((option) => option.id === id)
                   onScopeChange({ ...scope, id: id ?? 0, name: selected?.label ?? "" })

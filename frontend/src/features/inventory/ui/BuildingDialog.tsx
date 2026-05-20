@@ -11,21 +11,24 @@ type BuildingDialogProps = {
   saving: boolean
   unitOptions: LookupOption[]
   onClose: () => void
-  onSubmit: (request: { name: string; unitId: number }) => void
+  onSubmit: (request: { name: string; unitId: number; assignable: boolean }) => void
 }
 
 export function BuildingDialog({ row, open, saving, unitOptions, onClose, onSubmit }: BuildingDialogProps) {
   const { t } = useTranslation("common")
   const [name, setName] = useState("")
-  const [unitId, setUnitId] = useState(1)
+  const [unitId, setUnitId] = useState<number | null>(null)
+  const [assignable, setAssignable] = useState(true)
 
   useEffect(() => {
     if (row) {
       setName(row.name)
       setUnitId(row.unitId)
+      setAssignable(row.assignable)
     } else {
       setName("")
-      setUnitId(1)
+      setUnitId(null)
+      setAssignable(true)
     }
   }, [row, open])
 
@@ -52,12 +55,24 @@ export function BuildingDialog({ row, open, saving, unitOptions, onClose, onSubm
             value={unitId}
             options={unitOptions}
             placeholder={t("placeholders.selectUnit")}
-            onChange={(value) => setUnitId(value ?? unitId)}
+            onChange={setUnitId}
           />
+          <label className="flex items-center gap-3 rounded-md border border-zinc-800 bg-zinc-900/60 px-3 py-3 text-sm text-zinc-300">
+            <input
+              type="checkbox"
+              checked={assignable}
+              onChange={(event) => setAssignable(event.target.checked)}
+              className="h-4 w-4 shrink-0 accent-emerald-400"
+            />
+            <span className="min-w-0">
+              <span className="block text-zinc-100">{t("fields.assignableBuilding")}</span>
+              <span className="block text-xs text-zinc-500">{t("fields.assignableBuildingHint")}</span>
+            </span>
+          </label>
         </div>
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="ghost" onClick={onClose}>{t("actions.cancel")}</Button>
-          <Button type="button" disabled={saving || !name.trim()} onClick={() => onSubmit({ name, unitId })}>{t("actions.save")}</Button>
+          <Button type="button" disabled={saving || !name.trim() || !unitId} onClick={() => unitId && onSubmit({ name, unitId, assignable })}>{t("actions.save")}</Button>
         </div>
       </div>
     </div>

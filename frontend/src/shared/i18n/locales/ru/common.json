@@ -78,6 +78,8 @@
     "manufacturer": "Производитель",
     "distribution": "Распределение по частям",
     "attributes": "Атрибуты по схеме БД",
+    "assignableBuilding": "Можно закреплять подразделения",
+    "assignableBuildingHint": "Казармы, штабы и учебные корпуса могут принимать подразделения; склады и ангары обычно нет.",
     "crewSize": "Экипаж",
     "weightTons": "Масса, т",
     "maxSpeedKmh": "Скорость, км/ч",
@@ -89,6 +91,9 @@
   "placeholders": {
     "selectUnit": "Выберите военную часть",
     "selectResourceType": "Выберите тип"
+  },
+  "select": {
+    "visibleLimit": "Показаны первые {{visible}} из {{total}}. Уточните поиск."
   },
   "roles": {
     "ADMIN_DISTRICT": "Администратор округа",

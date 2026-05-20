@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -31,7 +32,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ApiErrorResponse handleAccessDenied(AccessDeniedException exception, HttpServletRequest request) {
-        return error(HttpStatus.FORBIDDEN, "FORBIDDEN", "Access denied", request);
+        return error(HttpStatus.FORBIDDEN, "FORBIDDEN", "Недостаточно прав для выполнения действия.", request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -58,8 +59,11 @@ public class GlobalExceptionHandler {
                 Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 "VALIDATION_ERROR",
-                "Validation failed",
+                "Проверьте заполнение формы.",
+                "Одно или несколько полей заполнены некорректно.",
                 request.getRequestURI(),
+                traceId(),
+                validationErrors,
                 validationErrors
         );
     }
@@ -79,20 +83,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiErrorResponse handleTypeMismatch(MethodArgumentTypeMismatchException exception, HttpServletRequest request) {
-        return error(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Invalid parameter: " + exception.getName(), request);
+        return error(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Некорректный параметр запроса: " + exception.getName(), request);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiErrorResponse handleDataIntegrity(DataIntegrityViolationException exception, HttpServletRequest request) {
-        return error(HttpStatus.CONFLICT, "DATA_INTEGRITY_ERROR", "Data integrity constraint violation", request);
+        String message = friendlyIntegrityMessage(exception);
+        return error(HttpStatus.CONFLICT, "DATA_INTEGRITY_ERROR", message, request);
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiErrorResponse handleUnexpected(Exception exception, HttpServletRequest request) {
         log.error("Unhandled API exception at {}", request.getRequestURI(), exception);
-        return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Unexpected server error", request);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Не удалось выполнить операцию. Повторите попытку позже.", request);
     }
 
     private ApiErrorResponse error(HttpStatus status, String code, String message, HttpServletRequest request) {
@@ -101,8 +106,40 @@ public class GlobalExceptionHandler {
                 status.value(),
                 code,
                 message,
+                null,
                 request.getRequestURI(),
+                traceId(),
+                Map.of(),
                 Map.of()
         );
+    }
+
+    private String friendlyIntegrityMessage(DataIntegrityViolationException exception) {
+        String raw = exception.getMostSpecificCause() == null
+                ? exception.getMessage()
+                : exception.getMostSpecificCause().getMessage();
+        if (raw == null) {
+            return "Операция нарушает ограничения целостности данных.";
+        }
+        if (raw.contains("BUILDING_NOT_ASSIGNABLE")) {
+            return "Невозможно назначить подразделение: выбранное сооружение не предназначено для размещения подразделений.";
+        }
+        if (raw.contains("Subdivision and building must belong to the same military unit")) {
+            return "Подразделение и сооружение должны относиться к одной военной части.";
+        }
+        if (raw.contains("foreign key")) {
+            return "Связанная запись не найдена или недоступна в текущей области.";
+        }
+        if (raw.contains("unique") || raw.contains("duplicate key")) {
+            return "Такая запись уже существует.";
+        }
+        if (raw.contains("check constraint")) {
+            return "Значение не соответствует правилам заполнения.";
+        }
+        return "Операция нарушает ограничения целостности данных.";
+    }
+
+    private String traceId() {
+        return UUID.randomUUID().toString();
     }
 }
