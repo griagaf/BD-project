@@ -13,6 +13,7 @@
   },
   "builder": {
     "templates": "Шаблоны",
+    "searchTemplates": "Поиск шаблона",
     "scope": "Область",
     "parameters": "Параметры",
     "noParameters": "Дополнительные параметры не требуются",

@@ -1,4 +1,6 @@
 import type { QueryTemplateMetadata } from "@/features/intelligence/model/intelligenceTypes"
+import { Search } from "lucide-react"
+import { useMemo, useState } from "react"
 import { Card } from "@/shared/ui/card"
 import { useTranslation } from "react-i18next"
 
@@ -10,12 +12,31 @@ type QueryTemplateSelectorProps = {
 
 export function QueryTemplateSelector({ templates, selectedCode, onSelect }: QueryTemplateSelectorProps) {
   const { t } = useTranslation("intelligence")
+  const [search, setSearch] = useState("")
+  const filtered = useMemo(() => {
+    const normalized = search.trim().toLowerCase()
+    if (!normalized) {
+      return templates
+    }
+    return templates.filter((template) =>
+      `${template.label} ${template.description} ${template.code}`.toLowerCase().includes(normalized),
+    )
+  }, [search, templates])
 
   return (
     <Card className="space-y-2">
       <div className="text-xs uppercase text-emerald-300">{t("builder.templates")}</div>
-      <div className="space-y-2">
-        {templates.map((template) => (
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2 text-zinc-600" />
+        <input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={t("builder.searchTemplates")}
+          className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 pl-9 pr-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-emerald-500"
+        />
+      </div>
+      <div className="max-h-[40rem] space-y-2 overflow-y-auto pr-1">
+        {filtered.map((template) => (
           <button
             key={template.code}
             type="button"

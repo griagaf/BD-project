@@ -24,8 +24,10 @@ public class LookupService {
     private final PermissionService permissionService;
 
     @Transactional(readOnly = true)
-    public List<LookupOptionResponse> units(String search, int limit) {
+    public List<LookupOptionResponse> units(String search, int limit, Long formationId) {
         UserContext user = userContextProvider.current();
+        Map<String, Object> params = params(search, limit);
+        params.put("formationId", formationId);
         return jdbcTemplate.query("""
                 SELECT mu.unit_id AS id, mu.name AS label, mf.name AS parent_label,
                        concat(
@@ -40,9 +42,10 @@ public class LookupService {
                 LEFT JOIN locations l ON l.location_id = mu.location_id
                 WHERE (:search = '' OR lower(mu.name) LIKE :pattern OR lower(mf.name) LIKE :pattern
                        OR lower(coalesce(l.city, '')) LIKE :pattern)
+                  AND (CAST(:formationId AS BIGINT) IS NULL OR mu.formation_id = :formationId)
                 ORDER BY mu.name
                 LIMIT :limit
-                """, params(search, limit), (rs, rowNum) -> new LookupOptionResponse(
+                """, params, (rs, rowNum) -> new LookupOptionResponse(
                 rs.getLong("id"),
                 rs.getString("label"),
                 rs.getString("hierarchy_path"),
@@ -53,9 +56,10 @@ public class LookupService {
     }
 
     @Transactional(readOnly = true)
-    public List<LookupOptionResponse> formations(String search, String types, int limit) {
+    public List<LookupOptionResponse> formations(String search, String types, int limit, Long parentId) {
         UserContext user = userContextProvider.current();
         Map<String, Object> params = params(search, limit);
+        params.put("parentId", parentId);
         List<String> typeList = types == null || types.isBlank()
                 ? List.of("Армия", "Корпус", "Дивизия", "Бригада")
                 : List.of(types.split(",")).stream()
@@ -73,6 +77,7 @@ public class LookupService {
                 LEFT JOIN military_formations parent ON parent.formation_id = mf.parent_id
                 WHERE mf.formation_type IN (:types)
                   AND (:search = '' OR lower(mf.name) LIKE :pattern OR lower(coalesce(parent.name, '')) LIKE :pattern)
+                  AND (CAST(:parentId AS BIGINT) IS NULL OR mf.parent_id = :parentId)
                 ORDER BY mf.formation_type, mf.name
                 LIMIT :limit
                 """, params, (rs, rowNum) -> {
@@ -90,8 +95,13 @@ public class LookupService {
     }
 
     @Transactional(readOnly = true)
-    public List<LookupOptionResponse> subdivisions(String search, int limit) {
+    public List<LookupOptionResponse> subdivisions(String search, int limit, Long unitId, Long parentId, String type) {
         UserContext user = userContextProvider.current();
+        Map<String, Object> params = params(search, limit);
+        params.put("unitId", unitId);
+        params.put("parentId", parentId);
+        String dbType = type == null || type.isBlank() ? null : subdivisionDbType(type);
+        params.put("type", dbType);
         return jdbcTemplate.query("""
                 SELECT s.subdivision_id AS id, s.name AS label, s.type, mu.name AS parent_label,
                        concat(mu.name, ' / ', coalesce(parent.name || ' / ', ''), s.name) AS hierarchy_path
@@ -99,18 +109,21 @@ public class LookupService {
                 JOIN military_units mu ON mu.unit_id = s.unit_id
                 LEFT JOIN subdivisions parent ON parent.subdivision_id = s.parent_id
                 WHERE (:search = '' OR lower(s.name) LIKE :pattern OR lower(mu.name) LIKE :pattern)
+                  AND (CAST(:unitId AS BIGINT) IS NULL OR s.unit_id = :unitId)
+                  AND (CAST(:parentId AS BIGINT) IS NULL OR s.parent_id = :parentId)
+                  AND (CAST(:type AS TEXT) IS NULL OR s.type = :type)
                 ORDER BY mu.name, s.type, s.name
                 LIMIT :limit
-                """, params(search, limit), (rs, rowNum) -> {
-            ObjectType type = subdivisionObjectType(rs.getString("type"));
+                """, params, (rs, rowNum) -> {
+            ObjectType objectType = subdivisionObjectType(rs.getString("type"));
             Long id = rs.getLong("id");
             return new LookupOptionResponse(
                     id,
                     rs.getString("label"),
                     rs.getString("hierarchy_path"),
-                    type.name(),
+                    objectType.name(),
                     rs.getString("parent_label") + " / " + rs.getString("type"),
-                    permissionService.canRead(user, type, id) ? null : "OUT_OF_SCOPE"
+                    permissionService.canRead(user, objectType, id) ? null : "OUT_OF_SCOPE"
             );
         }).stream().filter(option -> option.disabledReason() == null).toList();
     }
@@ -118,7 +131,7 @@ public class LookupService {
     @Transactional(readOnly = true)
     public List<LookupOptionResponse> ranks(String search, int limit) {
         UserContext user = userContextProvider.current();
-        if (!user.hasPermission("personnel:read")) {
+        if (!canUseLookup(user, "personnel:read")) {
             return List.of();
         }
         return jdbcTemplate.query("""
@@ -133,7 +146,7 @@ public class LookupService {
     @Transactional(readOnly = true)
     public List<LookupOptionResponse> specialties(String search, int limit) {
         UserContext user = userContextProvider.current();
-        if (!user.hasPermission("specialty:read") && !user.hasPermission("personnel:read")) {
+        if (!canUseLookup(user, "specialty:read") && !canUseLookup(user, "personnel:read")) {
             return List.of();
         }
         return jdbcTemplate.query("""
@@ -148,7 +161,7 @@ public class LookupService {
     @Transactional(readOnly = true)
     public List<LookupOptionResponse> equipmentTypes(String search, int limit) {
         UserContext user = userContextProvider.current();
-        if (!user.hasPermission("equipment:read")) {
+        if (!canUseLookup(user, "equipment:read")) {
             return List.of();
         }
         return jdbcTemplate.query("""
@@ -173,7 +186,7 @@ public class LookupService {
     @Transactional(readOnly = true)
     public List<LookupOptionResponse> weaponTypes(String search, int limit) {
         UserContext user = userContextProvider.current();
-        if (!user.hasPermission("weapon:read")) {
+        if (!canUseLookup(user, "weapon:read")) {
             return List.of();
         }
         return jdbcTemplate.query("""
@@ -248,7 +261,7 @@ public class LookupService {
         Map<String, Object> params = new HashMap<>();
         params.put("search", normalized);
         params.put("pattern", "%" + normalized + "%");
-        params.put("limit", Math.max(1, Math.min(limit, 100)));
+        params.put("limit", Math.max(1, Math.min(limit, 500)));
         return params;
     }
 
@@ -293,5 +306,20 @@ public class LookupService {
             case "Отделение" -> ObjectType.SQUAD;
             default -> ObjectType.SQUAD;
         };
+    }
+
+    private String subdivisionDbType(String type) {
+        return switch (type.toUpperCase(Locale.ROOT)) {
+            case "BATTALION" -> "Батальон";
+            case "COMPANY" -> "Рота";
+            case "PLATOON" -> "Взвод";
+            case "SQUAD" -> "Отделение";
+            default -> type;
+        };
+    }
+
+    private boolean canUseLookup(UserContext user, String permission) {
+        return user.hasAnyRole(com.tacticaldistrict.command.security.model.RoleCode.ADMIN_DISTRICT)
+                || user.hasPermission(permission);
     }
 }

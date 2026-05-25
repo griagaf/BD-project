@@ -102,6 +102,7 @@ public class AlertService {
                 FROM buildings b
                 JOIN military_units mu ON mu.unit_id = b.unit_id
                 LEFT JOIN subdivision_buildings sb ON sb.building_id = b.building_id
+                WHERE b.assignable = TRUE
                 GROUP BY b.building_id, b.name, mu.name
                 HAVING COUNT(sb.subdivision_id) = 0
                 ORDER BY mu.name, b.name
@@ -126,6 +127,7 @@ public class AlertService {
                 FROM buildings b
                 JOIN military_units mu ON mu.unit_id = b.unit_id
                 LEFT JOIN subdivision_buildings sb ON sb.building_id = b.building_id
+                WHERE b.assignable = TRUE
                 GROUP BY b.building_id, b.name, mu.name
                 HAVING COUNT(sb.subdivision_id) > :threshold
                 ORDER BY subdivisions_count DESC, b.name

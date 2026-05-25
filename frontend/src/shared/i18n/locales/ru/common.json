@@ -90,7 +90,10 @@
   },
   "placeholders": {
     "selectUnit": "Выберите военную часть",
-    "selectResourceType": "Выберите тип"
+    "searchUnit": "Поиск по номеру, названию или соединению",
+    "selectResourceType": "Выберите тип",
+    "searchResourceType": "Поиск по названию или категории",
+    "quantity": "Например: 12"
   },
   "select": {
     "visibleLimit": "Показаны первые {{visible}} из {{total}}. Уточните поиск."

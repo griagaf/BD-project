@@ -38,13 +38,13 @@ export function PersonnelPage() {
   const { data: dictionaries } = usePersonnelDictionariesQuery()
   const { data: subdivisionOptions = [] } = useQuery({
     queryKey: ["lookups", "subdivisions", "personnel-form"],
-    queryFn: () => lookupApi.subdivisions(),
-    staleTime: 5 * 60_000,
+    queryFn: () => lookupApi.subdivisions("", { limit: 500 }),
+    staleTime: 0,
   })
   const { data: unitOptions = [] } = useQuery({
     queryKey: ["lookups", "units", "personnel-filters"],
-    queryFn: () => lookupApi.units(),
-    staleTime: 5 * 60_000,
+    queryFn: () => lookupApi.units("", { limit: 500 }),
+    staleTime: 0,
   })
   const createMutation = useCreatePersonnelMutation()
   const updateMutation = useUpdatePersonnelMutation(editing?.id ?? 0)

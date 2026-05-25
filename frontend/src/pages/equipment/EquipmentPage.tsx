@@ -33,6 +33,7 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
   const [prefillTypeId, setPrefillTypeId] = useState<number | null>(null)
   const [typeDialogOpen, setTypeDialogOpen] = useState(false)
   const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null)
+  const [activeView, setActiveView] = useState<"inventory" | "types">("inventory")
   const { data: user } = useCurrentUserQuery()
   const [searchParams, setSearchParams] = useSearchParams()
   const { data, error, isLoading } = useInventoryQuery(kind, filters)
@@ -45,8 +46,8 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
   const typePassportQuery = useInventoryTypePassportQuery(kind, selectedTypeId)
   const { data: unitOptions = [] } = useQuery({
     queryKey: ["lookups", "units", kind],
-    queryFn: () => lookupApi.units(),
-    staleTime: 5 * 60_000,
+    queryFn: () => lookupApi.units("", { limit: 500 }),
+    staleTime: 0,
   })
   const typeOptions = (dictionaries?.types ?? []).map((type) => ({
     id: type.id,
@@ -102,28 +103,53 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
           </div>
         )}
       />
-      <FiltersPanel filters={filters} categories={dictionaries?.categories} types={dictionaries?.types} onChange={setFilters} />
-      {isLoading ? (
-        <TableSkeleton columns={6} />
-      ) : error ? (
-        <ErrorState title={t(`${namespace}:error`)} />
+      <div className="flex gap-2 overflow-x-auto border-b border-zinc-800 pb-2">
+        {(["inventory", "types"] as const).map((view) => (
+          <button
+            key={view}
+            type="button"
+            onClick={() => setActiveView(view)}
+            className={`shrink-0 rounded-md px-3 py-2 text-sm transition ${activeView === view ? "bg-emerald-500 text-zinc-950" : "bg-zinc-900 text-zinc-400 hover:text-zinc-100"}`}
+          >
+            {t(`${namespace}:tabs.${view}`)}
+          </button>
+        ))}
+      </div>
+      {activeView === "inventory" ? (
+        <>
+          <FiltersPanel filters={filters} categories={dictionaries?.categories} types={dictionaries?.types} onChange={setFilters} />
+          {isLoading ? (
+            <TableSkeleton columns={6} />
+          ) : error ? (
+            <ErrorState title={t(`${namespace}:error`)} />
+          ) : (
+            <InventoryTable rows={data?.content ?? []} canEdit={canEdit} onEdit={(row) => {
+              setEditing(row)
+              setInventoryDialogOpen(true)
+            }} onOpenType={setSelectedTypeId} onDelete={(row) => deleteMutation.mutate({ unitId: row.unitId, typeId: row.typeId }, {
+              onSuccess: () => toast.success(t(`${namespace}:toast.deleted`)),
+              onError: () => toast.error(t(`${namespace}:toast.deleteFailed`)),
+            })} />
+          )}
+          <Pagination
+            page={data?.page ?? filters.page ?? 0}
+            size={data?.size ?? filters.size ?? 10}
+            totalElements={data?.totalElements ?? 0}
+            totalPages={data?.totalPages ?? 1}
+            onPageChange={(page) => setFilters({ ...filters, page })}
+            onSizeChange={(size) => setFilters({ ...filters, page: 0, size })}
+          />
+        </>
       ) : (
-        <InventoryTable rows={data?.content ?? []} canEdit={canEdit} onEdit={(row) => {
-          setEditing(row)
-          setInventoryDialogOpen(true)
-        }} onOpenType={setSelectedTypeId} onDelete={(row) => deleteMutation.mutate({ unitId: row.unitId, typeId: row.typeId }, {
-          onSuccess: () => toast.success(t(`${namespace}:toast.deleted`)),
-          onError: () => toast.error(t(`${namespace}:toast.deleteFailed`)),
-        })} />
+        <TypeDirectoryPanel
+          kind={kind}
+          categories={dictionaries?.categories ?? []}
+          types={dictionaries?.types ?? []}
+          canManageDictionary={canManageDictionary}
+          onOpenType={setSelectedTypeId}
+          onManage={() => setTypeDialogOpen(true)}
+        />
       )}
-      <Pagination
-        page={data?.page ?? filters.page ?? 0}
-        size={data?.size ?? filters.size ?? 10}
-        totalElements={data?.totalElements ?? 0}
-        totalPages={data?.totalPages ?? 1}
-        onPageChange={(page) => setFilters({ ...filters, page })}
-        onSizeChange={(size) => setFilters({ ...filters, page: 0, size })}
-      />
       <InventoryDialog
         row={editing}
         open={inventoryDialogOpen}
@@ -183,6 +209,105 @@ export function InventoryResourcePage({ kind, icon }: { kind: "equipment" | "wea
         onClose={() => setSelectedTypeId(null)}
       />
     </div>
+  )
+}
+
+function TypeDirectoryPanel({
+  kind,
+  categories,
+  types,
+  canManageDictionary,
+  onOpenType,
+  onManage,
+}: {
+  kind: "equipment" | "weapons"
+  categories: InventoryCategory[]
+  types: InventoryType[]
+  canManageDictionary: boolean
+  onOpenType: (typeId: number) => void
+  onManage: () => void
+}) {
+  const namespace = kind === "equipment" ? "equipment" : "weapons"
+  const { t } = useTranslation(["common", "equipment", "weapons"])
+  const [search, setSearch] = useState("")
+  const [categoryId, setCategoryId] = useState<number | null>(null)
+  const [page, setPage] = useState(0)
+  const [size, setSize] = useState(25)
+  const categoryOptions = categories.map((category) => ({ id: category.id, label: category.name }))
+  const normalized = search.trim().toLowerCase()
+  const filtered = types.filter((type) =>
+    (!categoryId || type.categoryId === categoryId)
+    && (!normalized || `${type.name} ${type.categoryName}`.toLowerCase().includes(normalized)),
+  )
+  const totalPages = Math.max(1, Math.ceil(filtered.length / size))
+  const currentPage = Math.min(page, totalPages - 1)
+  const visible = filtered.slice(currentPage * size, currentPage * size + size)
+
+  return (
+    <Card className="space-y-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <div className="text-xs uppercase text-emerald-300">{t(`${namespace}:dictionary.typeDirectory`)}</div>
+          <h2 className="mt-1 text-lg font-semibold text-zinc-100">{t(`${namespace}:dictionary.typesInCategory`)}</h2>
+          <p className="mt-1 text-sm text-zinc-500">{t(`${namespace}:dictionary.directoryDescription`)}</p>
+        </div>
+        <Button type="button" variant="secondary" disabled={!canManageDictionary} onClick={onManage}>
+          <Settings className="h-4 w-4 shrink-0" />
+          {t(`${namespace}:actions.manageTypes`)}
+        </Button>
+      </div>
+      <div className="grid gap-3 md:grid-cols-[1fr_280px]">
+        <input
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setPage(0)
+          }}
+          placeholder={t(`${namespace}:dictionary.searchTypes`)}
+          className="h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-emerald-500"
+        />
+        <SearchableSelect
+          label={t("table.category")}
+          value={categoryId}
+          options={categoryOptions}
+          placeholder={t(`${namespace}:filters.allCategories`)}
+          onChange={(value) => {
+            setCategoryId(value)
+            setPage(0)
+          }}
+        />
+      </div>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {visible.map((type) => (
+          <button
+            key={type.id}
+            type="button"
+            onClick={() => onOpenType(type.id)}
+            className="rounded-md border border-zinc-800 bg-zinc-950 p-4 text-left transition hover:border-emerald-500/40 hover:bg-zinc-900"
+          >
+            <div className="truncate text-sm font-medium text-zinc-100" title={type.name}>{type.name}</div>
+            <div className="mt-1 truncate text-xs text-zinc-500" title={type.categoryName}>{type.categoryName}</div>
+            <div className="mt-3 text-xs text-emerald-300">{t(`${namespace}:dictionary.openPassport`)}</div>
+          </button>
+        ))}
+      </div>
+      {!visible.length ? (
+        <div className="rounded-md border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-500">
+          {t(`${namespace}:dictionary.noTypes`)}
+        </div>
+      ) : null}
+      <Pagination
+        page={currentPage}
+        size={size}
+        totalElements={filtered.length}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        onSizeChange={(nextSize) => {
+          setSize(nextSize)
+          setPage(0)
+        }}
+      />
+    </Card>
   )
 }
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Personnel, PersonnelRequest, Rank, Specialty } from "@/features/personnel/model/personnelTypes"
 import { apiClient } from "@/shared/api/apiClient"
-import type { LookupOption } from "@/shared/api/lookupApi"
+import { lookupApi, type LookupOption } from "@/shared/api/lookupApi"
 import { Button } from "@/shared/ui/button"
 import { SearchableSelect } from "@/shared/ui/searchable-select"
 
@@ -26,7 +26,7 @@ const emptyForm: PersonnelRequest = {
   personalNumber: "",
   birthDate: "1998-01-01",
   serviceStart: new Date().toISOString().slice(0, 10),
-  subdivisionId: 12,
+  subdivisionId: 0,
   rankId: null,
   rankAssignmentDate: new Date().toISOString().slice(0, 10),
   specialtyIds: [],
@@ -47,11 +47,47 @@ export function PersonnelEditModal({
   const [form, setForm] = useState<PersonnelRequest>(emptyForm)
   const [rankAttributeValues, setRankAttributeValues] = useState<Record<number, string>>({})
   const [step, setStep] = useState(0)
+  const [armyId, setArmyId] = useState<number | null>(null)
+  const [formationId, setFormationId] = useState<number | null>(null)
+  const [unitId, setUnitId] = useState<number | null>(null)
+  const [companyId, setCompanyId] = useState<number | null>(null)
+  const [platoonId, setPlatoonId] = useState<number | null>(null)
+  const [squadId, setSquadId] = useState<number | null>(null)
   const rankSchemaQuery = useQuery({
     queryKey: ["attributes", "rank", form.rankId],
     queryFn: () => apiClient<Array<{ id: number; name: string; dataType: "text" | "number" | "date" | "boolean"; required: boolean }>>(`/api/attributes/ranks/${form.rankId}`),
     enabled: Boolean(open && form.rankId),
     staleTime: 5 * 60_000,
+  })
+  const armiesQuery = useQuery({
+    queryKey: ["lookups", "formations", "army", open],
+    queryFn: () => lookupApi.formations("", "ARMY", { limit: 100 }),
+    enabled: open,
+  })
+  const formationsQuery = useQuery({
+    queryKey: ["lookups", "formations", "children", armyId],
+    queryFn: () => lookupApi.formations("", "CORPS,DIVISION,BRIGADE", { parentId: armyId, limit: 100 }),
+    enabled: open && Boolean(armyId),
+  })
+  const unitsQuery = useQuery({
+    queryKey: ["lookups", "units", formationId],
+    queryFn: () => lookupApi.units("", { formationId, limit: 100 }),
+    enabled: open && Boolean(formationId),
+  })
+  const companiesQuery = useQuery({
+    queryKey: ["lookups", "subdivisions", "companies", unitId],
+    queryFn: () => lookupApi.subdivisions("", { unitId, type: "COMPANY", limit: 100 }),
+    enabled: open && Boolean(unitId),
+  })
+  const platoonsQuery = useQuery({
+    queryKey: ["lookups", "subdivisions", "platoons", companyId],
+    queryFn: () => lookupApi.subdivisions("", { parentId: companyId, type: "PLATOON", limit: 100 }),
+    enabled: open && Boolean(companyId),
+  })
+  const squadsQuery = useQuery({
+    queryKey: ["lookups", "subdivisions", "squads", platoonId],
+    queryFn: () => lookupApi.subdivisions("", { parentId: platoonId, type: "SQUAD", limit: 100 }),
+    enabled: open && Boolean(platoonId),
   })
 
   useEffect(() => {
@@ -60,6 +96,7 @@ export function PersonnelEditModal({
     }
     if (!personnel) {
       setForm(emptyForm)
+      resetCascade()
       setStep(0)
       return
     }
@@ -77,6 +114,7 @@ export function PersonnelEditModal({
       rankAttributes: [],
     })
     setRankAttributeValues({})
+    resetCascade()
     setStep(0)
   }, [open, personnel])
 
@@ -88,6 +126,50 @@ export function PersonnelEditModal({
     t("personnel:wizard.rankAttributes"),
     t("personnel:wizard.confirm"),
   ]
+  const selectedSubdivision = subdivisionOptions.find((option) => option.id === form.subdivisionId)
+  const selectedPath = [
+    armiesQuery.data?.find((item) => item.id === armyId)?.label,
+    formationsQuery.data?.find((item) => item.id === formationId)?.label,
+    unitsQuery.data?.find((item) => item.id === unitId)?.label,
+    companiesQuery.data?.find((item) => item.id === companyId)?.label,
+    platoonsQuery.data?.find((item) => item.id === platoonId)?.label,
+    squadsQuery.data?.find((item) => item.id === squadId)?.label,
+  ].filter(Boolean).join(" → ")
+  const rankOptions = ranks
+    .map((rank) => ({
+      id: rank.id,
+      label: rank.name,
+      parentLabel: rankGroup(rank.category),
+      description: rank.category,
+    }))
+    .sort((left, right) => `${left.parentLabel} ${left.label}`.localeCompare(`${right.parentLabel} ${right.label}`, "ru"))
+
+  function resetCascade() {
+    setArmyId(null)
+    setFormationId(null)
+    setUnitId(null)
+    setCompanyId(null)
+    setPlatoonId(null)
+    setSquadId(null)
+  }
+
+  function applyAssignment(next: Partial<{
+    armyId: number | null
+    formationId: number | null
+    unitId: number | null
+    companyId: number | null
+    platoonId: number | null
+    squadId: number | null
+    subdivisionId: number
+  }>) {
+    if ("armyId" in next) setArmyId(next.armyId ?? null)
+    if ("formationId" in next) setFormationId(next.formationId ?? null)
+    if ("unitId" in next) setUnitId(next.unitId ?? null)
+    if ("companyId" in next) setCompanyId(next.companyId ?? null)
+    if ("platoonId" in next) setPlatoonId(next.platoonId ?? null)
+    if ("squadId" in next) setSquadId(next.squadId ?? null)
+    setForm((current) => ({ ...current, subdivisionId: next.subdivisionId ?? current.subdivisionId }))
+  }
 
   if (!open) {
     return null
@@ -136,17 +218,18 @@ export function PersonnelEditModal({
         <div className="grid gap-4 p-5 md:grid-cols-2">
           {step === 0 ? (
             <>
-              <Field label={t("personnel:form.lastName")} value={form.lastName} onChange={(value) => setForm({ ...form, lastName: value })} />
-              <Field label={t("personnel:form.firstName")} value={form.firstName} onChange={(value) => setForm({ ...form, firstName: value })} />
-              <Field label={t("personnel:form.middleName")} optional value={form.middleName ?? ""} onChange={(value) => setForm({ ...form, middleName: value })} />
-              <Field label={t("personnel:form.personalNumber")} value={form.personalNumber} onChange={(value) => setForm({ ...form, personalNumber: value })} />
-              <Field label={t("personnel:form.birthDate")} type="date" value={form.birthDate} onChange={(value) => setForm({ ...form, birthDate: value })} />
-              <Field label={t("personnel:form.serviceStart")} type="date" value={form.serviceStart} onChange={(value) => setForm({ ...form, serviceStart: value })} />
+              <Field label={t("personnel:form.lastName")} placeholder={t("personnel:placeholders.lastName")} value={form.lastName} onChange={(value) => setForm({ ...form, lastName: value })} />
+              <Field label={t("personnel:form.firstName")} placeholder={t("personnel:placeholders.firstName")} value={form.firstName} onChange={(value) => setForm({ ...form, firstName: value })} />
+              <Field label={t("personnel:form.middleName")} placeholder={t("personnel:placeholders.middleName")} optional value={form.middleName ?? ""} onChange={(value) => setForm({ ...form, middleName: value })} />
+              <Field label={t("personnel:form.personalNumber")} placeholder={t("personnel:placeholders.personalNumber")} hint={t("personnel:hints.personalNumber")} value={form.personalNumber} onChange={(value) => setForm({ ...form, personalNumber: value })} />
+              <Field label={t("personnel:form.birthDate")} type="date" hint={t("personnel:hints.date")} value={form.birthDate} onChange={(value) => setForm({ ...form, birthDate: value })} />
+              <Field label={t("personnel:form.serviceStart")} type="date" hint={t("personnel:hints.date")} value={form.serviceStart} onChange={(value) => setForm({ ...form, serviceStart: value })} />
               <SearchableSelect
                 label={t("personnel:form.rank")}
                 value={form.rankId ?? null}
-                options={ranks.map((rank) => ({ id: rank.id, label: rank.name, description: rank.category }))}
+                options={rankOptions}
                 placeholder={t("personnel:table.noRank")}
+                searchPlaceholder={t("personnel:placeholders.searchRank")}
                 onChange={(value) => {
                   setForm({ ...form, rankId: value })
                   setRankAttributeValues({})
@@ -156,18 +239,107 @@ export function PersonnelEditModal({
           ) : null}
 
           {step === 1 ? (
-            <div className="md:col-span-2">
+            <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
+              <SearchableSelect
+                label={t("personnel:wizard.army")}
+                value={armyId}
+                options={armiesQuery.data ?? []}
+                placeholder={t("personnel:wizard.selectArmy")}
+                onChange={(value) => applyAssignment({
+                  armyId: value,
+                  formationId: null,
+                  unitId: null,
+                  companyId: null,
+                  platoonId: null,
+                  squadId: null,
+                  subdivisionId: 0,
+                })}
+              />
+              <SearchableSelect
+                label={t("personnel:wizard.formation")}
+                value={formationId}
+                options={formationsQuery.data ?? []}
+                placeholder={t("personnel:wizard.selectFormation")}
+                disabled={!armyId}
+                onChange={(value) => applyAssignment({
+                  formationId: value,
+                  unitId: null,
+                  companyId: null,
+                  platoonId: null,
+                  squadId: null,
+                  subdivisionId: 0,
+                })}
+              />
+              <SearchableSelect
+                label={t("personnel:wizard.unit")}
+                value={unitId}
+                options={unitsQuery.data ?? []}
+                placeholder={t("personnel:wizard.selectUnit")}
+                disabled={!formationId}
+                onChange={(value) => applyAssignment({
+                  unitId: value,
+                  companyId: null,
+                  platoonId: null,
+                  squadId: null,
+                  subdivisionId: 0,
+                })}
+              />
+              <SearchableSelect
+                label={t("personnel:wizard.company")}
+                value={companyId}
+                options={companiesQuery.data ?? []}
+                placeholder={t("personnel:wizard.selectCompany")}
+                disabled={!unitId}
+                onChange={(value) => applyAssignment({
+                  companyId: value,
+                  platoonId: null,
+                  squadId: null,
+                  subdivisionId: value ?? 0,
+                })}
+              />
+              <SearchableSelect
+                label={t("personnel:wizard.platoon")}
+                value={platoonId}
+                options={platoonsQuery.data ?? []}
+                placeholder={t("personnel:wizard.selectPlatoon")}
+                disabled={!companyId}
+                onChange={(value) => applyAssignment({
+                  platoonId: value,
+                  squadId: null,
+                  subdivisionId: value ?? companyId ?? 0,
+                })}
+              />
+              <SearchableSelect
+                label={t("personnel:wizard.squad")}
+                value={squadId}
+                options={squadsQuery.data ?? []}
+                placeholder={t("personnel:wizard.selectSquad")}
+                disabled={!platoonId}
+                onChange={(value) => applyAssignment({
+                  squadId: value,
+                  subdivisionId: value ?? platoonId ?? companyId ?? 0,
+                })}
+              />
+              <div className="rounded-md border border-zinc-800 bg-zinc-900/50 p-3 text-sm text-zinc-400 md:col-span-2">
+                <div className="text-xs uppercase text-zinc-500">{t("personnel:wizard.selectedPath")}</div>
+                <div className="mt-1 break-words text-zinc-200">
+                  {selectedPath
+                    || selectedSubdivision?.description
+                    || selectedSubdivision?.parentLabel
+                    || t("personnel:wizard.selectPath")}
+                </div>
+              </div>
               <SearchableSelect
                 label={t("personnel:form.subdivision")}
                 value={form.subdivisionId}
                 options={subdivisionOptions}
                 placeholder={t("personnel:form.selectSubdivision")}
+                searchPlaceholder={t("personnel:placeholders.searchSubdivision")}
+                loadOptions={(search) => lookupApi.subdivisions(search, { limit: 500 })}
                 onChange={(value) => setForm({ ...form, subdivisionId: value ?? form.subdivisionId })}
               />
-              <div className="mt-3 rounded-md border border-zinc-800 bg-zinc-900/50 p-3 text-sm text-zinc-400">
-                {subdivisionOptions.find((option) => option.id === form.subdivisionId)?.description
-                  ?? subdivisionOptions.find((option) => option.id === form.subdivisionId)?.parentLabel
-                  ?? t("personnel:wizard.selectPath")}
+              <div className="rounded-md border border-zinc-800 bg-zinc-950 p-3 text-xs text-zinc-500">
+                {t("personnel:wizard.directSearchHint")}
               </div>
             </div>
           ) : null}
@@ -237,7 +409,7 @@ export function PersonnelEditModal({
               {t("actions.next")}
             </Button>
           ) : (
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" disabled={saving || !form.subdivisionId}>
             <Save className="h-4 w-4 shrink-0" />
             {t("actions.save")}
           </Button>
@@ -262,12 +434,16 @@ function Field({
   value,
   type = "text",
   optional = false,
+  placeholder,
+  hint,
   onChange,
 }: {
   label: string
   value: string
   type?: string
   optional?: boolean
+  placeholder?: string
+  hint?: string
   onChange: (value: string) => void
 }) {
   return (
@@ -277,9 +453,11 @@ function Field({
         className="h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm outline-none"
         type={type}
         value={value}
+        placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         required={!optional}
       />
+      {hint ? <span className="block text-xs text-zinc-600">{hint}</span> : null}
     </label>
   )
 }
@@ -315,4 +493,13 @@ function DynamicRankAttributeField({
       onChange={onChange}
     />
   )
+}
+
+function rankGroup(category: string) {
+  const normalized = category.toLowerCase()
+  if (normalized.includes("высш") || normalized.includes("генерал")) return "Высший состав"
+  if (normalized.includes("офиц")) return "Офицеры"
+  if (normalized.includes("прапор")) return "Прапорщики"
+  if (normalized.includes("серж") || normalized.includes("старшин")) return "Сержанты и старшины"
+  return "Рядовой состав"
 }
