@@ -1,6 +1,8 @@
 package com.tacticaldistrict.command.weapon.service;
 
 import com.tacticaldistrict.command.audit.AuditService;
+import com.tacticaldistrict.command.common.attribute.DynamicAttributeValueRequest;
+import com.tacticaldistrict.command.common.dto.AttributeValueResponse;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.equipment.dto.InventoryQuantityRequest;
 import com.tacticaldistrict.command.equipment.dto.InventoryStatisticsResponse;
@@ -19,6 +21,7 @@ import com.tacticaldistrict.command.weapon.dto.WeaponTypeResponse;
 import jakarta.persistence.EntityNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +91,10 @@ public class WeaponService {
 
     @Transactional(readOnly = true)
     public List<WeaponCategoryResponse> categories() {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("weapon:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
         return jdbcTemplate.query("""
                 SELECT category_id, name
                 FROM weapon_categories
@@ -98,6 +105,10 @@ public class WeaponService {
 
     @Transactional(readOnly = true)
     public List<WeaponTypeResponse> types() {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("weapon:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
         return jdbcTemplate.query("""
                 SELECT wt.type_id, wt.name, wc.category_id, wc.name AS category_name
                 FROM weapon_types wt
@@ -179,6 +190,7 @@ public class WeaponService {
                 )
                 RETURNING type_id
                 """, typeParams(request), Long.class);
+        syncTypeAttributes(id, request);
         auditService.created(user, ObjectType.WEAPON, id, "Weapon type created");
         return typeById(id);
     }
@@ -205,6 +217,7 @@ public class WeaponService {
         if (updated == 0) {
             throw new EntityNotFoundException("Weapon type not found: " + id);
         }
+        syncTypeAttributes(id, request);
         auditService.updated(user, ObjectType.WEAPON, id, "Weapon type updated");
         return typeById(id);
     }
@@ -223,7 +236,7 @@ public class WeaponService {
         if (!user.hasPermission("weapon:read")) {
             throw new AccessDeniedException("Access denied");
         }
-        WeaponTypePassportResponse base = jdbcTemplate.queryForObject("""
+        WeaponTypePassportResponse base = jdbcTemplate.query("""
                 SELECT wt.type_id, wt.name, wc.category_id, wc.name AS category_name,
                        wt.purpose, wt.caliber, wt.effective_range_m, wt.adoption_year,
                        wt.manufacturer, wt.description,
@@ -236,21 +249,88 @@ public class WeaponService {
                 GROUP BY wt.type_id, wt.name, wc.category_id, wc.name,
                          wt.purpose, wt.caliber, wt.effective_range_m, wt.adoption_year,
                          wt.manufacturer, wt.description
-                """, Map.of("id", id), this::mapTypePassport);
-        if (base == null) {
-            throw new EntityNotFoundException("Weapon type not found: " + id);
-        }
+                """, Map.of("id", id), this::mapTypePassport)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Weapon type not found: " + id));
         List<UnitWeaponResponse> distribution = queryInventory(new WeaponFilter(null, null, null, id))
                 .stream()
                 .filter(row -> permissionService.canRead(user, ObjectType.MILITARY_UNIT, row.unitId()))
                 .toList();
         long totalQuantity = distribution.stream().mapToLong(UnitWeaponResponse::quantity).sum();
         long unitsCount = distribution.stream().map(UnitWeaponResponse::unitId).distinct().count();
+        List<AttributeValueResponse> attributes = typeAttributes(id);
         return new WeaponTypePassportResponse(
                 base.id(), base.name(), base.categoryId(), base.categoryName(), base.purpose(),
                 base.caliber(), base.effectiveRangeM(), base.adoptionYear(), base.manufacturer(),
-                base.description(), totalQuantity, unitsCount, distribution
+                base.description(), totalQuantity, unitsCount, attributes, distribution
         );
+    }
+
+    private List<AttributeValueResponse> typeAttributes(Long typeId) {
+        return jdbcTemplate.query("""
+                SELECT wat.attribute_id,
+                       wat.name,
+                       wat.data_type,
+                       COALESCE(
+                           wtav.value_text,
+                           trim(to_char(wtav.value_number, 'FM999999990.99')),
+                           to_char(wtav.value_date, 'YYYY-MM-DD'),
+                           CASE WHEN wtav.value_boolean IS NULL THEN NULL ELSE wtav.value_boolean::TEXT END
+                       ) AS display_value
+                FROM weapon_type_attribute_values wtav
+                JOIN weapon_types wt ON wt.type_id = wtav.type_id
+                JOIN weapon_category_attributes wca
+                  ON wca.category_id = wt.category_id
+                 AND wca.attribute_id = wtav.attribute_id
+                JOIN weapon_attribute_types wat ON wat.attribute_id = wtav.attribute_id
+                WHERE wtav.type_id = :typeId
+                  AND COALESCE(
+                      wtav.value_text,
+                      wtav.value_number::TEXT,
+                      wtav.value_date::TEXT,
+                      wtav.value_boolean::TEXT
+                  ) IS NOT NULL
+                ORDER BY wat.attribute_id
+                """, Map.of("typeId", typeId), (rs, rowNum) -> new AttributeValueResponse(
+                rs.getLong("attribute_id"),
+                rs.getString("name"),
+                rs.getString("data_type"),
+                rs.getString("display_value")
+        ));
+    }
+
+    private void syncTypeAttributes(Long typeId, WeaponTypeRequest request) {
+        if (request.attributes() != null) {
+            syncDynamicAttributeValues(typeId, request.attributes());
+        }
+    }
+
+    private void syncDynamicAttributeValues(Long typeId, List<DynamicAttributeValueRequest> attributes) {
+        for (DynamicAttributeValueRequest attribute : attributes) {
+            String dataType = jdbcTemplate.queryForObject("""
+                    SELECT data_type
+                    FROM weapon_attribute_types
+                    WHERE attribute_id = :attributeId
+                    """, Map.of("attributeId", attribute.attributeId()), String.class);
+            if (attribute.value() == null || attribute.value().isBlank()) {
+                jdbcTemplate.update("""
+                        DELETE FROM weapon_type_attribute_values
+                        WHERE type_id = :typeId AND attribute_id = :attributeId
+                        """, Map.of("typeId", typeId, "attributeId", attribute.attributeId()));
+                continue;
+            }
+            Map<String, Object> params = attributeParams(typeId, attribute.attributeId(), dataType, attribute.value().trim());
+            jdbcTemplate.update("""
+                    INSERT INTO weapon_type_attribute_values (type_id, attribute_id, value_text, value_number, value_date, value_boolean)
+                    VALUES (:typeId, :attributeId, :valueText, :valueNumber, :valueDate, :valueBoolean)
+                    ON CONFLICT (type_id, attribute_id) DO UPDATE SET
+                        value_text = EXCLUDED.value_text,
+                        value_number = EXCLUDED.value_number,
+                        value_date = EXCLUDED.value_date,
+                        value_boolean = EXCLUDED.value_boolean
+                    """, params);
+        }
     }
 
     private List<UnitWeaponResponse> queryInventory(WeaponFilter filter) {
@@ -353,6 +433,7 @@ public class WeaponService {
                 rs.getString("description"),
                 rs.getLong("total_quantity"),
                 rs.getLong("units_count"),
+                List.of(),
                 List.of()
         );
     }
@@ -378,6 +459,17 @@ public class WeaponService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private Map<String, Object> attributeParams(Long typeId, Long attributeId, String dataType, String value) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("typeId", typeId);
+        params.put("attributeId", attributeId);
+        params.put("valueText", "text".equals(dataType) ? value : null);
+        params.put("valueNumber", "number".equals(dataType) ? new BigDecimal(value.replace(',', '.')) : null);
+        params.put("valueDate", "date".equals(dataType) ? java.time.LocalDate.parse(value) : null);
+        params.put("valueBoolean", "boolean".equals(dataType) ? Boolean.valueOf(value) : null);
+        return params;
     }
 
     private PageResponse<UnitWeaponResponse> page(List<UnitWeaponResponse> rows, Pageable pageable) {

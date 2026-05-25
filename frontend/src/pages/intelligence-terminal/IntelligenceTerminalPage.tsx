@@ -5,25 +5,29 @@ import { useExecuteQueryMutation, useExportQueryMutation, useQueryTemplatesQuery
 import type { ExecuteQueryRequest, QueryScope } from "@/features/intelligence/model/intelligenceTypes"
 import { QueryParamsForm } from "@/features/intelligence/ui/QueryParamsForm"
 import { QueryPreviewTerminal } from "@/features/intelligence/ui/QueryPreviewTerminal"
+import { QueryErrorPanel } from "@/features/intelligence/ui/QueryErrorPanel"
 import { QueryResultTable } from "@/features/intelligence/ui/QueryResultTable"
 import { QueryTemplateSelector } from "@/features/intelligence/ui/QueryTemplateSelector"
 import { Button } from "@/shared/ui/button"
 import { PageHeader } from "@/shared/ui/page"
-import { ErrorState, LoadingState } from "@/shared/ui/state"
+import { LoadingState } from "@/shared/ui/state"
 import { toast } from "@/shared/ui/toast"
 
 export function IntelligenceTerminalPage() {
   const { t } = useTranslation(["common", "intelligence"])
   const { data: templates = [], isLoading } = useQueryTemplatesQuery()
   const [selectedCode, setSelectedCode] = useState("FIND_UNITS_IN_FORMATION")
-  const [scope, setScope] = useState<QueryScope>({ type: "FORMATION", id: 1101, name: "11-й армейский корпус" })
-  const [parameters, setParameters] = useState<Record<string, string | number>>({ formationId: 1101 })
+  const [scope, setScope] = useState<QueryScope>({ type: "GLOBAL", id: 0, name: "" })
+  const [parameters, setParameters] = useState<Record<string, string | number>>({})
   const executeMutation = useExecuteQueryMutation()
   const exportMutation = useExportQueryMutation()
 
   const selectedTemplate = templates.find((template) => template.code === selectedCode) ?? templates[0]
   const command = useMemo(() => buildCommand(selectedCode, scope, parameters, selectedTemplate?.exampleCommand), [parameters, scope, selectedCode, selectedTemplate?.exampleCommand])
   const request: ExecuteQueryRequest = { scope, parameters, previewCommand: command }
+  const missingRequired = selectedTemplate?.parameters.some((parameter) => parameter.required && !parameters[parameter.name]) ?? false
+  const invalidScope = scope.type !== "GLOBAL" && (!scope.id || scope.id <= 0)
+  const canExecute = Boolean(selectedTemplate) && !missingRequired && !invalidScope
 
   function selectTemplate(code: string) {
     setSelectedCode(code)
@@ -34,6 +38,8 @@ export function IntelligenceTerminalPage() {
         .map((parameter) => [parameter.name, parameter.placeholder]) ?? [],
     )
     setParameters(defaults)
+    executeMutation.reset()
+    exportMutation.reset()
   }
 
   function exportCsv() {
@@ -51,6 +57,13 @@ export function IntelligenceTerminalPage() {
     })
   }
 
+  function executeQuery() {
+    executeMutation.mutate({ code: selectedCode, request }, {
+      onSuccess: (result) => toast.success(t("intelligence:toast.executed"), t("intelligence:toast.rowsReturned", { count: result.rowCount })),
+      onError: () => toast.error(t("intelligence:toast.failed")),
+    })
+  }
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -60,14 +73,11 @@ export function IntelligenceTerminalPage() {
         description={t("intelligence:page.description")}
         actions={
           <>
-          <Button type="button" variant="secondary" disabled={!selectedTemplate || exportMutation.isPending} onClick={exportCsv}>
+          <Button type="button" variant="secondary" disabled={!canExecute || !executeMutation.data || exportMutation.isPending} onClick={exportCsv}>
             <Download className="h-4 w-4 shrink-0" />
             {t("actions.exportCsv")}
           </Button>
-          <Button type="button" disabled={!selectedTemplate || executeMutation.isPending} onClick={() => executeMutation.mutate({ code: selectedCode, request }, {
-            onSuccess: (result) => toast.success(t("intelligence:toast.executed"), t("intelligence:toast.rowsReturned", { count: result.rowCount })),
-            onError: () => toast.error(t("intelligence:toast.failed")),
-          })}>
+          <Button type="button" disabled={!canExecute || executeMutation.isPending} onClick={executeQuery}>
             <Play className="h-4 w-4 shrink-0" />
             {t("actions.execute")}
           </Button>
@@ -90,7 +100,7 @@ export function IntelligenceTerminalPage() {
             />
             <QueryPreviewTerminal command={command} />
             {executeMutation.error ? (
-              <ErrorState title={t("intelligence:error")} />
+              <QueryErrorPanel error={executeMutation.error} parameters={parameters} onRetry={executeQuery} />
             ) : null}
             <QueryResultTable result={executeMutation.data} />
           </div>

@@ -7,6 +7,7 @@ import com.tacticaldistrict.command.intelligence.dto.QueryScopeDto;
 import com.tacticaldistrict.command.intelligence.model.QueryTemplate;
 import com.tacticaldistrict.command.security.access.PermissionService;
 import com.tacticaldistrict.command.security.model.ObjectType;
+import com.tacticaldistrict.command.security.model.RoleCode;
 import com.tacticaldistrict.command.user.service.UserContext;
 import com.tacticaldistrict.command.user.service.UserContextProvider;
 import java.nio.charset.StandardCharsets;
@@ -98,6 +99,15 @@ public class QueryExecutorService {
 
     private void checkScope(UserContext user, QueryScopeDto scope) {
         if (scope == null || scope.type() == null || scope.id() == null) {
+            if (!user.hasAnyRole(RoleCode.ADMIN_DISTRICT, RoleCode.STAFF_ANALYST)) {
+                throw new AccessDeniedException("Explicit query scope is required");
+            }
+            return;
+        }
+        if ("GLOBAL".equalsIgnoreCase(scope.type())) {
+            if (!user.hasAnyRole(RoleCode.ADMIN_DISTRICT, RoleCode.STAFF_ANALYST)) {
+                throw new AccessDeniedException("Global query scope is not allowed");
+            }
             return;
         }
         ObjectType objectType = objectType(scope.type());
@@ -249,23 +259,21 @@ public class QueryExecutorService {
 
     private QueryDefinition unitEquipment(Map<String, Object> params) {
         String filters = unitScopeWhere(params)
-                + (isBlank(params.get("equipmentCategory")) ? "" : " AND ec.name = :equipmentCategory ")
-                + (isBlank(params.get("equipmentType")) ? "" : " AND et.name = :equipmentType ");
+                + (isBlank(params.get("equipmentCategory")) ? "" : " AND vue.equipment_category = :equipmentCategory ")
+                + (isBlank(params.get("equipmentType")) ? "" : " AND vue.equipment_type = :equipmentType ");
         return new QueryDefinition("""
-                SELECT mu.unit_id,
-                       mu.name AS unit_name,
-                       mf.formation_id,
-                       ec.name AS equipment_category,
-                       et.name AS equipment_type,
-                       eiu.quantity
-                FROM equipment_in_units eiu
-                JOIN military_units mu ON mu.unit_id = eiu.unit_id
-                JOIN military_formations mf ON mf.formation_id = mu.formation_id
-                JOIN equipment_types et ON et.type_id = eiu.type_id
-                JOIN equipment_categories ec ON ec.category_id = et.category_id
+                SELECT vue.unit_id,
+                       vue.unit_name,
+                       vue.formation_id,
+                       vue.formation_name,
+                       vue.equipment_category,
+                       vue.equipment_type,
+                       vue.quantity
+                FROM v_unit_equipment vue
+                JOIN military_units mu ON mu.unit_id = vue.unit_id
                 WHERE 1 = 1
                 """ + filters + """
-                ORDER BY mu.name, ec.name, et.name
+                ORDER BY vue.unit_name, vue.equipment_category, vue.equipment_type
                 """, params);
     }
 
@@ -273,30 +281,22 @@ public class QueryExecutorService {
         String usage = stringValue(params.getOrDefault("usage", "ALL"));
         String filters = unitScopeWhere(params);
         if ("EMPTY".equals(usage)) {
-            filters += " AND COUNT(sb.subdivision_id) = 0 ";
+            filters += " AND vbu.subdivisions_count = 0 ";
         } else if ("OVERLOADED".equals(usage)) {
-            filters += " AND COUNT(sb.subdivision_id) > 3 ";
+            filters += " AND vbu.subdivisions_count > 3 ";
         }
-        String having = filters.contains("COUNT(")
-                ? " HAVING " + filters.substring(filters.indexOf("AND COUNT(") + 4)
-                : "";
-        String where = filters.contains("AND COUNT(")
-                ? filters.substring(0, filters.indexOf("AND COUNT("))
-                : filters;
         return new QueryDefinition("""
-                SELECT b.building_id,
-                       b.name AS building_name,
-                       mu.unit_id,
-                       mu.name AS unit_name,
-                       COUNT(sb.subdivision_id) AS subdivisions_count
-                FROM buildings b
-                JOIN military_units mu ON mu.unit_id = b.unit_id
-                LEFT JOIN subdivision_buildings sb ON sb.building_id = b.building_id
+                SELECT vbu.building_id,
+                       vbu.building_name,
+                       vbu.unit_id,
+                       vbu.unit_name,
+                       vbu.subdivisions_count,
+                       vbu.subdivisions
+                FROM v_buildings_usage vbu
+                JOIN military_units mu ON mu.unit_id = vbu.unit_id
                 WHERE 1 = 1
-                """ + where + """
-                GROUP BY b.building_id, b.name, mu.unit_id, mu.name
-                """ + having + """
-                ORDER BY mu.name, b.name
+                """ + filters + """
+                ORDER BY vbu.unit_name, vbu.building_name
                 """, params);
     }
 
@@ -336,23 +336,21 @@ public class QueryExecutorService {
 
     private QueryDefinition unitWeapons(Map<String, Object> params) {
         String filters = unitScopeWhere(params)
-                + (isBlank(params.get("weaponCategory")) ? "" : " AND wc.name = :weaponCategory ")
-                + (isBlank(params.get("weaponType")) ? "" : " AND wt.name = :weaponType ");
+                + (isBlank(params.get("weaponCategory")) ? "" : " AND vuw.weapon_category = :weaponCategory ")
+                + (isBlank(params.get("weaponType")) ? "" : " AND vuw.weapon_type = :weaponType ");
         return new QueryDefinition("""
-                SELECT mu.unit_id,
-                       mu.name AS unit_name,
-                       mf.formation_id,
-                       wc.name AS weapon_category,
-                       wt.name AS weapon_type,
-                       wiu.quantity
-                FROM weapon_in_units wiu
-                JOIN military_units mu ON mu.unit_id = wiu.unit_id
-                JOIN military_formations mf ON mf.formation_id = mu.formation_id
-                JOIN weapon_types wt ON wt.type_id = wiu.type_id
-                JOIN weapon_categories wc ON wc.category_id = wt.category_id
+                SELECT vuw.unit_id,
+                       vuw.unit_name,
+                       vuw.formation_id,
+                       vuw.formation_name,
+                       vuw.weapon_category,
+                       vuw.weapon_type,
+                       vuw.quantity
+                FROM v_unit_weapons vuw
+                JOIN military_units mu ON mu.unit_id = vuw.unit_id
                 WHERE 1 = 1
                 """ + filters + """
-                ORDER BY mu.name, wc.name, wt.name
+                ORDER BY vuw.unit_name, vuw.weapon_category, vuw.weapon_type
                 """, params);
     }
 

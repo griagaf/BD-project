@@ -35,6 +35,7 @@ export function LoginPage() {
     event.preventDefault()
     const response = await loginMutation.mutateAsync({ username, password })
     clearSimulation()
+    queryClient.clear()
     setTokens({
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,

@@ -1,72 +1,131 @@
 # TACTICAL DISTRICT COMMAND
 
-**TACTICAL DISTRICT COMMAND** is a backend and database-centered command system for managing a military district structure, personnel, units, equipment, weapons, buildings, specialties, reports, alerts, audit events, and analytical SQL queries.
+**TACTICAL DISTRICT COMMAND** — информационная система управления военным округом. Система объединяет иерархию формирований, военные части, подразделения, личный состав, технику, вооружение, сооружения, предупреждения, отчёты, аудит и аналитический Query Terminal.
 
-## Repository Contents
+## Возможности
+
+- JWT-аутентификация, refresh token flow и backend-side контроль доступа.
+- Ролевая модель с областью командования через `command_assignments`.
+- Tactical Dashboard с readiness summary, предупреждениями и деловыми событиями.
+- Focus Tree для навигации по структуре округа.
+- CRUD для личного состава, иерархии, частей, подразделений, техники, вооружения, сооружений и пользователей.
+- Справочники категорий и типов техники/вооружения с динамическими атрибутами.
+- Intelligence Query Terminal на основе SQL-запросов из каталога `selects`.
+- Smart Mission Report с составом, готовностью, проблемами и рекомендациями.
+- Access Simulation Mode для просмотра интерфейса в пределах другой роли и области.
+- Русский интерфейс по умолчанию, английский язык как дополнительный режим.
+
+## Назначение
+
+Система предназначена для централизованного просмотра и управления структурой военного округа. Основной сценарий работы — быстро определить состояние области командования, увидеть проблемные зоны, открыть нужный объект, выполнить корректирующее действие и зафиксировать изменения через backend API с аудитом.
+
+## Навигация
+
+- **Тактическая панель** — общая сводка, readiness radar, предупреждения и события.
+- **Структура** — Focus Tree, паспорта формирований, частей и подразделений.
+- **Личный состав** — поиск, фильтры, профиль, цепочка командования и CRUD.
+- **Техника / Вооружение** — наличие в частях и отдельные справочники типов.
+- **Сооружения** — здания, размещение подразделений и контроль пригодности.
+- **Терминал разведки** — выполнение аналитических SQL-шаблонов.
+- **Отчёты** — Smart Mission Report по выбранной области.
+- **Администрирование** — пользователи, роли и состояние доступа.
+
+## Технологии
+
+- Backend: Java 21, Spring Boot 4, Spring Security, JWT, Spring Data JPA, NamedParameterJdbcTemplate, MapStruct, Lombok, Flyway.
+- Database: PostgreSQL, SQL schema, trigger functions, constraints, seed data.
+- Frontend: React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui-подход, TanStack Query, Zustand, React Router, Recharts, Framer Motion, Lucide Icons, i18next.
+- Infrastructure: Docker, Docker Compose, Nginx для frontend.
+
+## Структура репозитория
 
 ```text
-.
-├── create.txt
-├── military_district_seed.sql
-├── selects/
-├── triggers/
-├── docs/
-└── README.md
+backend/                 Spring Boot API
+frontend/                React + Vite приложение
+create.sql               исходная SQL-модель БД
+selects/                 аналитические SELECT-запросы
+triggers/                функции и триггеры БД
+docs/                    документация системы
+docker-compose.yml       запуск PostgreSQL, backend и frontend
+.env.example             пример переменных окружения
 ```
 
-## Database Files
+## Backend-модули
 
-- [`create.txt`](create.txt) - database schema.
-- [`military_district_seed.sql`](military_district_seed.sql) - seed data.
-- [`selects/`](selects/) - SQL views and analytical queries.
-- [`triggers/`](triggers/) - database functions and triggers.
+- `auth` — вход, refresh, logout, текущий пользователь.
+- `security` — JWT filter chain, `UserContext`, permissions, scope filtering.
+- `user` — пользователи, роли, permissions.
+- `hierarchy` и `unit` — формирования, части, подразделения, командиры.
+- `personnel` — личный состав, звания, специальности, профиль.
+- `equipment` и `weapon` — справочники, динамические атрибуты и наличие в частях.
+- `building` — сооружения и размещение подразделений.
+- `alert`, `dashboard`, `report`, `intelligence` — предупреждения, сводки, отчёты и SQL-шаблоны.
+- `audit`, `common` — аудит, lookup-и, errors, shared DTO.
 
-## Documentation
+## Frontend-модули
 
-- [`docs/01_application_architecture.md`](docs/01_application_architecture.md) - application architecture.
-- [`docs/02_access_control.md`](docs/02_access_control.md) - roles, users, command assignments, and access scope.
-- [`docs/03_backend_security_architecture.md`](docs/03_backend_security_architecture.md) - JWT authentication and backend authorization architecture.
-- [`docs/04_backend_application_design.md`](docs/04_backend_application_design.md) - backend package structure, REST API, DTO, services, repositories, OpenAPI, pagination, filtering, and audit.
-- [`docs/05_intelligence_query_terminal.md`](docs/05_intelligence_query_terminal.md) - Intelligence Query Terminal, query templates, backend execution, access control, CSV export, and frontend components.
-- [`docs/06_frontend_architecture.md`](docs/06_frontend_architecture.md) - frontend architecture, Feature-Sliced Design, routing, auth store, API client, layout, pages, components, and CRUD UI patterns.
-- [`docs/07_focus_tree.md`](docs/07_focus_tree.md) - Focus Tree module, strategic tree, focus mode, chain mode, lazy loading, scoped tree API, passport card, and React components.
-- [`docs/08_tactical_dashboard_alerts_readiness.md`](docs/08_tactical_dashboard_alerts_readiness.md) - Tactical Dashboard, Alert Center, Alert to Action, Readiness Radar, scoped metrics, backend services, endpoints, DTO, and frontend components.
-- [`docs/09_smart_mission_report.md`](docs/09_smart_mission_report.md) - Smart Mission Report, tactical report generation, report DTO, rule-based recommendations, export CSV/PDF, frontend preview, Query Terminal and Alert Center integration.
-- [`docs/10_crud_modules.md`](docs/10_crud_modules.md) - CRUD modules, endpoints, frontend forms, validation rules, permission guards, backend checks, refetch strategy, error handling, audit log, and soft delete rules.
-- [`docs/11_infrastructure_setup.md`](docs/11_infrastructure_setup.md) - Docker Compose setup, backend/frontend Dockerfiles, PostgreSQL, volumes, healthchecks, environment variables, Spring profiles, migrations, seed data, and run commands.
-- [`docs/12_implementation_plan.md`](docs/12_implementation_plan.md) - staged implementation plan for MVP, Core version, Visual version, and Final defense version.
+Frontend разделён на `app`, `pages`, `features` и `shared`. Страницы собирают готовые feature-компоненты, `shared` содержит API client, i18n, UI primitives, таблицы, пагинацию, состояния загрузки и reusable searchable select.
 
-## Setup
+## Модель иерархии
 
-### Requirements
+Иерархия строится как: округ → армия → корпус / дивизия / бригада → военная часть → рота → взвод → отделение. Дерево загружается лениво, а действия зависят от роли и области командования.
 
-- Docker
-- Docker Compose
+## Модель готовности
 
-### Environment
+Readiness оценивает личный состав, технику, вооружение, специалистов, инфраструктуру и предупреждения. В интерфейсе есть раздел “Критерии оценки готовности”, который объясняет показатели без раскрытия технических SQL-формул.
 
-Create `.env` from `.env.example`:
+## Динамические атрибуты
 
-```bash
-cp .env.example .env
-```
+Категории техники, категории вооружения и звания определяют собственные наборы атрибутов. Frontend получает metadata schema и строит формы динамически. Это позволяет добавлять новые категории и свойства без изменения React-компонентов под конкретный тип.
 
-### Start
+## Триггеры
+
+Триггеры PostgreSQL защищают целостность назначений, аудита и связанных правил. Backend выполняет предварительную validation для понятных ошибок, а база данных остаётся последней линией защиты.
+
+## Query Terminal
+
+Query Terminal использует шаблоны на основе SQL из `selects`. Список шаблонов поддерживает поиск без пагинации; результаты выполнения пагинируются, показывают общее количество строк и текущий диапазон.
+
+## Запуск
 
 ```bash
 docker compose up --build
 ```
 
-### URLs
+После запуска:
 
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8080
 - Swagger UI: http://localhost:8080/swagger-ui/index.html
-- Backend health: http://localhost:8080/actuator/health
+- Healthcheck: http://localhost:8080/actuator/health
 
-### Demo Users
+Полный сброс базы:
 
-All seeded demo users use password `password`.
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+## Переменные окружения
+
+Базовые значения указаны в `.env.example`: параметры PostgreSQL, JDBC URL, JWT secret, сроки жизни токенов, профили Spring и адрес API для frontend.
+
+## Миграции и данные
+
+Flyway применяет схему, триггеры, представления, динамические атрибуты и русскоязычный набор данных. `create.sql` используется как источник структуры, каталог `triggers` отражён в миграциях, а запросы из `selects` доступны через Query Terminal.
+
+## Роли
+
+- `ADMIN_DISTRICT` — полный доступ к округу и администрированию.
+- `STAFF_ANALYST` — аналитический доступ без изменения оперативных данных.
+- `ARMY_COMMANDER`, `FORMATION_COMMANDER`, `UNIT_COMMANDER`, `COMPANY_COMMANDER`, `PLATOON_COMMANDER`, `SQUAD_COMMANDER` — доступ в пределах назначенной области командования.
+- `SOLDIER` — доступ к личной карточке и разрешённым связанным данным.
+
+Права проверяются на backend. Frontend скрывает или отключает действия только для удобства.
+
+## Demo Accounts
+
+Все демонстрационные учётные записи используют пароль `password`.
 
 - `admin.district`
 - `analyst.staff`
@@ -78,70 +137,41 @@ All seeded demo users use password `password`.
 - `squad.cmd.1`
 - `soldier.demo`
 
-### Stop
+## Документация
 
-```bash
-docker compose down
-```
+- [Архитектура](docs/architecture.md)
+- [Backend](docs/backend.md)
+- [Frontend](docs/frontend.md)
+- [Безопасность и доступ](docs/security.md)
+- [База данных](docs/database.md)
+- [Query Terminal](docs/query-terminal.md)
+- [Readiness](docs/readiness.md)
+- [Динамические атрибуты](docs/dynamic-attributes.md)
+- [Триггеры](docs/triggers.md)
+- [Модули системы](docs/modules)
 
-### Reset Database
+## Screenshots
 
-```bash
-docker compose down -v
-docker compose up --build
-```
+Каталог для изображений интерфейса: `docs/screenshots`.
 
-## Core Backend Stack
+Рекомендуемый набор:
 
-- Java 21+
-- Spring Boot 4.x
-- Gradle Kotlin DSL
-- Spring Security
-- JWT
-- PostgreSQL
-- Spring Data JPA
-- NamedParameterJdbcTemplate
-- MapStruct
-- OpenAPI / Swagger
-- React 19+
-- TypeScript
-- Vite
-- Tailwind CSS
-- shadcn/ui
-- TanStack Query
-- Zustand
-- TanStack Table
-- React Hook Form
-- Zod
-- Recharts
-- Framer Motion
-- Lucide Icons
+- `dashboard.png` — тактическая панель.
+- `focus-tree.png` — дерево структуры.
+- `query-terminal.png` — терминал разведки.
+- `mission-report.png` — сводный отчёт.
+- `inventory-passport.png` — паспорт типа техники или вооружения.
 
-## Data Access Rules
+## Глоссарий
 
-```text
-Standard CRUD -> Spring Data JPA
-Complex SQL queries -> NamedParameterJdbcTemplate
-Authentication -> JWT
-Authorization -> roles + command_assignments
-Audit -> audit_events
-```
+- **Scope** — область данных, доступная пользователю по командному назначению.
+- **Command assignment** — связь военнослужащего с объектом командования.
+- **Readiness** — интегральная оценка готовности по нескольким направлениям.
+- **Dynamic attributes** — атрибуты, определяемые данными БД, а не кодом формы.
+- **Passport** — карточка объекта с ключевыми сведениями, статистикой и действиями.
 
-## Main Backend Modules
+## Troubleshooting
 
-- `auth`
-- `user`
-- `personnel`
-- `hierarchy`
-- `unit`
-- `equipment`
-- `weapon`
-- `building`
-- `specialty`
-- `intelligence`
-- `alert`
-- `report`
-- `dashboard`
-- `security`
-- `audit`
-- `common`
+- Если backend не стартует после изменения миграций, выполните `docker compose down -v` и запустите систему заново.
+- Если frontend показывает старые данные после смены роли или режима симуляции, выйдите из системы и войдите снова: клиент очищает query cache при logout/login/simulation switch.
+- Если порт занят, измените опубликованные порты в `docker-compose.yml`.

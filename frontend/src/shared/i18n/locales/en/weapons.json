@@ -8,16 +8,55 @@
     "addInventory": "Add weapon",
     "manageTypes": "Weapons dictionary"
   },
+  "tabs": {
+    "inventory": "Assigned inventory",
+    "types": "Type dictionary"
+  },
   "dictionary": {
     "title": "Weapons dictionary",
+    "typeDirectory": "Standalone dictionary",
+    "directoryDescription": "Weapon types are visible even when they are not assigned to a military unit.",
+    "searchTypes": "Search weapon type",
+    "openPassport": "Open type passport",
+    "noTypes": "No weapon types found. Adjust search or filters.",
     "newType": "New weapon type",
     "newCategory": "New category",
     "currentTypes": "Current types",
+    "categoryPassport": "Category passport",
+    "typesInCategory": "Types in category",
+    "typesCount": "{{count}} types",
     "typeName": "Type name",
     "selectCategory": "Select category",
     "purpose": "Purpose",
     "manufacturer": "Manufacturer",
-    "adoptionYear": "Adoption year"
+    "adoptionYear": "Adoption year",
+    "attributes": "Dynamic attributes",
+    "attributeName": "Attribute name",
+    "attributeType": "Data type",
+    "createAttribute": "Create attribute",
+    "assignAttribute": "Category attribute",
+    "selectAttribute": "Select attribute",
+    "required": "Required",
+    "addToCategory": "Add to category",
+    "noAttributes": "The selected category has no assigned attributes."
+  },
+  "passport": {
+    "title": "Weapon Type Passport",
+    "tabs": {
+      "overview": "Overview",
+      "attributes": "Attributes",
+      "distribution": "Distribution",
+      "units": "Linked units",
+      "alerts": "Alerts",
+      "actions": "Actions"
+    },
+    "noAttributes": "No attributes are filled for this type.",
+    "noDistribution": "This weapon type is not assigned to visible units.",
+    "noLinkedAlerts": "No linked alerts detected.",
+    "noQuantityAlert": "No registered quantity for this weapon type.",
+    "addToUnit": "Add this type to a unit",
+    "openUnits": "Open units with this type",
+    "reportByType": "Generate report by type"
   },
   "toast": {
     "created": "Weapon added to unit",
@@ -25,6 +64,8 @@
     "deleted": "Weapon row deleted",
     "categoryCreated": "Weapon category created",
     "typeCreated": "Weapon type created",
+    "attributeCreated": "Attribute created",
+    "attributeAssigned": "Attribute added to category",
     "updateFailed": "Weapon update failed",
     "deleteFailed": "Weapon delete failed"
   },

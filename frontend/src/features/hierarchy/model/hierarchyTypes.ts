@@ -78,3 +78,27 @@ export type HierarchySelection = {
   type: string
   id: number
 }
+
+export type SubdivisionRequest = {
+  name: string
+  type: string
+  unitId: number
+  parentId?: number | null
+  commanderId?: number | null
+}
+
+export type FormationRequest = {
+  name: string
+  formationType: string
+  parentId?: number | null
+  formationDate?: string | null
+  status?: string | null
+  commanderId?: number | null
+}
+
+export type UnitRequest = {
+  name: string
+  formationId: number
+  locationId?: number | null
+  commanderId?: number | null
+}

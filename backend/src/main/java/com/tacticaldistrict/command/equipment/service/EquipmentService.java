@@ -1,6 +1,8 @@
 package com.tacticaldistrict.command.equipment.service;
 
 import com.tacticaldistrict.command.audit.AuditService;
+import com.tacticaldistrict.command.common.attribute.DynamicAttributeValueRequest;
+import com.tacticaldistrict.command.common.dto.AttributeValueResponse;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.equipment.dto.EquipmentCategoryResponse;
 import com.tacticaldistrict.command.equipment.dto.EquipmentFilter;
@@ -89,6 +91,10 @@ public class EquipmentService {
 
     @Transactional(readOnly = true)
     public List<EquipmentCategoryResponse> categories() {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("equipment:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
         return jdbcTemplate.query("""
                 SELECT category_id, name
                 FROM equipment_categories
@@ -99,6 +105,10 @@ public class EquipmentService {
 
     @Transactional(readOnly = true)
     public List<EquipmentTypeResponse> types() {
+        UserContext user = userContextProvider.current();
+        if (!user.hasPermission("equipment:read")) {
+            throw new AccessDeniedException("Access denied");
+        }
         return jdbcTemplate.query("""
                 SELECT et.type_id, et.name, ec.category_id, ec.name AS category_name
                 FROM equipment_types et
@@ -180,6 +190,7 @@ public class EquipmentService {
                 )
                 RETURNING type_id
                 """, typeParams(request), Long.class);
+        syncTypeAttributes(id, request);
         auditService.created(user, ObjectType.EQUIPMENT, id, "Equipment type created");
         return typeById(id);
     }
@@ -208,6 +219,7 @@ public class EquipmentService {
         if (updated == 0) {
             throw new EntityNotFoundException("Equipment type not found: " + id);
         }
+        syncTypeAttributes(id, request);
         auditService.updated(user, ObjectType.EQUIPMENT, id, "Equipment type updated");
         return typeById(id);
     }
@@ -226,7 +238,7 @@ public class EquipmentService {
         if (!user.hasPermission("equipment:read")) {
             throw new AccessDeniedException("Access denied");
         }
-        EquipmentTypePassportResponse base = jdbcTemplate.queryForObject("""
+        EquipmentTypePassportResponse base = jdbcTemplate.query("""
                 SELECT et.type_id, et.name, ec.category_id, ec.name AS category_name,
                        et.purpose, et.crew_size, et.weight_tons, et.max_speed_kmh,
                        et.operational_range_km, et.adoption_year, et.manufacturer, et.description,
@@ -239,22 +251,89 @@ public class EquipmentService {
                 GROUP BY et.type_id, et.name, ec.category_id, ec.name,
                          et.purpose, et.crew_size, et.weight_tons, et.max_speed_kmh,
                          et.operational_range_km, et.adoption_year, et.manufacturer, et.description
-                """, Map.of("id", id), this::mapTypePassport);
-        if (base == null) {
-            throw new EntityNotFoundException("Equipment type not found: " + id);
-        }
+                """, Map.of("id", id), this::mapTypePassport)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Equipment type not found: " + id));
         List<UnitEquipmentResponse> distribution = queryInventory(new EquipmentFilter(null, null, null, id))
                 .stream()
                 .filter(row -> permissionService.canRead(user, ObjectType.MILITARY_UNIT, row.unitId()))
                 .toList();
         long totalQuantity = distribution.stream().mapToLong(UnitEquipmentResponse::quantity).sum();
         long unitsCount = distribution.stream().map(UnitEquipmentResponse::unitId).distinct().count();
+        List<AttributeValueResponse> attributes = typeAttributes(id);
         return new EquipmentTypePassportResponse(
                 base.id(), base.name(), base.categoryId(), base.categoryName(), base.purpose(),
                 base.crewSize(), base.weightTons(), base.maxSpeedKmh(), base.operationalRangeKm(),
                 base.adoptionYear(), base.manufacturer(), base.description(),
-                totalQuantity, unitsCount, distribution
+                totalQuantity, unitsCount, attributes, distribution
         );
+    }
+
+    private List<AttributeValueResponse> typeAttributes(Long typeId) {
+        return jdbcTemplate.query("""
+                SELECT eat.attribute_id,
+                       eat.name,
+                       eat.data_type,
+                       COALESCE(
+                           etav.value_text,
+                           trim(to_char(etav.value_number, 'FM999999990.99')),
+                           to_char(etav.value_date, 'YYYY-MM-DD'),
+                           CASE WHEN etav.value_boolean IS NULL THEN NULL ELSE etav.value_boolean::TEXT END
+                       ) AS display_value
+                FROM equipment_type_attribute_values etav
+                JOIN equipment_types et ON et.type_id = etav.type_id
+                JOIN equipment_category_attributes eca
+                  ON eca.category_id = et.category_id
+                 AND eca.attribute_id = etav.attribute_id
+                JOIN equipment_attribute_types eat ON eat.attribute_id = etav.attribute_id
+                WHERE etav.type_id = :typeId
+                  AND COALESCE(
+                      etav.value_text,
+                      etav.value_number::TEXT,
+                      etav.value_date::TEXT,
+                      etav.value_boolean::TEXT
+                  ) IS NOT NULL
+                ORDER BY eat.attribute_id
+                """, Map.of("typeId", typeId), (rs, rowNum) -> new AttributeValueResponse(
+                rs.getLong("attribute_id"),
+                rs.getString("name"),
+                rs.getString("data_type"),
+                rs.getString("display_value")
+        ));
+    }
+
+    private void syncTypeAttributes(Long typeId, EquipmentTypeRequest request) {
+        if (request.attributes() != null) {
+            syncDynamicAttributeValues(typeId, request.attributes());
+        }
+    }
+
+    private void syncDynamicAttributeValues(Long typeId, List<DynamicAttributeValueRequest> attributes) {
+        for (DynamicAttributeValueRequest attribute : attributes) {
+            String dataType = jdbcTemplate.queryForObject("""
+                    SELECT data_type
+                    FROM equipment_attribute_types
+                    WHERE attribute_id = :attributeId
+                    """, Map.of("attributeId", attribute.attributeId()), String.class);
+            if (attribute.value() == null || attribute.value().isBlank()) {
+                jdbcTemplate.update("""
+                        DELETE FROM equipment_type_attribute_values
+                        WHERE type_id = :typeId AND attribute_id = :attributeId
+                        """, Map.of("typeId", typeId, "attributeId", attribute.attributeId()));
+                continue;
+            }
+            Map<String, Object> params = attributeParams(typeId, attribute.attributeId(), dataType, attribute.value().trim());
+            jdbcTemplate.update("""
+                    INSERT INTO equipment_type_attribute_values (type_id, attribute_id, value_text, value_number, value_date, value_boolean)
+                    VALUES (:typeId, :attributeId, :valueText, :valueNumber, :valueDate, :valueBoolean)
+                    ON CONFLICT (type_id, attribute_id) DO UPDATE SET
+                        value_text = EXCLUDED.value_text,
+                        value_number = EXCLUDED.value_number,
+                        value_date = EXCLUDED.value_date,
+                        value_boolean = EXCLUDED.value_boolean
+                    """, params);
+        }
     }
 
     private List<UnitEquipmentResponse> queryInventory(EquipmentFilter filter) {
@@ -360,6 +439,7 @@ public class EquipmentService {
                 rs.getString("description"),
                 rs.getLong("total_quantity"),
                 rs.getLong("units_count"),
+                List.of(),
                 List.of()
         );
     }
@@ -387,6 +467,17 @@ public class EquipmentService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private Map<String, Object> attributeParams(Long typeId, Long attributeId, String dataType, String value) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("typeId", typeId);
+        params.put("attributeId", attributeId);
+        params.put("valueText", "text".equals(dataType) ? value : null);
+        params.put("valueNumber", "number".equals(dataType) ? new BigDecimal(value.replace(',', '.')) : null);
+        params.put("valueDate", "date".equals(dataType) ? java.time.LocalDate.parse(value) : null);
+        params.put("valueBoolean", "boolean".equals(dataType) ? Boolean.valueOf(value) : null);
+        return params;
     }
 
     private PageResponse<UnitEquipmentResponse> page(List<UnitEquipmentResponse> rows, Pageable pageable) {

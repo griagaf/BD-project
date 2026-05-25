@@ -1,6 +1,7 @@
 package com.tacticaldistrict.command.building.service;
 
 import com.tacticaldistrict.command.audit.AuditService;
+import com.tacticaldistrict.command.building.dto.BuildingAssignmentResponse;
 import com.tacticaldistrict.command.building.dto.BuildingFilter;
 import com.tacticaldistrict.command.building.dto.BuildingRequest;
 import com.tacticaldistrict.command.building.dto.BuildingResponse;
@@ -61,10 +62,14 @@ public class BuildingService {
         UserContext user = userContextProvider.current();
         permissionService.checkCreate(user, ObjectType.MILITARY_UNIT, request.unitId(), ObjectType.BUILDING);
         Long id = jdbcTemplate.queryForObject("""
-                INSERT INTO buildings (name, unit_id)
-                VALUES (:name, :unitId)
+                INSERT INTO buildings (name, unit_id, assignable)
+                VALUES (:name, :unitId, :assignable)
                 RETURNING building_id
-                """, Map.of("name", request.name(), "unitId", request.unitId()), Long.class);
+                """, Map.of(
+                "name", request.name(),
+                "unitId", request.unitId(),
+                "assignable", assignable(request)
+        ), Long.class);
         auditService.created(user, ObjectType.BUILDING, id, "Building created");
         return findById(id);
     }
@@ -78,9 +83,14 @@ public class BuildingService {
         }
         int updated = jdbcTemplate.update("""
                 UPDATE buildings
-                SET name = :name, unit_id = :unitId
+                SET name = :name, unit_id = :unitId, assignable = :assignable
                 WHERE building_id = :id
-                """, Map.of("id", id, "name", request.name(), "unitId", request.unitId()));
+                """, Map.of(
+                "id", id,
+                "name", request.name(),
+                "unitId", request.unitId(),
+                "assignable", assignable(request)
+        ));
         if (updated == 0) {
             throw new EntityNotFoundException("Building not found: " + id);
         }
@@ -138,7 +148,18 @@ public class BuildingService {
             throw new EntityNotFoundException("Subdivision not found: " + subdivisionId);
         }
         if (!building.unitId().equals(subdivisionUnitId)) {
-            throw new IllegalArgumentException("Subdivision and building must belong to the same unit");
+            throw new IllegalArgumentException("Подразделение и сооружение должны относиться к одной военной части.");
+        }
+        if (!Boolean.TRUE.equals(building.assignable())) {
+            throw new IllegalArgumentException("Невозможно назначить подразделение: выбранное сооружение не предназначено для размещения подразделений.");
+        }
+        Long currentBuildingId = jdbcTemplate.query("""
+                SELECT building_id
+                FROM subdivision_buildings
+                WHERE subdivision_id = :subdivisionId
+                """, Map.of("subdivisionId", subdivisionId), rs -> rs.next() ? rs.getLong("building_id") : null);
+        if (currentBuildingId != null && !currentBuildingId.equals(buildingId)) {
+            throw new IllegalArgumentException("Подразделение уже размещено в другом сооружении. Сначала снимите текущее закрепление.");
         }
         jdbcTemplate.update("""
                 INSERT INTO subdivision_buildings (subdivision_id, building_id)
@@ -175,13 +196,14 @@ public class BuildingService {
                 SELECT b.building_id,
                        b.name,
                        b.unit_id,
+                       b.assignable,
                        mu.name AS unit_name,
                        COUNT(sb.subdivision_id) AS subdivisions_count
                 FROM buildings b
                 JOIN military_units mu ON mu.unit_id = b.unit_id
                 LEFT JOIN subdivision_buildings sb ON sb.building_id = b.building_id
                 """ + where + """
-                GROUP BY b.building_id, b.name, b.unit_id, mu.name
+                GROUP BY b.building_id, b.name, b.unit_id, b.assignable, mu.name
                 ORDER BY mu.name, b.name
                 """, params, this::mapRow);
     }
@@ -194,9 +216,36 @@ public class BuildingService {
                 rs.getString("name"),
                 rs.getLong("unit_id"),
                 rs.getString("unit_name"),
+                rs.getBoolean("assignable"),
                 subdivisionsCount,
-                status
+                status,
+                assignedSubdivisions(rs.getLong("building_id"))
         );
+    }
+
+    private List<BuildingAssignmentResponse> assignedSubdivisions(Long buildingId) {
+        return jdbcTemplate.query("""
+                SELECT s.subdivision_id,
+                       s.name,
+                       s.type,
+                       s.unit_id,
+                       mu.name AS unit_name
+                FROM subdivision_buildings sb
+                JOIN subdivisions s ON s.subdivision_id = sb.subdivision_id
+                JOIN military_units mu ON mu.unit_id = s.unit_id
+                WHERE sb.building_id = :buildingId
+                ORDER BY s.type, s.name
+                """, Map.of("buildingId", buildingId), (rs, rowNum) -> new BuildingAssignmentResponse(
+                rs.getLong("subdivision_id"),
+                rs.getString("name"),
+                rs.getString("type"),
+                rs.getLong("unit_id"),
+                rs.getString("unit_name")
+        ));
+    }
+
+    private boolean assignable(BuildingRequest request) {
+        return request.assignable() == null || request.assignable();
     }
 
     private PageResponse<BuildingResponse> page(List<BuildingResponse> rows, Pageable pageable) {

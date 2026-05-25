@@ -1,5 +1,6 @@
 package com.tacticaldistrict.command.weapon.dto;
 
+import com.tacticaldistrict.command.common.dto.AttributeValueResponse;
 import java.util.List;
 
 public record WeaponTypePassportResponse(
@@ -15,6 +16,7 @@ public record WeaponTypePassportResponse(
         String description,
         Long totalQuantity,
         Long unitsCount,
+        List<AttributeValueResponse> attributes,
         List<UnitWeaponResponse> distribution
 ) {
 }

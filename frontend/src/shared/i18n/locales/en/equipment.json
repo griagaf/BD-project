@@ -22,16 +22,55 @@
     "addInventory": "Add equipment",
     "manageTypes": "Equipment dictionary"
   },
+  "tabs": {
+    "inventory": "Assigned inventory",
+    "types": "Type dictionary"
+  },
   "dictionary": {
     "title": "Equipment dictionary",
+    "typeDirectory": "Standalone dictionary",
+    "directoryDescription": "Equipment types are visible even when they are not assigned to a military unit.",
+    "searchTypes": "Search equipment type",
+    "openPassport": "Open type passport",
+    "noTypes": "No equipment types found. Adjust search or filters.",
     "newType": "New equipment type",
     "newCategory": "New category",
     "currentTypes": "Current types",
+    "categoryPassport": "Category passport",
+    "typesInCategory": "Types in category",
+    "typesCount": "{{count}} types",
     "typeName": "Type name",
     "selectCategory": "Select category",
     "purpose": "Purpose",
     "manufacturer": "Manufacturer",
-    "adoptionYear": "Adoption year"
+    "adoptionYear": "Adoption year",
+    "attributes": "Dynamic attributes",
+    "attributeName": "Attribute name",
+    "attributeType": "Data type",
+    "createAttribute": "Create attribute",
+    "assignAttribute": "Category attribute",
+    "selectAttribute": "Select attribute",
+    "required": "Required",
+    "addToCategory": "Add to category",
+    "noAttributes": "The selected category has no assigned attributes."
+  },
+  "passport": {
+    "title": "Equipment Type Passport",
+    "tabs": {
+      "overview": "Overview",
+      "attributes": "Attributes",
+      "distribution": "Distribution",
+      "units": "Linked units",
+      "alerts": "Alerts",
+      "actions": "Actions"
+    },
+    "noAttributes": "No attributes are filled for this type.",
+    "noDistribution": "This equipment type is not assigned to visible units.",
+    "noLinkedAlerts": "No linked alerts detected.",
+    "noQuantityAlert": "No registered quantity for this equipment type.",
+    "addToUnit": "Add this type to a unit",
+    "openUnits": "Open units with this type",
+    "reportByType": "Generate report by type"
   },
   "toast": {
     "created": "Equipment added to unit",
@@ -39,6 +78,8 @@
     "deleted": "Equipment row deleted",
     "categoryCreated": "Equipment category created",
     "typeCreated": "Equipment type created",
+    "attributeCreated": "Attribute created",
+    "attributeAssigned": "Attribute added to category",
     "updateFailed": "Equipment update failed",
     "deleteFailed": "Equipment delete failed"
   },

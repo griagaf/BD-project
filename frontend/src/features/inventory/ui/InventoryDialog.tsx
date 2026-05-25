@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import type { LookupOption } from "@/shared/api/lookupApi"
+import { lookupApi, type LookupOption } from "@/shared/api/lookupApi"
 import type { InventoryRow } from "@/features/inventory/model/inventoryTypes"
 import { Button } from "@/shared/ui/button"
 import { SearchableSelect } from "@/shared/ui/searchable-select"
@@ -11,11 +11,13 @@ type InventoryDialogProps = {
   saving: boolean
   unitOptions: LookupOption[]
   typeOptions: LookupOption[]
+  initialUnitId?: number | null
+  initialTypeId?: number | null
   onClose: () => void
   onSubmit: (request: { unitId: number; typeId: number; quantity: number }) => void
 }
 
-export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, onClose, onSubmit }: InventoryDialogProps) {
+export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, initialUnitId, initialTypeId, onClose, onSubmit }: InventoryDialogProps) {
   const { t } = useTranslation("common")
   const [unitId, setUnitId] = useState<number | null>(null)
   const [typeId, setTypeId] = useState<number | null>(null)
@@ -27,11 +29,11 @@ export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, o
       setTypeId(row.typeId)
       setQuantity(row.quantity)
     } else if (open) {
-      setUnitId(null)
-      setTypeId(null)
+      setUnitId(initialUnitId ?? null)
+      setTypeId(initialTypeId ?? null)
       setQuantity(1)
     }
-  }, [open, row])
+  }, [initialTypeId, initialUnitId, open, row])
 
   if (!open) {
     return null
@@ -52,6 +54,8 @@ export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, o
             options={unitOptions}
             disabled={Boolean(row)}
             placeholder={t("placeholders.selectUnit")}
+            searchPlaceholder={t("placeholders.searchUnit")}
+            loadOptions={(search) => lookupApi.units(search, { limit: 500 })}
             onChange={setUnitId}
           />
           <SearchableSelect
@@ -60,6 +64,7 @@ export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, o
             options={typeOptions}
             disabled={Boolean(row)}
             placeholder={t("placeholders.selectResourceType")}
+            searchPlaceholder={t("placeholders.searchResourceType")}
             onChange={setTypeId}
           />
         </div>
@@ -68,6 +73,7 @@ export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, o
           <input
             type="number"
             min={0}
+            placeholder={t("placeholders.quantity")}
             value={quantity}
             onChange={(event) => setQuantity(Number(event.target.value))}
             className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"

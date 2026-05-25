@@ -11,8 +11,8 @@ public enum QueryTemplate {
             "Возвращает военные части внутри выбранной ветки структуры.",
             "UNITS",
             Set.of("structure:read", "unit:read"),
-            List.of(param("formationId", "ID соединения", "number", true, "1101")),
-            "QUERY: НАЙТИ ЧАСТИ В КОРПУСЕ 1101"
+            List.of(param("formationId", "Соединение", "number", true, "Выберите соединение")),
+            "QUERY: НАЙТИ ЧАСТИ В ВЫБРАННОМ СОЕДИНЕНИИ"
     ),
     FIND_OFFICERS(
             "Найти офицеров",
@@ -35,8 +35,8 @@ public enum QueryTemplate {
             "Возвращает цепочку подчинённости для выбранного военнослужащего.",
             "PERSONNEL",
             Set.of("personnel:read", "structure:read"),
-            List.of(param("personnelId", "ID военнослужащего", "number", true, "1110101111")),
-            "QUERY: НАЙТИ ЦЕПОЧКУ КОМАНДОВАНИЯ ДЛЯ 1110101111"
+            List.of(param("personnelId", "Военнослужащий", "number", true, "Выберите военнослужащего")),
+            "QUERY: НАЙТИ ЦЕПОЧКУ КОМАНДОВАНИЯ ДЛЯ ВОЕННОСЛУЖАЩЕГО"
     ),
     FIND_UNIT_LOCATIONS(
             "Найти дислокацию частей",
@@ -53,9 +53,9 @@ public enum QueryTemplate {
             Set.of("equipment:read", "unit:read"),
             List.of(
                     param("equipmentCategory", "Категория", "text", false, "бронетехника"),
-                    param("equipmentType", "Тип", "text", false, "BMP-2")
+                    param("equipmentType", "Тип", "text", false, "Выберите тип техники")
             ),
-            "QUERY: НАЙТИ ТЕХНИКУ BMP-2 В ЧАСТИ 11101"
+            "QUERY: НАЙТИ ТЕХНИКУ В ВЫБРАННОЙ ОБЛАСТИ"
     ),
     FIND_BUILDING_USAGE(
             "Найти использование сооружений",
@@ -71,11 +71,11 @@ public enum QueryTemplate {
             "EQUIPMENT",
             Set.of("equipment:read", "unit:read"),
             List.of(
-                    param("equipmentType", "Тип техники", "text", true, "BMP-2"),
+                    param("equipmentType", "Тип техники", "text", true, "Выберите тип техники"),
                     param("condition", "Условие", "enum", true, "WITH_QUANTITY_GT", List.of("WITH_QUANTITY_GT", "WITHOUT")),
                     param("minQuantity", "Минимальное количество", "number", false, "5")
             ),
-            "QUERY: НАЙТИ ЧАСТИ БЕЗ ТЕХНИКИ BMP-2 В КОРПУСЕ 1101"
+            "QUERY: НАЙТИ ЧАСТИ БЕЗ ВЫБРАННОЙ ТЕХНИКИ"
     ),
     FIND_UNIT_WEAPONS(
             "Найти вооружение частей",
@@ -84,9 +84,9 @@ public enum QueryTemplate {
             Set.of("weapon:read", "unit:read"),
             List.of(
                     param("weaponCategory", "Категория", "text", false, "стрелковое оружие"),
-                    param("weaponType", "Тип", "text", false, "AK-74M")
+                    param("weaponType", "Тип", "text", false, "Выберите тип вооружения")
             ),
-            "QUERY: НАЙТИ ВООРУЖЕНИЕ AK-74M В ЧАСТИ 11101"
+            "QUERY: НАЙТИ ВООРУЖЕНИЕ В ВЫБРАННОЙ ОБЛАСТИ"
     ),
     FIND_SPECIALTY_COVERAGE(
             "Найти покрытие специальностей",
@@ -104,8 +104,8 @@ public enum QueryTemplate {
             "Возвращает военнослужащих с выбранной специальностью.",
             "PERSONNEL",
             Set.of("personnel:read", "specialty:read"),
-            List.of(param("specialtyName", "Специальность", "text", true, "оператор связи")),
-            "QUERY: НАЙТИ СПЕЦИАЛИСТОВ \"оператор связи\" В ЧАСТИ 11101"
+            List.of(param("specialtyName", "Специальность", "text", true, "Выберите специальность")),
+            "QUERY: НАЙТИ СПЕЦИАЛИСТОВ В ВЫБРАННОЙ ОБЛАСТИ"
     ),
     FIND_WEAPON_AVAILABILITY(
             "Проверить наличие вооружения",
@@ -113,11 +113,11 @@ public enum QueryTemplate {
             "WEAPONS",
             Set.of("weapon:read", "unit:read"),
             List.of(
-                    param("weaponType", "Тип вооружения", "text", true, "AK-74M"),
+                    param("weaponType", "Тип вооружения", "text", true, "Выберите тип вооружения"),
                     param("condition", "Условие", "enum", true, "WITH_QUANTITY_GT", List.of("WITH_QUANTITY_GT", "WITHOUT")),
                     param("minQuantity", "Минимальное количество", "number", false, "10")
             ),
-            "QUERY: НАЙТИ ЧАСТИ БЕЗ ВООРУЖЕНИЯ AK-74M В КОРПУСЕ 1101"
+            "QUERY: НАЙТИ ЧАСТИ БЕЗ ВЫБРАННОГО ВООРУЖЕНИЯ"
     ),
     FIND_FORMATION_UNIT_EXTREMES(
             "Найти соединения по числу частей",

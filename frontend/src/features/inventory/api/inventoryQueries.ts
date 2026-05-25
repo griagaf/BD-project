@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { buildingsApi, equipmentApi, weaponsApi } from "@/features/inventory/api/inventoryApi"
-import type { BuildingFilter, EquipmentTypeRequest, InventoryCategoryRequest, InventoryFilter, WeaponTypeRequest } from "@/features/inventory/model/inventoryTypes"
+import type { BuildingFilter, DynamicAttributeMetadata, EquipmentTypeRequest, InventoryCategoryRequest, InventoryFilter, WeaponTypeRequest } from "@/features/inventory/model/inventoryTypes"
 
 const apiByKind = {
   equipment: equipmentApi,
@@ -59,6 +59,43 @@ export function useInventoryTypePassportQuery(kind: "equipment" | "weapons", id?
   })
 }
 
+export function useInventoryAttributeSchemaQuery(kind: "equipment" | "weapons", categoryId?: number | null) {
+  return useQuery({
+    queryKey: [kind, "attribute-schema", categoryId],
+    queryFn: () => apiByKind[kind].attributeSchema(categoryId ?? 0),
+    enabled: Boolean(categoryId),
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function useInventoryAttributeTypesQuery(kind: "equipment" | "weapons") {
+  return useQuery({
+    queryKey: [kind, "attribute-types"],
+    queryFn: () => apiByKind[kind].attributeTypes(),
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function useCreateInventoryAttributeTypeMutation(kind: "equipment" | "weapons") {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: { name: string; dataType: DynamicAttributeMetadata["dataType"] }) => apiByKind[kind].createAttributeType(request),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [kind, "attribute-types"] }),
+  })
+}
+
+export function useAssignInventoryAttributeMutation(kind: "equipment" | "weapons") {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: { categoryId: number; attributeId: number; required?: boolean }) =>
+      apiByKind[kind].assignAttribute(request.categoryId, { attributeId: request.attributeId, required: request.required }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [kind, "attribute-schema", variables.categoryId] })
+      queryClient.invalidateQueries({ queryKey: [kind, "attribute-types"] })
+    },
+  })
+}
+
 export function useUpdateInventoryMutation(kind: "equipment" | "weapons") {
   const queryClient = useQueryClient()
   return useMutation({
@@ -94,7 +131,7 @@ export function useBuildingStatsQuery() {
 export function useSaveBuildingMutation(id?: number) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (request: { name: string; unitId: number }) => (id ? buildingsApi.update(id, request) : buildingsApi.create(request)),
+    mutationFn: (request: { name: string; unitId: number; assignable?: boolean }) => (id ? buildingsApi.update(id, request) : buildingsApi.create(request)),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["buildings"] }),
   })
 }
@@ -103,6 +140,24 @@ export function useDeleteBuildingMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => buildingsApi.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["buildings"] }),
+  })
+}
+
+export function useAssignBuildingSubdivisionMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: { buildingId: number; subdivisionId: number }) =>
+      buildingsApi.assignSubdivision(request.buildingId, request.subdivisionId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["buildings"] }),
+  })
+}
+
+export function useRemoveBuildingSubdivisionMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: { buildingId: number; subdivisionId: number }) =>
+      buildingsApi.removeSubdivision(request.buildingId, request.subdivisionId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["buildings"] }),
   })
 }

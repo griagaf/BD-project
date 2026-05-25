@@ -26,6 +26,9 @@ public record UserContext(
     }
 
     public boolean hasPermission(String permission) {
+        if (roles.contains(RoleCode.ADMIN_DISTRICT)) {
+            return true;
+        }
         return permissions.contains(permission);
     }
 

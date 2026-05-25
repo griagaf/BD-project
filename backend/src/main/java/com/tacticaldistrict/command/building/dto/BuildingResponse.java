@@ -5,7 +5,9 @@ public record BuildingResponse(
         String name,
         Long unitId,
         String unitName,
+        Boolean assignable,
         Long subdivisionsCount,
-        String status
+        String status,
+        java.util.List<BuildingAssignmentResponse> assignedSubdivisions
 ) {
 }

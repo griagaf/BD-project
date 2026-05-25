@@ -1,5 +1,5 @@
 import { apiClient } from "@/shared/api/apiClient"
-import type { FocusTreeResponse, HierarchyContext, ObjectPassport, TreeMode, TreeNode, Unit } from "@/features/hierarchy/model/hierarchyTypes"
+import type { FocusTreeResponse, FormationRequest, HierarchyContext, ObjectPassport, SubdivisionRequest, TreeMode, TreeNode, Unit, UnitRequest } from "@/features/hierarchy/model/hierarchyTypes"
 
 export const hierarchyApi = {
   roots: (mode: TreeMode) => apiClient<TreeNode[]>(`/api/hierarchy/roots?mode=${mode}`),
@@ -14,4 +14,30 @@ export const hierarchyApi = {
     apiClient<HierarchyContext>(`/api/hierarchy/nodes/${nodeType}/${nodeId}/context`),
   unitPassport: (unitId: number) => apiClient<ObjectPassport>(`/api/units/${unitId}/passport`),
   units: () => apiClient<Unit[]>("/api/units"),
+  createFormation: (request: FormationRequest) =>
+    apiClient("/api/formations", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+  createUnit: (request: UnitRequest) =>
+    apiClient("/api/units", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+  createSubdivision: (request: SubdivisionRequest) =>
+    apiClient("/api/subdivisions", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+  assignCommander: (nodeType: string, nodeId: number, commanderId: number) => {
+    const resource = nodeType === "MILITARY_UNIT"
+      ? "units"
+      : nodeType === "COMPANY" || nodeType === "PLATOON" || nodeType === "SQUAD" || nodeType === "BATTALION"
+        ? "subdivisions"
+        : "formations"
+    return apiClient(`/api/${resource}/${nodeId}/commander`, {
+      method: "PUT",
+      body: JSON.stringify({ commanderId }),
+    })
+  },
 }

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useCurrentUserQuery } from "@/features/auth/api/authQueries"
-import { useBuildingStatsQuery, useBuildingsQuery, useDeleteBuildingMutation, useSaveBuildingMutation } from "@/features/inventory/api/inventoryQueries"
+import { useAssignBuildingSubdivisionMutation, useBuildingStatsQuery, useBuildingsQuery, useDeleteBuildingMutation, useRemoveBuildingSubdivisionMutation, useSaveBuildingMutation } from "@/features/inventory/api/inventoryQueries"
 import type { BuildingFilter, BuildingRow } from "@/features/inventory/model/inventoryTypes"
 import { BuildingDialog } from "@/features/inventory/ui/BuildingDialog"
 import { BuildingsTable } from "@/features/inventory/ui/BuildingsTable"
@@ -15,17 +15,22 @@ import { toast } from "@/shared/ui/toast"
 import { Pagination } from "@/shared/ui/pagination"
 import { lookupApi } from "@/shared/api/lookupApi"
 import { SearchableSelect } from "@/shared/ui/searchable-select"
+import { ApiError } from "@/shared/api/apiError"
 
 export function BuildingsPage() {
   const { t } = useTranslation(["common", "buildings"])
   const [filters, setFilters] = useState<BuildingFilter>({ page: 0, size: 10 })
   const [editing, setEditing] = useState<BuildingRow | null>(null)
+  const [assigning, setAssigning] = useState<BuildingRow | null>(null)
+  const [subdivisionId, setSubdivisionId] = useState<number | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const { data: user } = useCurrentUserQuery()
   const { data, error, isLoading } = useBuildingsQuery(filters)
   const { data: stats } = useBuildingStatsQuery()
   const saveMutation = useSaveBuildingMutation(editing?.id)
   const deleteMutation = useDeleteBuildingMutation()
+  const assignMutation = useAssignBuildingSubdivisionMutation()
+  const removeAssignmentMutation = useRemoveBuildingSubdivisionMutation()
   const { data: unitOptions = [] } = useQuery({
     queryKey: ["lookups", "units", "buildings"],
     queryFn: () => lookupApi.units(),
@@ -91,7 +96,15 @@ export function BuildingsPage() {
           }}
           onDelete={(row) => deleteMutation.mutate(row.id, {
             onSuccess: () => toast.success(t("buildings:toast.deleted")),
-            onError: () => toast.error(t("buildings:toast.deleteFailed")),
+            onError: (error) => toast.error(errorMessage(error, t("buildings:toast.deleteFailed"))),
+          })}
+          onAssign={(row) => {
+            setAssigning(row)
+            setSubdivisionId(null)
+          }}
+          onRemoveAssignment={(row, targetSubdivisionId) => removeAssignmentMutation.mutate({ buildingId: row.id, subdivisionId: targetSubdivisionId }, {
+            onSuccess: () => toast.success(t("buildings:toast.unassigned")),
+            onError: (error) => toast.error(errorMessage(error, t("buildings:toast.unassignFailed"))),
           })}
         />
       )}
@@ -120,11 +133,54 @@ export function BuildingsPage() {
             setDialogOpen(false)
             setEditing(null)
           },
-          onError: () => toast.error(t("buildings:toast.saveFailed")),
+          onError: (error) => toast.error(errorMessage(error, t("buildings:toast.saveFailed"))),
         })}
       />
+
+      {assigning ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-md border border-zinc-800 bg-zinc-950 p-5 shadow-2xl">
+            <div className="text-xs uppercase text-emerald-300">{t("buildings:assignment.eyebrow")}</div>
+            <h2 className="mt-1 break-words text-xl font-semibold text-zinc-100">{assigning.name}</h2>
+            <p className="mt-1 text-sm text-zinc-500">{t("buildings:assignment.description")}</p>
+            <div className="mt-5">
+              <SearchableSelect
+                label={t("buildings:assignment.subdivision")}
+                value={subdivisionId}
+                options={[]}
+                loadOptions={lookupApi.subdivisions}
+                placeholder={t("buildings:assignment.selectSubdivision")}
+                onChange={setSubdivisionId}
+              />
+            </div>
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="ghost" onClick={() => setAssigning(null)}>{t("actions.cancel")}</Button>
+              <Button
+                type="button"
+                disabled={!subdivisionId || assignMutation.isPending}
+                onClick={() => {
+                  if (!subdivisionId) return
+                  assignMutation.mutate({ buildingId: assigning.id, subdivisionId }, {
+                    onSuccess: () => {
+                      toast.success(t("buildings:toast.assigned"))
+                      setAssigning(null)
+                    },
+                    onError: (error) => toast.error(errorMessage(error, t("buildings:toast.assignFailed"))),
+                  })
+                }}
+              >
+                {t("buildings:assignment.submit")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
+}
+
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof ApiError ? error.message || fallback : fallback
 }
 
 function Metric({ label, value }: { label: string; value: string | number }) {

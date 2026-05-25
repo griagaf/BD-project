@@ -40,6 +40,41 @@
     "rank": "Rank",
     "specialties": "Specialties"
   },
+  "wizard": {
+    "basic": "Basic data",
+    "assignment": "Assignment",
+    "specialties": "Specialties",
+    "rankAttributes": "Rank attributes",
+    "confirm": "Confirmation",
+    "army": "Army",
+    "formation": "Formation",
+    "unit": "Military unit",
+    "company": "Company",
+    "platoon": "Platoon",
+    "squad": "Squad",
+    "selectArmy": "Select army",
+    "selectFormation": "Select formation",
+    "selectUnit": "Select military unit",
+    "selectCompany": "Select company",
+    "selectPlatoon": "Select platoon",
+    "selectSquad": "Select squad",
+    "selectedPath": "Selected path",
+    "directSearchHint": "If the exact company, platoon, or squad is known, use direct search below.",
+    "selectPath": "Select a subdivision to see the assignment path.",
+    "noRankAttributes": "Selected rank has no additional attributes."
+  },
+  "placeholders": {
+    "lastName": "For example: Volkov",
+    "firstName": "For example: Alexander",
+    "middleName": "For example: Sergeevich",
+    "personalNumber": "For example: PN-42115-018",
+    "searchRank": "Search by rank or personnel category",
+    "searchSubdivision": "Search by company, platoon, squad, or unit"
+  },
+  "hints": {
+    "date": "Select a date in the calendar or enter it using the field format.",
+    "personalNumber": "Use a unique personal number without leading or trailing spaces."
+  },
   "profile": {
     "loading": "Loading personnel profile",
     "unavailable": "Personnel profile unavailable",
@@ -48,6 +83,7 @@
     "noFormation": "No formation",
     "timeline": "Service timeline",
     "profileDate": "Profile date",
+    "rankAttributes": "Rank attributes",
     "chainOfCommand": "Chain of Command",
     "noCommander": "No commander"
   },

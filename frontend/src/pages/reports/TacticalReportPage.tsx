@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { FileText, Radar } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -13,18 +14,25 @@ import { lookupApi } from "@/shared/api/lookupApi"
 import { SearchableSelect } from "@/shared/ui/searchable-select"
 
 const objectTypes: ReportObjectType[] = [
+  "DISTRICT",
   "ARMY",
   "FORMATION",
   "BRIGADE",
   "MILITARY_UNIT",
   "COMPANY",
   "PLATOON",
+  "SQUAD",
 ]
 
 export function TacticalReportPage() {
   const { t } = useTranslation("reports")
-  const [objectType, setObjectType] = useState<ReportObjectType>("MILITARY_UNIT")
-  const [objectId, setObjectId] = useState<number | null>(11101)
+  const [searchParams] = useSearchParams()
+  const initialType = objectTypes.includes(searchParams.get("objectType") as ReportObjectType)
+    ? searchParams.get("objectType") as ReportObjectType
+    : "MILITARY_UNIT"
+  const initialId = Number(searchParams.get("objectId"))
+  const [objectType, setObjectType] = useState<ReportObjectType>(initialType)
+  const [objectId, setObjectId] = useState<number | null>(Number.isFinite(initialId) && initialId > 0 ? initialId : 11101)
   const [includePersonnel, setIncludePersonnel] = useState(true)
   const [includeResources, setIncludeResources] = useState(true)
   const [includeAlerts, setIncludeAlerts] = useState(true)
@@ -35,7 +43,8 @@ export function TacticalReportPage() {
     queryKey: ["lookups", "report-object", objectType],
     queryFn: () => {
       if (objectType === "MILITARY_UNIT") return lookupApi.units()
-      if (objectType === "COMPANY" || objectType === "PLATOON") return lookupApi.subdivisions()
+      if (objectType === "COMPANY" || objectType === "PLATOON" || objectType === "SQUAD") return lookupApi.subdivisions()
+      if (objectType === "DISTRICT") return lookupApi.formations("", "DISTRICT")
       if (objectType === "ARMY") return lookupApi.formations("", "ARMY")
       if (objectType === "BRIGADE") return lookupApi.formations("", "BRIGADE")
       return lookupApi.formations("", "CORPS,DIVISION,BRIGADE")

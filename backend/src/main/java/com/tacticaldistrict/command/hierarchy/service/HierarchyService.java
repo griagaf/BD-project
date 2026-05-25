@@ -247,15 +247,21 @@ public class HierarchyService {
         validateSubdivisionType(request.type());
         UserContext user = userContextProvider.current();
         ObjectType targetType = HierarchyQueryRepository.subdivisionType(request.type());
+        Long resolvedUnitId = request.unitId();
         if (request.parentId() == null) {
             permissionService.checkCreate(user, ObjectType.MILITARY_UNIT, request.unitId(), targetType);
+            validateRootSubdivisionType(request.type());
         } else {
-            permissionService.checkCreate(user, hierarchyQueryRepository.subdivisionObjectType(request.parentId()), request.parentId(), targetType);
+            ObjectType parentObjectType = hierarchyQueryRepository.subdivisionObjectType(request.parentId());
+            permissionService.checkCreate(user, parentObjectType, request.parentId(), targetType);
+            SubdivisionResponse parent = subdivision(request.parentId());
+            validateChildSubdivisionType(parent.type(), request.type());
+            resolvedUnitId = parent.unitId();
         }
         validateCommander(user, request.commanderId(), request.commanderId() != null);
 
         SubdivisionEntity entity = new SubdivisionEntity();
-        apply(request, entity);
+        apply(request, resolvedUnitId, entity);
         SubdivisionEntity saved = subdivisionRepository.save(entity);
         auditService.created(user, targetType, saved.getId(), "Subdivision created");
         return subdivision(saved.getId());
@@ -355,6 +361,24 @@ public class HierarchyService {
         }
     }
 
+    private void validateRootSubdivisionType(String subdivisionType) {
+        if (!List.of("Батальон", "Рота").contains(subdivisionType)) {
+            throw new IllegalArgumentException("Рота или батальон создаются внутри военной части. Взвод создаётся внутри роты, отделение — внутри взвода.");
+        }
+    }
+
+    private void validateChildSubdivisionType(String parentType, String childType) {
+        boolean valid = switch (parentType) {
+            case "Батальон" -> "Рота".equals(childType);
+            case "Рота" -> "Взвод".equals(childType);
+            case "Взвод" -> "Отделение".equals(childType);
+            default -> false;
+        };
+        if (!valid) {
+            throw new IllegalArgumentException("Недопустимый уровень иерархии подразделения для выбранного родителя.");
+        }
+    }
+
     private void apply(FormationRequest request, MilitaryFormationEntity entity) {
         entity.setName(request.name());
         entity.setFormationType(request.formationType());
@@ -365,9 +389,13 @@ public class HierarchyService {
     }
 
     private void apply(SubdivisionRequest request, SubdivisionEntity entity) {
+        apply(request, request.unitId(), entity);
+    }
+
+    private void apply(SubdivisionRequest request, Long resolvedUnitId, SubdivisionEntity entity) {
         entity.setName(request.name());
         entity.setType(request.type());
-        entity.setUnitId(request.unitId());
+        entity.setUnitId(resolvedUnitId);
         entity.setParentId(request.parentId());
         entity.setCommanderId(request.commanderId());
     }

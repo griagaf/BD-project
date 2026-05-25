@@ -13,6 +13,7 @@
   },
   "builder": {
     "templates": "Templates",
+    "searchTemplates": "Search templates",
     "scope": "Scope",
     "parameters": "Parameters",
     "noParameters": "No additional parameters required",
@@ -21,6 +22,7 @@
     "unit": "Unit",
     "personnel": "Personnel",
     "global": "Global",
+    "selectScope": "Select scope",
     "queryPreview": "Query Preview"
   },
   "result": {
@@ -33,5 +35,8 @@
     "exported": "CSV exported",
     "exportedDescription": "{{code}} result exported"
   },
-  "error": "Query execution failed"
+  "error": "Query execution failed",
+  "errorPanel": {
+    "title": "Query failed"
+  }
 }

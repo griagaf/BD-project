@@ -51,6 +51,20 @@ export function PersonnelProfilePage() {
         </div>
       </Card>
 
+      {data.rankAttributes?.length ? (
+        <Card>
+          <div className="mb-4 flex items-center gap-2 text-sm font-medium text-zinc-100">
+            <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-300" />
+            {t("profile.rankAttributes")}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {data.rankAttributes.map((attribute) => (
+              <Info key={attribute.id} label={attribute.name} value={attribute.displayValue} />
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
       <Card>
         <div className="mb-4 flex items-center gap-2 text-sm font-medium text-zinc-100">
           <Network className="h-4 w-4 shrink-0 text-emerald-300" />

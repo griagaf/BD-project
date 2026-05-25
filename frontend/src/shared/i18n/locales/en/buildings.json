@@ -19,15 +19,30 @@
     "building": "Building",
     "unit": "Unit",
     "subdivisions": "Subdivisions",
+    "assignmentMode": "Deployment",
+    "assignable": "Can host units",
+    "notAssignable": "Cannot host units",
+    "noAssignments": "No assignments",
     "emptyTitle": "No buildings visible",
     "emptyDescription": "Current filters and command scope returned no building records."
+  },
+  "assignment": {
+    "eyebrow": "Subdivision assignment",
+    "description": "Select a subdivision from the available scope. The system validates unit and building type.",
+    "subdivision": "Subdivision",
+    "selectSubdivision": "Search subdivision by name or unit",
+    "submit": "Assign"
   },
   "toast": {
     "created": "Building created",
     "updated": "Building updated",
     "deleted": "Building deleted",
+    "assigned": "Subdivision assigned",
+    "unassigned": "Assignment removed",
     "saveFailed": "Building save failed",
-    "deleteFailed": "Building delete failed"
+    "deleteFailed": "Building delete failed",
+    "assignFailed": "Unable to assign subdivision",
+    "unassignFailed": "Unable to remove assignment"
   },
   "error": "Unable to load buildings"
 }

@@ -64,6 +64,7 @@ public class AlertService {
                 Map.of("unitName", rs.getString("unit_name")),
                 List.of(
                         new AlertActionDto("Открыть часть", "/units/" + rs.getLong("unit_id"), null),
+                        new AlertActionDto("Добавить технику", "/equipment?unitId=" + rs.getLong("unit_id") + "&action=add", null),
                         new AlertActionDto("Показать технику", "/equipment?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_EQUIPMENT"),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_EQUIPMENT_AVAILABILITY")
                 )
@@ -88,6 +89,7 @@ public class AlertService {
                 Map.of("unitName", rs.getString("unit_name")),
                 List.of(
                         new AlertActionDto("Открыть часть", "/units/" + rs.getLong("unit_id"), null),
+                        new AlertActionDto("Добавить вооружение", "/weapons?unitId=" + rs.getLong("unit_id") + "&action=add", null),
                         new AlertActionDto("Показать вооружение", "/weapons?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_WEAPONS"),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_WEAPON_AVAILABILITY")
                 )
@@ -100,6 +102,7 @@ public class AlertService {
                 FROM buildings b
                 JOIN military_units mu ON mu.unit_id = b.unit_id
                 LEFT JOIN subdivision_buildings sb ON sb.building_id = b.building_id
+                WHERE b.assignable = TRUE
                 GROUP BY b.building_id, b.name, mu.name
                 HAVING COUNT(sb.subdivision_id) = 0
                 ORDER BY mu.name, b.name
@@ -124,6 +127,7 @@ public class AlertService {
                 FROM buildings b
                 JOIN military_units mu ON mu.unit_id = b.unit_id
                 LEFT JOIN subdivision_buildings sb ON sb.building_id = b.building_id
+                WHERE b.assignable = TRUE
                 GROUP BY b.building_id, b.name, mu.name
                 HAVING COUNT(sb.subdivision_id) > :threshold
                 ORDER BY subdivisions_count DESC, b.name

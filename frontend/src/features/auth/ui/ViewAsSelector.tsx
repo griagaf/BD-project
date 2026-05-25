@@ -48,12 +48,12 @@ export function ViewAsSelector() {
   function applySimulation() {
     const scope = scopes.find((item) => `${item.objectType}:${item.objectId}` === scopeKey) ?? scopes[3]
     setSimulation({ role, objectType: scope.objectType, objectId: scope.objectId })
-    queryClient.invalidateQueries()
+    queryClient.clear()
   }
 
   function resetSimulation() {
     clearSimulation()
-    queryClient.invalidateQueries()
+    queryClient.clear()
   }
 
   return (
