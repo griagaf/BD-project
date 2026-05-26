@@ -1,5 +1,6 @@
 package com.tacticaldistrict.command.alert.repository;
 
+import com.tacticaldistrict.command.alert.application.port.AlertRepositoryPort;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -8,10 +9,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class AlertQueryRepository {
+public class AlertQueryRepository implements AlertRepositoryPort {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
+    @Override
     public List<UnitCandidate> unitsWithoutEquipment() {
         return jdbcTemplate.query("""
                 SELECT mu.unit_id, mu.name AS unit_name
@@ -23,6 +25,7 @@ public class AlertQueryRepository {
                 """, Map.of(), (rs, rowNum) -> new UnitCandidate(rs.getLong("unit_id"), rs.getString("unit_name")));
     }
 
+    @Override
     public List<UnitCandidate> unitsWithoutWeapons() {
         return jdbcTemplate.query("""
                 SELECT mu.unit_id, mu.name AS unit_name
@@ -34,6 +37,7 @@ public class AlertQueryRepository {
                 """, Map.of(), (rs, rowNum) -> new UnitCandidate(rs.getLong("unit_id"), rs.getString("unit_name")));
     }
 
+    @Override
     public List<BuildingCandidate> buildingsWithoutSubdivisions() {
         return jdbcTemplate.query("""
                 SELECT b.building_id, b.name AS building_name, mu.name AS unit_name, COUNT(sb.subdivision_id) AS subdivisions_count
@@ -52,6 +56,7 @@ public class AlertQueryRepository {
         ));
     }
 
+    @Override
     public List<BuildingCandidate> overloadedBuildings(int threshold) {
         return jdbcTemplate.query("""
                 SELECT b.building_id, b.name AS building_name, mu.name AS unit_name, COUNT(sb.subdivision_id) AS subdivisions_count
@@ -70,6 +75,7 @@ public class AlertQueryRepository {
         ));
     }
 
+    @Override
     public List<SpecialtyCandidate> specialtiesWithoutSpecialists() {
         return jdbcTemplate.query("""
                 SELECT s.specialty_id, s.name AS specialty_name
@@ -81,6 +87,7 @@ public class AlertQueryRepository {
                 """, Map.of(), (rs, rowNum) -> new SpecialtyCandidate(rs.getLong("specialty_id"), rs.getString("specialty_name")));
     }
 
+    @Override
     public List<InventoryCandidate> equipmentQuantityExceeded(int threshold) {
         return jdbcTemplate.query("""
                 SELECT mu.unit_id, mu.name AS unit_name, et.name AS resource_type, eiu.quantity
@@ -97,6 +104,7 @@ public class AlertQueryRepository {
         ));
     }
 
+    @Override
     public List<InventoryCandidate> weaponQuantityExceeded(int threshold) {
         return jdbcTemplate.query("""
                 SELECT mu.unit_id, mu.name AS unit_name, wt.name AS resource_type, wiu.quantity

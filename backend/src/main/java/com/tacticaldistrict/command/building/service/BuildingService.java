@@ -1,12 +1,12 @@
 package com.tacticaldistrict.command.building.service;
 
 import com.tacticaldistrict.command.audit.AuditService;
+import com.tacticaldistrict.command.building.application.port.BuildingRepositoryPort;
 import com.tacticaldistrict.command.building.domain.BuildingAssignmentPolicy;
 import com.tacticaldistrict.command.building.dto.BuildingFilter;
 import com.tacticaldistrict.command.building.dto.BuildingRequest;
 import com.tacticaldistrict.command.building.dto.BuildingResponse;
 import com.tacticaldistrict.command.building.dto.BuildingStatisticsResponse;
-import com.tacticaldistrict.command.building.repository.BuildingJdbcRepository;
 import com.tacticaldistrict.command.common.dto.PageResponse;
 import com.tacticaldistrict.command.security.access.PermissionService;
 import com.tacticaldistrict.command.security.model.ObjectType;
@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BuildingService {
 
-    private final BuildingJdbcRepository buildingRepository;
+    private final BuildingRepositoryPort buildingRepository;
     private final BuildingAssignmentPolicy buildingAssignmentPolicy;
     private final UserContextProvider userContextProvider;
     private final PermissionService permissionService;

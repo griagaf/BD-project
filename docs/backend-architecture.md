@@ -2,7 +2,7 @@
 
 ## Назначение
 
-Backend разделён на HTTP-слой, application services, domain policies, repositories, mappers и security/access слой. Такое разделение удерживает SQL, бизнес-правила, HTTP-контракты и проверку доступа в разных местах и упрощает сопровождение системы.
+Backend разделён на HTTP-слой, application services, repository ports, domain policies, infrastructure adapters, mappers и security/access слой. Такое разделение удерживает SQL, бизнес-правила, HTTP-контракты и проверку доступа в разных местах и упрощает сопровождение системы.
 
 ## Слои
 
@@ -18,7 +18,7 @@ Application service управляет use case:
 - получает `UserContext`;
 - вызывает `PermissionService` и access checks;
 - вызывает domain policy для предметных правил;
-- вызывает repository для чтения и записи;
+- вызывает repository port для чтения и записи;
 - вызывает mapper для DTO.
 
 В application service не размещаются `JdbcTemplate`, `ResultSet` mapping и SQL templates.
@@ -29,15 +29,31 @@ Domain policy содержит предметные правила, которы
 
 ### Repository
 
-Repository отвечает за доступ к данным. Сложные SQL-запросы размещаются в custom repository:
+Application layer зависит от портов:
+
+- `QueryExecutionPort`;
+- `QueryDefinitionPort`;
+- `BuildingRepositoryPort`;
+- `AlertRepositoryPort`;
+- `DashboardRepositoryPort`.
+
+Infrastructure adapters реализуют эти порты и отвечают за доступ к данным. Сложные SQL-запросы размещаются в custom repository:
 
 - `QueryExecutionRepository`;
 - `QuerySqlFactory`;
 - `BuildingJdbcRepository`;
 - `AlertQueryRepository`;
+- `DashboardQueryRepository`;
 - специализированные query repositories модулей hierarchy, personnel и reports.
 
 Repository не выполняет permission checks и не содержит UI-решений.
+
+## Текущие чистые вертикальные срезы
+
+- Query Terminal: registry, parameter resolver, SQL factory, execution port, mapper и application service разделены.
+- Buildings: persistence вынесен в repository adapter, правила назначения подразделений в domain policy.
+- Alerts: SQL-кандидаты вынесены в repository adapter, service формирует alert DTO и применяет access filtering.
+- Dashboard: SQL вынесен в repository port/adapter, readiness calculation и problem zone assembly вынесены в domain components.
 
 ### Mapper
 

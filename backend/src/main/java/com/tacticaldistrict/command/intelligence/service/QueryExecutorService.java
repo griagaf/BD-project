@@ -3,11 +3,11 @@ package com.tacticaldistrict.command.intelligence.service;
 import com.tacticaldistrict.command.intelligence.dto.ExecuteQueryRequest;
 import com.tacticaldistrict.command.intelligence.dto.QueryResultDto;
 import com.tacticaldistrict.command.intelligence.dto.QueryScopeDto;
+import com.tacticaldistrict.command.intelligence.application.port.QueryDefinitionPort;
+import com.tacticaldistrict.command.intelligence.application.port.QueryExecutionPort;
 import com.tacticaldistrict.command.intelligence.mapper.QueryResultMapper;
 import com.tacticaldistrict.command.intelligence.model.QueryTemplate;
 import com.tacticaldistrict.command.intelligence.repository.QueryDefinition;
-import com.tacticaldistrict.command.intelligence.repository.QueryExecutionRepository;
-import com.tacticaldistrict.command.intelligence.repository.QuerySqlFactory;
 import com.tacticaldistrict.command.security.access.PermissionService;
 import com.tacticaldistrict.command.security.model.ObjectType;
 import com.tacticaldistrict.command.security.model.RoleCode;
@@ -31,8 +31,8 @@ public class QueryExecutorService {
     private final UserContextProvider userContextProvider;
     private final PermissionService permissionService;
     private final QueryParameterResolver parameterResolver;
-    private final QuerySqlFactory querySqlFactory;
-    private final QueryExecutionRepository queryExecutionRepository;
+    private final QueryDefinitionPort queryDefinitionPort;
+    private final QueryExecutionPort queryExecutionPort;
     private final QueryResultMapper queryResultMapper;
 
     @Transactional(readOnly = true)
@@ -42,8 +42,8 @@ public class QueryExecutorService {
         parameterResolver.validate(template, request);
         checkScope(user, request.scope());
 
-        QueryDefinition query = querySqlFactory.build(template, request);
-        List<Map<String, Object>> rows = queryExecutionRepository.execute(query)
+        QueryDefinition query = queryDefinitionPort.build(template, request);
+        List<Map<String, Object>> rows = queryExecutionPort.execute(query)
                 .stream()
                 .filter(row -> rowInScope(user, row))
                 .toList();

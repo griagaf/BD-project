@@ -1,5 +1,6 @@
 package com.tacticaldistrict.command.building.repository;
 
+import com.tacticaldistrict.command.building.application.port.BuildingRepositoryPort;
 import com.tacticaldistrict.command.building.dto.BuildingAssignmentResponse;
 import com.tacticaldistrict.command.building.dto.BuildingFilter;
 import com.tacticaldistrict.command.building.dto.BuildingRequest;
@@ -16,10 +17,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class BuildingJdbcRepository {
+public class BuildingJdbcRepository implements BuildingRepositoryPort {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
+    @Override
     public List<BuildingResponse> search(BuildingFilter filter) {
         Map<String, Object> params = new HashMap<>();
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
@@ -48,6 +50,7 @@ public class BuildingJdbcRepository {
                 """, params, this::mapRow);
     }
 
+    @Override
     public Optional<BuildingResponse> findById(Long id) {
         return search(new BuildingFilter(null, null))
                 .stream()
@@ -55,6 +58,7 @@ public class BuildingJdbcRepository {
                 .findFirst();
     }
 
+    @Override
     public Long create(BuildingRequest request, boolean assignable) {
         return jdbcTemplate.queryForObject("""
                 INSERT INTO buildings (name, unit_id, assignable)
@@ -67,6 +71,7 @@ public class BuildingJdbcRepository {
         ), Long.class);
     }
 
+    @Override
     public boolean update(Long id, BuildingRequest request, boolean assignable) {
         int updated = jdbcTemplate.update("""
                 UPDATE buildings
@@ -81,6 +86,7 @@ public class BuildingJdbcRepository {
         return updated > 0;
     }
 
+    @Override
     public boolean delete(Long id) {
         int deleted = jdbcTemplate.update("""
                 DELETE FROM buildings
@@ -89,6 +95,7 @@ public class BuildingJdbcRepository {
         return deleted > 0;
     }
 
+    @Override
     public Optional<Long> subdivisionUnitId(Long subdivisionId) {
         Long result = jdbcTemplate.query("""
                 SELECT unit_id
@@ -98,6 +105,7 @@ public class BuildingJdbcRepository {
         return Optional.ofNullable(result);
     }
 
+    @Override
     public Optional<Long> currentBuildingId(Long subdivisionId) {
         Long result = jdbcTemplate.query("""
                 SELECT building_id
@@ -107,6 +115,7 @@ public class BuildingJdbcRepository {
         return Optional.ofNullable(result);
     }
 
+    @Override
     public void assignSubdivision(Long buildingId, Long subdivisionId) {
         jdbcTemplate.update("""
                 INSERT INTO subdivision_buildings (subdivision_id, building_id)
@@ -115,6 +124,7 @@ public class BuildingJdbcRepository {
                 """, Map.of("subdivisionId", subdivisionId, "buildingId", buildingId));
     }
 
+    @Override
     public void removeSubdivision(Long buildingId, Long subdivisionId) {
         jdbcTemplate.update("""
                 DELETE FROM subdivision_buildings

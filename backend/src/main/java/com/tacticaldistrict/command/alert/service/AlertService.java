@@ -1,8 +1,8 @@
 package com.tacticaldistrict.command.alert.service;
 
+import com.tacticaldistrict.command.alert.application.port.AlertRepositoryPort;
 import com.tacticaldistrict.command.alert.dto.AlertActionDto;
 import com.tacticaldistrict.command.alert.dto.TacticalAlertDto;
-import com.tacticaldistrict.command.alert.repository.AlertQueryRepository;
 import com.tacticaldistrict.command.security.access.PermissionService;
 import com.tacticaldistrict.command.security.model.ObjectType;
 import com.tacticaldistrict.command.user.service.UserContext;
@@ -24,7 +24,7 @@ public class AlertService {
     private static final int EQUIPMENT_EXCEEDED_THRESHOLD = 300;
     private static final int WEAPON_EXCEEDED_THRESHOLD = 1000;
 
-    private final AlertQueryRepository alertQueryRepository;
+    private final AlertRepositoryPort alertRepository;
     private final UserContextProvider userContextProvider;
     private final PermissionService permissionService;
 
@@ -47,7 +47,7 @@ public class AlertService {
     }
 
     private List<TacticalAlertDto> unitsWithoutEquipment(UserContext user) {
-        return alertQueryRepository.unitsWithoutEquipment()
+        return alertRepository.unitsWithoutEquipment()
                 .stream()
                 .map(row -> alert(
                 "UNIT_WITHOUT_EQUIPMENT",
@@ -69,7 +69,7 @@ public class AlertService {
     }
 
     private List<TacticalAlertDto> unitsWithoutWeapons(UserContext user) {
-        return alertQueryRepository.unitsWithoutWeapons()
+        return alertRepository.unitsWithoutWeapons()
                 .stream()
                 .map(row -> alert(
                 "UNIT_WITHOUT_WEAPONS",
@@ -91,7 +91,7 @@ public class AlertService {
     }
 
     private List<TacticalAlertDto> buildingsWithoutSubdivisions(UserContext user) {
-        return alertQueryRepository.buildingsWithoutSubdivisions()
+        return alertRepository.buildingsWithoutSubdivisions()
                 .stream()
                 .map(row -> alert(
                 "BUILDING_WITHOUT_SUBDIVISIONS",
@@ -111,7 +111,7 @@ public class AlertService {
     }
 
     private List<TacticalAlertDto> overloadedBuildings(UserContext user) {
-        return alertQueryRepository.overloadedBuildings(BUILDING_OVERLOAD_THRESHOLD)
+        return alertRepository.overloadedBuildings(BUILDING_OVERLOAD_THRESHOLD)
                 .stream()
                 .map(row -> alert(
                 "BUILDING_OVERLOADED",
@@ -135,7 +135,7 @@ public class AlertService {
     }
 
     private List<TacticalAlertDto> specialtiesWithoutSpecialists(UserContext user) {
-        return alertQueryRepository.specialtiesWithoutSpecialists()
+        return alertRepository.specialtiesWithoutSpecialists()
                 .stream()
                 .map(row -> alert(
                 "SPECIALTY_WITHOUT_SPECIALISTS",
@@ -152,7 +152,7 @@ public class AlertService {
     }
 
     private List<TacticalAlertDto> equipmentQuantityExceeded(UserContext user) {
-        return alertQueryRepository.equipmentQuantityExceeded(EQUIPMENT_EXCEEDED_THRESHOLD)
+        return alertRepository.equipmentQuantityExceeded(EQUIPMENT_EXCEEDED_THRESHOLD)
                 .stream()
                 .map(row -> alert(
                 "EQUIPMENT_QUANTITY_EXCEEDED",
@@ -172,7 +172,7 @@ public class AlertService {
     }
 
     private List<TacticalAlertDto> weaponQuantityExceeded(UserContext user) {
-        return alertQueryRepository.weaponQuantityExceeded(WEAPON_EXCEEDED_THRESHOLD)
+        return alertRepository.weaponQuantityExceeded(WEAPON_EXCEEDED_THRESHOLD)
                 .stream()
                 .map(row -> alert(
                 "WEAPON_QUANTITY_EXCEEDED",

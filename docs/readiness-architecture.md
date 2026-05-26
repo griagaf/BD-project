@@ -11,13 +11,14 @@ Readiness вычисляется из агрегированных показа�
 - инфраструктура;
 - активные предупреждения.
 
-Application service собирает данные, calculator применяет правила и thresholds, API возвращает DTO для dashboard и reports.
+Application service собирает данные через `DashboardRepositoryPort`, calculator применяет правила и thresholds, API возвращает DTO для dashboard и reports.
 
 ## Alerts
 
 Alert flow разделён на два слоя:
 
-- `AlertQueryRepository` получает кандидатов из БД;
+- `AlertRepositoryPort` описывает required data access;
+- `AlertQueryRepository` реализует порт и получает кандидатов из БД;
 - `AlertService` формирует `TacticalAlertDto`, action flow и применяет access filtering.
 
 SQL не находится в alert service, а предметные правила остаются рядом с генерацией alert DTO.

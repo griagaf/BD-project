@@ -2,6 +2,7 @@ package com.tacticaldistrict.command.intelligence.repository;
 
 import com.tacticaldistrict.command.intelligence.dto.ExecuteQueryRequest;
 import com.tacticaldistrict.command.intelligence.dto.QueryScopeDto;
+import com.tacticaldistrict.command.intelligence.application.port.QueryDefinitionPort;
 import com.tacticaldistrict.command.intelligence.model.QueryTemplate;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -9,10 +10,11 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
-public class QuerySqlFactory {
+public class QuerySqlFactory implements QueryDefinitionPort {
 
     private static final List<String> FORMATION_SCOPE_TYPES = List.of("DISTRICT", "FORMATION", "ARMY", "CORPS", "DIVISION", "BRIGADE");
 
+    @Override
     public QueryDefinition build(QueryTemplate template, ExecuteQueryRequest request) {
         Map<String, Object> params = request == null || request.parameters() == null
                 ? new LinkedHashMap<>()
