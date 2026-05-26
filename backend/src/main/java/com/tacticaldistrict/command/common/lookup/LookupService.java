@@ -129,18 +129,28 @@ public class LookupService {
     }
 
     @Transactional(readOnly = true)
-    public List<LookupOptionResponse> ranks(String search, int limit) {
+    public List<LookupOptionResponse> ranks(String search, int limit, String category) {
         UserContext user = userContextProvider.current();
         if (!canUseLookup(user, "personnel:read")) {
             return List.of();
         }
+        Map<String, Object> params = params(search, limit);
+        params.put("category", rankDbCategory(category));
         return jdbcTemplate.query("""
-                SELECT rank_id AS id, name AS label
+                SELECT rank_id AS id, name AS label, category
                 FROM military_ranks
                 WHERE (:search = '' OR lower(name) LIKE :pattern)
+                  AND (CAST(:category AS TEXT) IS NULL OR category = :category)
                 ORDER BY rank_id, name
                 LIMIT :limit
-                """, params(search, limit), this::simple);
+                """, params, (rs, rowNum) -> new LookupOptionResponse(
+                rs.getLong("id"),
+                rs.getString("label"),
+                null,
+                "RANK",
+                rs.getString("category"),
+                null
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -320,6 +330,17 @@ public class LookupService {
             case "PLATOON" -> "Взвод";
             case "SQUAD" -> "Отделение";
             default -> type;
+        };
+    }
+
+    private String rankDbCategory(String category) {
+        if (category == null || category.isBlank()) {
+            return null;
+        }
+        return switch (category.trim().toUpperCase(Locale.ROOT)) {
+            case "OFFICERS", "OFFICER" -> "Офицерский";
+            case "ENLISTED_AND_SERGEANTS", "ENLISTED", "SERGEANTS" -> "Сержантский и Рядовой";
+            default -> category.trim();
         };
     }
 

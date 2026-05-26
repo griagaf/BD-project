@@ -1,16 +1,18 @@
 import { AlertTriangle, RotateCcw } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { ApiError } from "@/shared/api/apiError"
+import type { QueryParameterMetadata } from "@/features/intelligence/model/intelligenceTypes"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
 
 type QueryErrorPanelProps = {
   error: unknown
+  templateParameters?: QueryParameterMetadata[]
   parameters: Record<string, string | number>
   onRetry: () => void
 }
 
-export function QueryErrorPanel({ error, parameters, onRetry }: QueryErrorPanelProps) {
+export function QueryErrorPanel({ error, templateParameters = [], parameters, onRetry }: QueryErrorPanelProps) {
   const { t } = useTranslation(["common", "intelligence"])
   const message = error instanceof ApiError ? error.message : t("intelligence:error")
   const filledParameters = Object.entries(parameters).filter(([, value]) => `${value ?? ""}`.trim() !== "")
@@ -26,7 +28,7 @@ export function QueryErrorPanel({ error, parameters, onRetry }: QueryErrorPanelP
             <div className="mt-3 flex flex-wrap gap-2">
               {filledParameters.map(([key, value]) => (
                 <span key={key} className="max-w-full rounded border border-red-900/60 bg-black/20 px-2 py-1 text-xs text-red-100/80">
-                  <span className="text-red-200">{key}</span>: <span className="break-words">{value}</span>
+                  <span className="text-red-200">{parameterLabel(templateParameters, key)}</span>: <span className="break-words">{parameterValue(t, templateParameters, key, value)}</span>
                 </span>
               ))}
             </div>
@@ -39,4 +41,16 @@ export function QueryErrorPanel({ error, parameters, onRetry }: QueryErrorPanelP
       </div>
     </Card>
   )
+}
+
+function parameterLabel(parameters: QueryParameterMetadata[], key: string) {
+  return parameters.find((parameter) => parameter.name === key)?.label ?? key
+}
+
+function parameterValue(t: (key: string, options?: Record<string, unknown>) => string, parameters: QueryParameterMetadata[], key: string, value: string | number) {
+  const parameter = parameters.find((item) => item.name === key)
+  if (parameter?.type !== "enum") {
+    return String(value)
+  }
+  return t(`intelligence:builder.optionLabels.${value}`, { defaultValue: String(value) })
 }

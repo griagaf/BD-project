@@ -127,9 +127,9 @@ public class BuildingService {
                 .filter(row -> permissionService.canRead(user, ObjectType.BUILDING, row.id()))
                 .toList();
         long units = rows.stream().map(BuildingResponse::unitId).distinct().count();
-        long empty = rows.stream().filter(row -> row.subdivisionsCount() == 0).count();
-        long overloaded = rows.stream().filter(row -> row.subdivisionsCount() > 3).count();
-        long assigned = rows.size() - empty;
+        long empty = rows.stream().filter(row -> Boolean.TRUE.equals(row.assignable()) && row.subdivisionsCount() == 0).count();
+        long overloaded = rows.stream().filter(row -> Boolean.TRUE.equals(row.assignable()) && row.subdivisionsCount() > 3).count();
+        long assigned = rows.stream().filter(row -> Boolean.TRUE.equals(row.assignable()) && row.subdivisionsCount() > 0).count();
         int readiness = rows.isEmpty() ? 0 : Math.max(0, Math.min(100, (int) (90 - empty * 8 - overloaded * 10)));
         return new BuildingStatisticsResponse(units, (long) rows.size(), assigned, empty, overloaded, readiness);
     }
@@ -210,13 +210,14 @@ public class BuildingService {
 
     private BuildingResponse mapRow(ResultSet rs, int rowNum) throws SQLException {
         long subdivisionsCount = rs.getLong("subdivisions_count");
-        String status = subdivisionsCount == 0 ? "WARNING" : subdivisionsCount > 3 ? "OVERLOADED" : "READY";
+        boolean assignable = rs.getBoolean("assignable");
+        String status = !assignable ? "DEPLOYMENT_NOT_APPLICABLE" : subdivisionsCount == 0 ? "WARNING" : subdivisionsCount > 3 ? "OVERLOADED" : "READY";
         return new BuildingResponse(
                 rs.getLong("building_id"),
                 rs.getString("name"),
                 rs.getLong("unit_id"),
                 rs.getString("unit_name"),
-                rs.getBoolean("assignable"),
+                assignable,
                 subdivisionsCount,
                 status,
                 assignedSubdivisions(rs.getLong("building_id"))

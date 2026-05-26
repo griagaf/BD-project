@@ -36,10 +36,62 @@
     "searchPersonnel": "Поиск по ФИО, званию или личному номеру",
     "selectedPath": "Выбранный путь",
     "selectPersonnelPath": "Выберите структуру и военнослужащего",
-    "queryPreview": "Предпросмотр команды"
+    "queryPreview": "Предпросмотр команды",
+    "optionLabels": {
+      "ALL": "Все сооружения",
+      "EMPTY": "Без закреплённых подразделений",
+      "OVERLOADED": "Перегруженные сооружения",
+      "WITH_QUANTITY_GT": "Количество больше заданного значения",
+      "WITHOUT": "Отсутствует",
+      "WITH_SPECIALISTS": "Есть специалисты",
+      "WITHOUT_SPECIALISTS": "Нет специалистов",
+      "MAX": "Максимальное значение",
+      "MIN": "Минимальное значение"
+    }
   },
   "result": {
-    "rowsReturned": "{{count}} строк, выполнено {{time}}"
+    "rowsReturned": "{{count}} строк, выполнено {{time}}",
+    "columns": {
+      "unit_id": "ID части",
+      "unit_name": "Военная часть",
+      "formation_id": "ID формирования",
+      "formation_name": "Формирование",
+      "parent_formation_name": "Родительское формирование",
+      "parent_formation_type": "Тип формирования",
+      "formation_type": "Тип формирования",
+      "commander_name": "Командир",
+      "commander_rank": "Звание командира",
+      "personnel_id": "ID военнослужащего",
+      "last_name": "Фамилия",
+      "first_name": "Имя",
+      "middle_name": "Отчество",
+      "personal_number": "Личный номер",
+      "rank_name": "Звание",
+      "subdivision_name": "Подразделение",
+      "object_type": "Тип объекта",
+      "object_name": "Объект",
+      "extra_info": "Дополнительно",
+      "level_no": "Уровень",
+      "city": "Город",
+      "address": "Адрес",
+      "equipment_category": "Категория техники",
+      "equipment_type": "Тип техники",
+      "weapon_category": "Категория вооружения",
+      "weapon_type": "Тип вооружения",
+      "quantity": "Количество",
+      "building_id": "ID сооружения",
+      "building_name": "Сооружение",
+      "subdivisions_count": "Количество подразделений",
+      "subdivisions": "Подразделения",
+      "specialty_id": "ID специальности",
+      "specialty_name": "Специальность",
+      "specialists_count": "Количество специалистов",
+      "units_count": "Количество частей"
+    },
+    "values": {
+      "PERSONNEL": "Военнослужащий",
+      "MILITARY_UNIT": "Военная часть"
+    }
   },
   "toast": {
     "executed": "Запрос выполнен",

@@ -21,6 +21,11 @@ export function QueryResultTable({ result }: QueryResultTableProps) {
   }, [result?.executedAt])
 
   const rows = result?.rows ?? []
+  const displayColumns = useMemo(() => {
+    const columns = result?.columns ?? []
+    const readableColumns = columns.filter((column) => !column.endsWith("_id"))
+    return readableColumns.length ? readableColumns : columns
+  }, [result?.columns])
   const totalPages = Math.max(1, Math.ceil(rows.length / size))
   const currentPage = Math.min(page, totalPages - 1)
   const visibleRows = useMemo(
@@ -43,9 +48,9 @@ export function QueryResultTable({ result }: QueryResultTableProps) {
         <Table>
           <thead className={tableHeadClass}>
             <tr>
-              {result.columns.map((column) => (
+              {displayColumns.map((column) => (
                 <th key={column} className={cn(tableCellClass, "whitespace-nowrap")}>
-                  <span className="block max-w-56 truncate" title={column}>{column}</span>
+                  <span className="block max-w-56 truncate" title={columnLabel(t, column)}>{columnLabel(t, column)}</span>
                 </th>
               ))}
             </tr>
@@ -53,9 +58,9 @@ export function QueryResultTable({ result }: QueryResultTableProps) {
           <tbody>
             {visibleRows.map((row, index) => (
               <tr key={`${currentPage}:${index}`} className={tableRowClass}>
-                {result.columns.map((column) => (
+                {displayColumns.map((column) => (
                   <td key={column} className={cn(tableCellClass, "text-zinc-300")}>
-                    <span className="block max-w-72 truncate" title={String(row[column] ?? "")}>{String(row[column] ?? "")}</span>
+                    <span className="block max-w-72 truncate" title={formatCellValue(t, row[column])}>{formatCellValue(t, row[column])}</span>
                   </td>
                 ))}
               </tr>
@@ -83,4 +88,20 @@ export function QueryResultTable({ result }: QueryResultTableProps) {
       )}
     </Card>
   )
+}
+
+function columnLabel(t: (key: string, options?: Record<string, unknown>) => string, column: string) {
+  return t(`intelligence:result.columns.${column}`, {
+    defaultValue: column.replaceAll("_", " "),
+  })
+}
+
+function formatCellValue(t: (key: string, options?: Record<string, unknown>) => string, value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return ""
+  }
+  if (typeof value !== "string") {
+    return String(value)
+  }
+  return t(`intelligence:result.values.${value}`, { defaultValue: value })
 }

@@ -64,6 +64,8 @@ export function BuildingsTable({ rows, canEdit, onEdit, onDelete, onAssign, onRe
                         <span className="rounded border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs text-zinc-500">+{row.assignedSubdivisions.length - 4}</span>
                       ) : null}
                     </div>
+                  ) : !row.assignable ? (
+                    <span className="text-zinc-500">{t("buildings:table.deploymentNotApplicable")}</span>
                   ) : (
                     <span className="text-zinc-600">{t("buildings:table.noAssignments")}</span>
                   )}
@@ -79,9 +81,11 @@ export function BuildingsTable({ rows, canEdit, onEdit, onDelete, onAssign, onRe
                 <td className={tableCellClass}><StatusBadge status={row.status} /></td>
                 <td className={tableCellClass}>
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="ghost" size="icon" disabled={!canEdit || !row.assignable} onClick={() => onAssign(row)}>
-                      <Link2 className="h-4 w-4 shrink-0" />
-                    </Button>
+                    {row.assignable ? (
+                      <Button type="button" variant="ghost" size="icon" disabled={!canEdit} onClick={() => onAssign(row)}>
+                        <Link2 className="h-4 w-4 shrink-0" />
+                      </Button>
+                    ) : null}
                     <Button type="button" variant="ghost" size="icon" disabled={!canEdit} onClick={() => onEdit(row)}>
                       <Pencil className="h-4 w-4 shrink-0" />
                     </Button>

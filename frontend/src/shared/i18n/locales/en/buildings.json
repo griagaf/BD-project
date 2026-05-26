@@ -23,6 +23,7 @@
     "assignable": "Can host units",
     "notAssignable": "Cannot host units",
     "noAssignments": "No assignments",
+    "deploymentNotApplicable": "Unit deployment is not applicable",
     "emptyTitle": "No buildings visible",
     "emptyDescription": "Current filters and command scope returned no building records."
   },

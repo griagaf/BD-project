@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next"
 import { useMemo, useState } from "react"
 
 type QueryParamsFormProps = {
+  templateCode?: string
   parameters: QueryParameterMetadata[]
   values: Record<string, string | number>
   scope: QueryScope
@@ -14,15 +15,25 @@ type QueryParamsFormProps = {
   onScopeChange: (scope: QueryScope) => void
 }
 
+function rankCategoryForTemplate(templateCode?: string) {
+  if (templateCode === "FIND_OFFICERS") return "OFFICERS"
+  if (templateCode === "FIND_ENLISTED_PERSONNEL") return "ENLISTED_AND_SERGEANTS"
+  return null
+}
+
 function QueryParameterField({
+  templateCode,
   parameter,
   values,
   onValuesChange,
 }: {
+  templateCode?: string
   parameter: QueryParameterMetadata
   values: Record<string, string | number>
   onValuesChange: (values: Record<string, string | number>) => void
 }) {
+  const { t } = useTranslation("intelligence")
+  const rankCategory = rankCategoryForTemplate(templateCode)
   const lookupKind = parameter.name === "personnelId"
     ? "personnel"
     : parameter.name === "formationId"
@@ -40,7 +51,7 @@ function QueryParameterField({
                 : null
 
   const { data: options = [] } = useQuery({
-    queryKey: ["lookups", lookupKind, "query-param"],
+    queryKey: ["lookups", lookupKind, "query-param", rankCategory],
     queryFn: () => {
       if (lookupKind === "personnel") return lookupApi.personnel("", { limit: 500 })
       if (lookupKind === "formations") return lookupApi.formations("", "DISTRICT,ARMY,CORPS,DIVISION,BRIGADE", { limit: 500 })
@@ -48,10 +59,10 @@ function QueryParameterField({
       if (lookupKind === "equipmentTypes") return lookupApi.equipmentTypes("", 500)
       if (lookupKind === "weaponTypes") return lookupApi.weaponTypes("", 500)
       if (lookupKind === "specialties") return lookupApi.specialties("", 500)
-      return lookupApi.ranks("", 500)
+      return lookupApi.ranks("", 500, { category: rankCategory })
     },
     enabled: Boolean(lookupKind),
-    staleTime: 5 * 60_000,
+    staleTime: 0,
   })
 
   if (parameter.name === "personnelId") {
@@ -87,7 +98,7 @@ function QueryParameterField({
           if (lookupKind === "equipmentTypes") return lookupApi.equipmentTypes(search, 500)
           if (lookupKind === "weaponTypes") return lookupApi.weaponTypes(search, 500)
           if (lookupKind === "specialties") return lookupApi.specialties(search, 500)
-          return lookupApi.ranks(search, 500)
+          return lookupApi.ranks(search, 500, { category: rankCategory })
         }}
         onChange={(id) => {
           const selected = options.find((option) => option.id === id)
@@ -110,7 +121,7 @@ function QueryParameterField({
           className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
         >
           {parameter.options.map((option) => (
-            <option key={option} value={option}>{option}</option>
+            <option key={option} value={option}>{t(`builder.optionLabels.${option}`, { defaultValue: option })}</option>
           ))}
         </select>
       ) : (
@@ -235,7 +246,7 @@ function HierarchyPersonnelPicker({
   )
 }
 
-export function QueryParamsForm({ parameters, values, scope, onValuesChange, onScopeChange }: QueryParamsFormProps) {
+export function QueryParamsForm({ templateCode, parameters, values, scope, onValuesChange, onScopeChange }: QueryParamsFormProps) {
   const { t } = useTranslation("intelligence")
   const { data: formationOptions = [] } = useQuery({
     queryKey: ["lookups", "formations", "intelligence"],
@@ -300,14 +311,6 @@ export function QueryParamsForm({ parameters, values, scope, onValuesChange, onS
             )}
           </div>
           <input type="hidden" value={scope.name ?? ""} readOnly />
-          {false ? (
-          <input
-            value={scope.name ?? ""}
-            onChange={(event) => onScopeChange({ ...scope, name: event.target.value })}
-            placeholder={t("builder.displayName")}
-            className="h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
-          />
-          ) : null}
         </div>
       </div>
 
@@ -315,7 +318,7 @@ export function QueryParamsForm({ parameters, values, scope, onValuesChange, onS
         <div className="text-xs uppercase text-emerald-300">{t("builder.parameters")}</div>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           {parameters.map((parameter) => (
-            <QueryParameterField key={parameter.name} parameter={parameter} values={values} onValuesChange={onValuesChange} />
+            <QueryParameterField key={parameter.name} templateCode={templateCode} parameter={parameter} values={values} onValuesChange={onValuesChange} />
           ))}
           {!parameters.length ? <div className="text-sm text-zinc-500">{t("builder.noParameters")}</div> : null}
         </div>

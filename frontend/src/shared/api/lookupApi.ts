@@ -39,7 +39,8 @@ export const lookupApi = {
       parentId: extra?.parentId,
       type: extra?.type,
     })}`),
-  ranks: (search?: string, limit = 50) => apiClient<LookupOption[]>(`/api/lookups/ranks?${query(search, limit)}`),
+  ranks: (search?: string, limit = 50, extra?: { category?: string | null }) =>
+    apiClient<LookupOption[]>(`/api/lookups/ranks?${query(search, limit, { category: extra?.category })}`),
   specialties: (search?: string, limit = 50) => apiClient<LookupOption[]>(`/api/lookups/specialties?${query(search, limit)}`),
   equipmentTypes: (search?: string, limit = 50) => apiClient<LookupOption[]>(`/api/lookups/equipment-types?${query(search, limit)}`),
   weaponTypes: (search?: string, limit = 50) => apiClient<LookupOption[]>(`/api/lookups/weapon-types?${query(search, limit)}`),
