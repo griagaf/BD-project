@@ -8,9 +8,11 @@ Backend предоставляет REST API, применяет правила �
 
 - Controller принимает HTTP-запросы, DTO и validation annotations.
 - Service содержит бизнес-логику, permission checks и orchestration.
-- Repository/JdbcTemplate выполняет доступ к БД.
+- Repository/JdbcTemplate выполняет доступ к БД. SQL Query Terminal, Buildings и Alerts вынесены в custom repositories.
 - Mapper преобразует Entity/SQL rows в DTO.
 - GlobalExceptionHandler формирует человекочитаемые ошибки с `traceId`.
+
+Подробное описание слоёв находится в [backend-architecture.md](backend-architecture.md).
 
 ## Доступ к данным
 

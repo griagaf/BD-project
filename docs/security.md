@@ -24,3 +24,5 @@ Scope вычисляется из активных записей `command_assig
 - lookup, reports, Query Terminal, dashboard и exports возвращают только данные текущего scope.
 
 Frontend PermissionGuard используется только для качества интерфейса.
+
+Подробное описание access control находится в [access-control.md](access-control.md).

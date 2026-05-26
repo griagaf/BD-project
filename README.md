@@ -141,27 +141,19 @@ Flyway применяет схему, триггеры, представлени
 
 - [Архитектура](docs/architecture.md)
 - [Backend](docs/backend.md)
+- [Backend Architecture](docs/backend-architecture.md)
 - [Frontend](docs/frontend.md)
 - [Безопасность и доступ](docs/security.md)
+- [Access Control](docs/access-control.md)
 - [База данных](docs/database.md)
 - [Query Terminal](docs/query-terminal.md)
+- [Query Terminal Architecture](docs/query-terminal-architecture.md)
 - [Readiness](docs/readiness.md)
+- [Readiness Architecture](docs/readiness-architecture.md)
 - [Метрики заполненности и готовности](docs/readiness-and-completeness-metrics.md)
 - [Динамические атрибуты](docs/dynamic-attributes.md)
 - [Триггеры](docs/triggers.md)
 - [Модули системы](docs/modules)
-
-## Screenshots
-
-Каталог для изображений интерфейса: `docs/screenshots`.
-
-Рекомендуемый набор:
-
-- `dashboard.png` — тактическая панель.
-- `focus-tree.png` — дерево структуры.
-- `query-terminal.png` — терминал разведки.
-- `mission-report.png` — сводный отчёт.
-- `inventory-passport.png` — паспорт типа техники или вооружения.
 
 ## Глоссарий
 

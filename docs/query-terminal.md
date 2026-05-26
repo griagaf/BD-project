@@ -10,8 +10,12 @@ Intelligence Query Terminal выполняет согласованные ана
 2. Пользователь выбирает шаблон через поисковый список.
 3. Форма параметров строится по описанию шаблона.
 4. Backend проверяет permissions и scope.
-5. SQL выполняется через `NamedParameterJdbcTemplate`.
-6. Результаты возвращаются таблицей с колонками и строками.
+5. `QuerySqlFactory` строит SQL definition.
+6. `QueryExecutionRepository` выполняет SQL через `NamedParameterJdbcTemplate`.
+7. `QueryExecutorService` повторно применяет row-level access guard.
+8. Результаты возвращаются таблицей с колонками и строками.
+
+Подробная архитектура описана в [query-terminal-architecture.md](query-terminal-architecture.md).
 
 ## UX
 
