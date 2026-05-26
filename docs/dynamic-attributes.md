@@ -14,4 +14,4 @@
 
 ## Frontend rendering
 
-Frontend получает schema endpoint, определяет `dataType` и рендерит text, number, date или boolean controls. Паспорт объекта использует те же metadata.
+Frontend получает описание схемы, определяет `dataType` и рендерит text, number, date или boolean controls. Паспорт объекта использует то же описание полей.

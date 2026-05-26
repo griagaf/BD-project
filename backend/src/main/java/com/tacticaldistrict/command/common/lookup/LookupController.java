@@ -47,9 +47,10 @@ public class LookupController {
     @GetMapping("/ranks")
     public List<LookupOptionResponse> ranks(
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "50") int limit
+            @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(defaultValue = "") String category
     ) {
-        return lookupService.ranks(search, limit);
+        return lookupService.ranks(search, limit, category);
     }
 
     @GetMapping("/specialties")
@@ -87,8 +88,10 @@ public class LookupController {
     @GetMapping("/personnel")
     public List<LookupOptionResponse> personnel(
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "50") int limit
+            @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(required = false) Long unitId,
+            @RequestParam(required = false) Long subdivisionId
     ) {
-        return lookupService.personnel(search, limit);
+        return lookupService.personnel(search, limit, unitId, subdivisionId);
     }
 }

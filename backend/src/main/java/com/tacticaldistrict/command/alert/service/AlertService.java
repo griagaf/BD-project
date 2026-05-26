@@ -1,5 +1,6 @@
 package com.tacticaldistrict.command.alert.service;
 
+import com.tacticaldistrict.command.alert.application.port.AlertRepositoryPort;
 import com.tacticaldistrict.command.alert.dto.AlertActionDto;
 import com.tacticaldistrict.command.alert.dto.TacticalAlertDto;
 import com.tacticaldistrict.command.security.access.PermissionService;
@@ -11,7 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +24,7 @@ public class AlertService {
     private static final int EQUIPMENT_EXCEEDED_THRESHOLD = 300;
     private static final int WEAPON_EXCEEDED_THRESHOLD = 1000;
 
-    private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final AlertRepositoryPort alertRepository;
     private final UserContextProvider userContextProvider;
     private final PermissionService permissionService;
 
@@ -47,175 +47,148 @@ public class AlertService {
     }
 
     private List<TacticalAlertDto> unitsWithoutEquipment(UserContext user) {
-        return jdbcTemplate.query("""
-                SELECT mu.unit_id, mu.name AS unit_name
-                FROM military_units mu
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM equipment_in_units eiu WHERE eiu.unit_id = mu.unit_id
-                )
-                ORDER BY mu.name
-                """, Map.of(), (rs, rowNum) -> alert(
+        return alertRepository.unitsWithoutEquipment()
+                .stream()
+                .map(row -> alert(
                 "UNIT_WITHOUT_EQUIPMENT",
                 "HIGH",
                 "В части отсутствует техника",
-                rs.getString("unit_name") + ": техника не зарегистрирована в инвентаре.",
+                row.unitName() + ": техника не зарегистрирована в инвентаре.",
                 ObjectType.MILITARY_UNIT,
-                rs.getLong("unit_id"),
-                Map.of("unitName", rs.getString("unit_name")),
+                row.unitId(),
+                Map.of("unitName", row.unitName()),
                 List.of(
-                        new AlertActionDto("Открыть часть", "/units/" + rs.getLong("unit_id"), null),
-                        new AlertActionDto("Добавить технику", "/equipment?unitId=" + rs.getLong("unit_id") + "&action=add", null),
-                        new AlertActionDto("Показать технику", "/equipment?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_EQUIPMENT"),
+                        new AlertActionDto("Открыть часть", "/units/" + row.unitId(), null),
+                        new AlertActionDto("Добавить технику", "/equipment?unitId=" + row.unitId() + "&action=add", null),
+                        new AlertActionDto("Показать технику", "/equipment?unitId=" + row.unitId(), "FIND_UNIT_EQUIPMENT"),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_EQUIPMENT_AVAILABILITY")
                 )
-        )).stream().filter(alert -> canRead(user, alert)).toList();
+        ))
+                .filter(alert -> canRead(user, alert))
+                .toList();
     }
 
     private List<TacticalAlertDto> unitsWithoutWeapons(UserContext user) {
-        return jdbcTemplate.query("""
-                SELECT mu.unit_id, mu.name AS unit_name
-                FROM military_units mu
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM weapon_in_units wiu WHERE wiu.unit_id = mu.unit_id
-                )
-                ORDER BY mu.name
-                """, Map.of(), (rs, rowNum) -> alert(
+        return alertRepository.unitsWithoutWeapons()
+                .stream()
+                .map(row -> alert(
                 "UNIT_WITHOUT_WEAPONS",
                 "HIGH",
                 "В части отсутствует вооружение",
-                rs.getString("unit_name") + ": вооружение не зарегистрировано в инвентаре.",
+                row.unitName() + ": вооружение не зарегистрировано в инвентаре.",
                 ObjectType.MILITARY_UNIT,
-                rs.getLong("unit_id"),
-                Map.of("unitName", rs.getString("unit_name")),
+                row.unitId(),
+                Map.of("unitName", row.unitName()),
                 List.of(
-                        new AlertActionDto("Открыть часть", "/units/" + rs.getLong("unit_id"), null),
-                        new AlertActionDto("Добавить вооружение", "/weapons?unitId=" + rs.getLong("unit_id") + "&action=add", null),
-                        new AlertActionDto("Показать вооружение", "/weapons?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_WEAPONS"),
+                        new AlertActionDto("Открыть часть", "/units/" + row.unitId(), null),
+                        new AlertActionDto("Добавить вооружение", "/weapons?unitId=" + row.unitId() + "&action=add", null),
+                        new AlertActionDto("Показать вооружение", "/weapons?unitId=" + row.unitId(), "FIND_UNIT_WEAPONS"),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_WEAPON_AVAILABILITY")
                 )
-        )).stream().filter(alert -> canRead(user, alert)).toList();
+        ))
+                .filter(alert -> canRead(user, alert))
+                .toList();
     }
 
     private List<TacticalAlertDto> buildingsWithoutSubdivisions(UserContext user) {
-        return jdbcTemplate.query("""
-                SELECT b.building_id, b.name AS building_name, mu.name AS unit_name
-                FROM buildings b
-                JOIN military_units mu ON mu.unit_id = b.unit_id
-                LEFT JOIN subdivision_buildings sb ON sb.building_id = b.building_id
-                WHERE b.assignable = TRUE
-                GROUP BY b.building_id, b.name, mu.name
-                HAVING COUNT(sb.subdivision_id) = 0
-                ORDER BY mu.name, b.name
-                """, Map.of(), (rs, rowNum) -> alert(
+        return alertRepository.buildingsWithoutSubdivisions()
+                .stream()
+                .map(row -> alert(
                 "BUILDING_WITHOUT_SUBDIVISIONS",
                 "MEDIUM",
                 "Сооружение не используется",
-                rs.getString("building_name") + " не закреплено ни за одним подразделением.",
+                row.buildingName() + " не закреплено ни за одним подразделением.",
                 ObjectType.BUILDING,
-                rs.getLong("building_id"),
-                Map.of("buildingName", rs.getString("building_name"), "unitName", rs.getString("unit_name")),
+                row.buildingId(),
+                Map.of("buildingName", row.buildingName(), "unitName", row.unitName()),
                 List.of(
                         new AlertActionDto("Открыть сооружения", "/buildings", null),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_BUILDING_USAGE")
                 )
-        )).stream().filter(alert -> canRead(user, alert)).toList();
+        ))
+                .filter(alert -> canRead(user, alert))
+                .toList();
     }
 
     private List<TacticalAlertDto> overloadedBuildings(UserContext user) {
-        return jdbcTemplate.query("""
-                SELECT b.building_id, b.name AS building_name, mu.name AS unit_name, COUNT(sb.subdivision_id) AS subdivisions_count
-                FROM buildings b
-                JOIN military_units mu ON mu.unit_id = b.unit_id
-                LEFT JOIN subdivision_buildings sb ON sb.building_id = b.building_id
-                WHERE b.assignable = TRUE
-                GROUP BY b.building_id, b.name, mu.name
-                HAVING COUNT(sb.subdivision_id) > :threshold
-                ORDER BY subdivisions_count DESC, b.name
-                """, Map.of("threshold", BUILDING_OVERLOAD_THRESHOLD), (rs, rowNum) -> alert(
+        return alertRepository.overloadedBuildings(BUILDING_OVERLOAD_THRESHOLD)
+                .stream()
+                .map(row -> alert(
                 "BUILDING_OVERLOADED",
                 "MEDIUM",
                 "Перегрузка сооружения",
-                rs.getString("building_name") + " размещает подразделений: " + rs.getLong("subdivisions_count") + ".",
+                row.buildingName() + " размещает подразделений: " + row.subdivisionsCount() + ".",
                 ObjectType.BUILDING,
-                rs.getLong("building_id"),
+                row.buildingId(),
                 Map.of(
-                        "buildingName", rs.getString("building_name"),
-                        "unitName", rs.getString("unit_name"),
-                        "subdivisionsCount", rs.getLong("subdivisions_count")
+                        "buildingName", row.buildingName(),
+                        "unitName", row.unitName(),
+                        "subdivisionsCount", row.subdivisionsCount()
                 ),
                 List.of(
                         new AlertActionDto("Открыть сооружения", "/buildings", null),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_BUILDING_USAGE")
                 )
-        )).stream().filter(alert -> canRead(user, alert)).toList();
+        ))
+                .filter(alert -> canRead(user, alert))
+                .toList();
     }
 
     private List<TacticalAlertDto> specialtiesWithoutSpecialists(UserContext user) {
-        return jdbcTemplate.query("""
-                SELECT s.specialty_id, s.name AS specialty_name
-                FROM specialties s
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM personnel_specialties ps WHERE ps.specialty_id = s.specialty_id
-                )
-                ORDER BY s.name
-                """, Map.of(), (rs, rowNum) -> alert(
+        return alertRepository.specialtiesWithoutSpecialists()
+                .stream()
+                .map(row -> alert(
                 "SPECIALTY_WITHOUT_SPECIALISTS",
                 "MEDIUM",
                 "Недостаток специалистов",
-                "По специальности \"" + rs.getString("specialty_name") + "\" нет назначенных военнослужащих.",
+                "По специальности \"" + row.specialtyName() + "\" нет назначенных военнослужащих.",
                 ObjectType.SPECIALTY,
-                rs.getLong("specialty_id"),
-                Map.of("specialtyName", rs.getString("specialty_name")),
+                row.specialtyId(),
+                Map.of("specialtyName", row.specialtyName()),
                 List.of(new AlertActionDto("Открыть терминал", "/intelligence", "FIND_SPECIALTY_COVERAGE"))
-        )).stream()
+        ))
                 .filter(alert -> permissionService.canRead(user, ObjectType.SPECIALTY, alert.objectId()))
                 .toList();
     }
 
     private List<TacticalAlertDto> equipmentQuantityExceeded(UserContext user) {
-        return jdbcTemplate.query("""
-                SELECT mu.unit_id, mu.name AS unit_name, et.name AS equipment_type, eiu.quantity
-                FROM equipment_in_units eiu
-                JOIN military_units mu ON mu.unit_id = eiu.unit_id
-                JOIN equipment_types et ON et.type_id = eiu.type_id
-                WHERE eiu.quantity > :threshold
-                ORDER BY eiu.quantity DESC
-                """, Map.of("threshold", EQUIPMENT_EXCEEDED_THRESHOLD), (rs, rowNum) -> alert(
+        return alertRepository.equipmentQuantityExceeded(EQUIPMENT_EXCEEDED_THRESHOLD)
+                .stream()
+                .map(row -> alert(
                 "EQUIPMENT_QUANTITY_EXCEEDED",
                 "CRITICAL",
                 "Превышение количества техники",
-                rs.getString("unit_name") + ": зафиксировано повышенное количество техники \"" + rs.getString("equipment_type") + "\".",
+                row.unitName() + ": зафиксировано повышенное количество техники \"" + row.resourceType() + "\".",
                 ObjectType.MILITARY_UNIT,
-                rs.getLong("unit_id"),
-                Map.of("unitName", rs.getString("unit_name"), "equipmentType", rs.getString("equipment_type"), "quantity", rs.getInt("quantity")),
+                row.unitId(),
+                Map.of("unitName", row.unitName(), "equipmentType", row.resourceType(), "quantity", row.quantity()),
                 List.of(
-                        new AlertActionDto("Показать технику", "/equipment?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_EQUIPMENT"),
+                        new AlertActionDto("Показать технику", "/equipment?unitId=" + row.unitId(), "FIND_UNIT_EQUIPMENT"),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_EQUIPMENT_AVAILABILITY")
                 )
-        )).stream().filter(alert -> canRead(user, alert)).toList();
+        ))
+                .filter(alert -> canRead(user, alert))
+                .toList();
     }
 
     private List<TacticalAlertDto> weaponQuantityExceeded(UserContext user) {
-        return jdbcTemplate.query("""
-                SELECT mu.unit_id, mu.name AS unit_name, wt.name AS weapon_type, wiu.quantity
-                FROM weapon_in_units wiu
-                JOIN military_units mu ON mu.unit_id = wiu.unit_id
-                JOIN weapon_types wt ON wt.type_id = wiu.type_id
-                WHERE wiu.quantity > :threshold
-                ORDER BY wiu.quantity DESC
-                """, Map.of("threshold", WEAPON_EXCEEDED_THRESHOLD), (rs, rowNum) -> alert(
+        return alertRepository.weaponQuantityExceeded(WEAPON_EXCEEDED_THRESHOLD)
+                .stream()
+                .map(row -> alert(
                 "WEAPON_QUANTITY_EXCEEDED",
                 "CRITICAL",
                 "Превышение количества вооружения",
-                rs.getString("unit_name") + ": зафиксировано повышенное количество вооружения \"" + rs.getString("weapon_type") + "\".",
+                row.unitName() + ": зафиксировано повышенное количество вооружения \"" + row.resourceType() + "\".",
                 ObjectType.MILITARY_UNIT,
-                rs.getLong("unit_id"),
-                Map.of("unitName", rs.getString("unit_name"), "weaponType", rs.getString("weapon_type"), "quantity", rs.getInt("quantity")),
+                row.unitId(),
+                Map.of("unitName", row.unitName(), "weaponType", row.resourceType(), "quantity", row.quantity()),
                 List.of(
-                        new AlertActionDto("Показать вооружение", "/weapons?unitId=" + rs.getLong("unit_id"), "FIND_UNIT_WEAPONS"),
+                        new AlertActionDto("Показать вооружение", "/weapons?unitId=" + row.unitId(), "FIND_UNIT_WEAPONS"),
                         new AlertActionDto("Открыть терминал", "/intelligence", "FIND_WEAPON_AVAILABILITY")
                 )
-        )).stream().filter(alert -> canRead(user, alert)).toList();
+        ))
+                .filter(alert -> canRead(user, alert))
+                .toList();
     }
 
     private TacticalAlertDto alert(

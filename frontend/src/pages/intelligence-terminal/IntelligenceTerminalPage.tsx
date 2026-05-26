@@ -2,7 +2,7 @@ import { Download, Play, Radar } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useExecuteQueryMutation, useExportQueryMutation, useQueryTemplatesQuery } from "@/features/intelligence/api/intelligenceQueries"
-import type { ExecuteQueryRequest, QueryScope } from "@/features/intelligence/model/intelligenceTypes"
+import type { ExecuteQueryRequest, QueryScope, QueryTemplateMetadata } from "@/features/intelligence/model/intelligenceTypes"
 import { QueryParamsForm } from "@/features/intelligence/ui/QueryParamsForm"
 import { QueryPreviewTerminal } from "@/features/intelligence/ui/QueryPreviewTerminal"
 import { QueryErrorPanel } from "@/features/intelligence/ui/QueryErrorPanel"
@@ -23,7 +23,7 @@ export function IntelligenceTerminalPage() {
   const exportMutation = useExportQueryMutation()
 
   const selectedTemplate = templates.find((template) => template.code === selectedCode) ?? templates[0]
-  const command = useMemo(() => buildCommand(selectedCode, scope, parameters, selectedTemplate?.exampleCommand), [parameters, scope, selectedCode, selectedTemplate?.exampleCommand])
+  const command = useMemo(() => buildCommand(selectedTemplate, scope, parameters, t), [parameters, scope, selectedTemplate, t])
   const request: ExecuteQueryRequest = { scope, parameters, previewCommand: command }
   const missingRequired = selectedTemplate?.parameters.some((parameter) => parameter.required && !parameters[parameter.name]) ?? false
   const invalidScope = scope.type !== "GLOBAL" && (!scope.id || scope.id <= 0)
@@ -92,6 +92,7 @@ export function IntelligenceTerminalPage() {
           <QueryTemplateSelector templates={templates} selectedCode={selectedCode} onSelect={selectTemplate} />
           <div className="space-y-5">
             <QueryParamsForm
+              templateCode={selectedTemplate?.code}
               parameters={selectedTemplate?.parameters ?? []}
               values={parameters}
               scope={scope}
@@ -100,7 +101,7 @@ export function IntelligenceTerminalPage() {
             />
             <QueryPreviewTerminal command={command} />
             {executeMutation.error ? (
-              <QueryErrorPanel error={executeMutation.error} parameters={parameters} onRetry={executeQuery} />
+              <QueryErrorPanel error={executeMutation.error} templateParameters={selectedTemplate?.parameters ?? []} parameters={parameters} onRetry={executeQuery} />
             ) : null}
             <QueryResultTable result={executeMutation.data} />
           </div>
@@ -110,12 +111,22 @@ export function IntelligenceTerminalPage() {
   )
 }
 
-function buildCommand(code: string, scope: QueryScope, parameters: Record<string, string | number>, fallback?: string) {
-  const target = code.replaceAll("_", " ")
-  const scopeText = scope.type === "GLOBAL" ? "GLOBAL" : `${scope.type} ${scope.name || scope.id}`
+function buildCommand(template: QueryTemplateMetadata | undefined, scope: QueryScope, parameters: Record<string, string | number>, t: (key: string, options?: Record<string, unknown>) => string) {
+  const target = template?.label?.toUpperCase() ?? "ЗАПРОС"
+  const scopeType = scope.type === "GLOBAL"
+    ? t("intelligence:builder.global")
+    : t(`common:objectTypes.${scope.type}`, { defaultValue: scope.type.replaceAll("_", " ") })
+  const scopeText = scope.type === "GLOBAL" ? scopeType : `${scopeType} ${scope.name || scope.id}`
   const params = Object.entries(parameters)
     .filter(([, value]) => value !== undefined && value !== null && `${value}`.trim() !== "")
-    .map(([key, value]) => `${key}=${value}`)
+    .map(([key, value]) => {
+      const metadata = template?.parameters.find((parameter) => parameter.name === key)
+      const label = metadata?.label ?? key
+      const displayValue = metadata?.type === "enum"
+        ? t(`intelligence:builder.optionLabels.${value}`, { defaultValue: String(value) })
+        : value
+      return `${label}: ${displayValue}`
+    })
     .join(" ")
-  return `QUERY: ${target}${params ? ` ${params}` : ""} IN ${scopeText}` || fallback || `QUERY: ${target}`
+  return `QUERY: ${target}${params ? ` ${params}` : ""} — ${t("intelligence:builder.scope")}: ${scopeText}`
 }

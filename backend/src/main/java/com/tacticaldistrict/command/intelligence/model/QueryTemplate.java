@@ -7,12 +7,12 @@ import java.util.Set;
 
 public enum QueryTemplate {
     FIND_UNITS_IN_FORMATION(
-            "Найти части в соединении",
-            "Возвращает военные части внутри выбранной ветки структуры.",
+            "Найти части в области поиска",
+            "Возвращает военные части внутри выбранной области структуры.",
             "UNITS",
             Set.of("structure:read", "unit:read"),
-            List.of(param("formationId", "Соединение", "number", true, "Выберите соединение")),
-            "QUERY: НАЙТИ ЧАСТИ В ВЫБРАННОМ СОЕДИНЕНИИ"
+            List.of(),
+            "QUERY: НАЙТИ ЧАСТИ В ВЫБРАННОЙ ОБЛАСТИ"
     ),
     FIND_OFFICERS(
             "Найти офицеров",

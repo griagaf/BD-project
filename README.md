@@ -76,7 +76,7 @@ Readiness оценивает личный состав, технику, воор
 
 ## Динамические атрибуты
 
-Категории техники, категории вооружения и звания определяют собственные наборы атрибутов. Frontend получает metadata schema и строит формы динамически. Это позволяет добавлять новые категории и свойства без изменения React-компонентов под конкретный тип.
+Категории техники, категории вооружения и звания определяют собственные наборы характеристик. Frontend получает описание схемы полей и показывает только релевантные параметры.
 
 ## Триггеры
 
@@ -141,33 +141,26 @@ Flyway применяет схему, триггеры, представлени
 
 - [Архитектура](docs/architecture.md)
 - [Backend](docs/backend.md)
+- [Backend Architecture](docs/backend-architecture.md)
 - [Frontend](docs/frontend.md)
 - [Безопасность и доступ](docs/security.md)
+- [Access Control](docs/access-control.md)
 - [База данных](docs/database.md)
 - [Query Terminal](docs/query-terminal.md)
+- [Query Terminal Architecture](docs/query-terminal-architecture.md)
 - [Readiness](docs/readiness.md)
+- [Readiness Architecture](docs/readiness-architecture.md)
+- [Метрики заполненности и готовности](docs/readiness-and-completeness-metrics.md)
 - [Динамические атрибуты](docs/dynamic-attributes.md)
 - [Триггеры](docs/triggers.md)
 - [Модули системы](docs/modules)
-
-## Screenshots
-
-Каталог для изображений интерфейса: `docs/screenshots`.
-
-Рекомендуемый набор:
-
-- `dashboard.png` — тактическая панель.
-- `focus-tree.png` — дерево структуры.
-- `query-terminal.png` — терминал разведки.
-- `mission-report.png` — сводный отчёт.
-- `inventory-passport.png` — паспорт типа техники или вооружения.
 
 ## Глоссарий
 
 - **Scope** — область данных, доступная пользователю по командному назначению.
 - **Command assignment** — связь военнослужащего с объектом командования.
 - **Readiness** — интегральная оценка готовности по нескольким направлениям.
-- **Dynamic attributes** — атрибуты, определяемые данными БД, а не кодом формы.
+- **Характеристики** — параметры, определяемые справочниками категорий и званий.
 - **Passport** — карточка объекта с ключевыми сведениями, статистикой и действиями.
 
 ## Troubleshooting

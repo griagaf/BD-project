@@ -129,18 +129,28 @@ public class LookupService {
     }
 
     @Transactional(readOnly = true)
-    public List<LookupOptionResponse> ranks(String search, int limit) {
+    public List<LookupOptionResponse> ranks(String search, int limit, String category) {
         UserContext user = userContextProvider.current();
         if (!canUseLookup(user, "personnel:read")) {
             return List.of();
         }
+        Map<String, Object> params = params(search, limit);
+        params.put("category", rankDbCategory(category));
         return jdbcTemplate.query("""
-                SELECT rank_id AS id, name AS label
+                SELECT rank_id AS id, name AS label, category
                 FROM military_ranks
                 WHERE (:search = '' OR lower(name) LIKE :pattern)
-                ORDER BY rank_order, name
+                  AND (CAST(:category AS TEXT) IS NULL OR category = :category)
+                ORDER BY rank_id, name
                 LIMIT :limit
-                """, params(search, limit), this::simple);
+                """, params, (rs, rowNum) -> new LookupOptionResponse(
+                rs.getLong("id"),
+                rs.getString("label"),
+                null,
+                "RANK",
+                rs.getString("category"),
+                null
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -229,8 +239,11 @@ public class LookupService {
     }
 
     @Transactional(readOnly = true)
-    public List<LookupOptionResponse> personnel(String search, int limit) {
+    public List<LookupOptionResponse> personnel(String search, int limit, Long unitId, Long subdivisionId) {
         UserContext user = userContextProvider.current();
+        Map<String, Object> params = params(search, limit);
+        params.put("unitId", unitId);
+        params.put("subdivisionId", subdivisionId);
         return jdbcTemplate.query("""
                 SELECT p.personnel_id AS id,
                        trim(p.last_name || ' ' || p.first_name || ' ' || coalesce(p.middle_name, '')) AS label,
@@ -244,9 +257,11 @@ public class LookupService {
                 LEFT JOIN military_ranks mr ON mr.rank_id = pr.rank_id
                 WHERE (:search = '' OR lower(p.last_name || ' ' || p.first_name || ' ' || coalesce(p.middle_name, '')) LIKE :pattern
                        OR lower(p.personal_number) LIKE :pattern)
+                  AND (CAST(:unitId AS BIGINT) IS NULL OR s.unit_id = :unitId)
+                  AND (CAST(:subdivisionId AS BIGINT) IS NULL OR s.subdivision_id = :subdivisionId)
                 ORDER BY p.last_name, p.first_name, p.middle_name
                 LIMIT :limit
-                """, params(search, limit), (rs, rowNum) -> new LookupOptionResponse(
+                """, params, (rs, rowNum) -> new LookupOptionResponse(
                 rs.getLong("id"),
                 rs.getString("label"),
                 rs.getString("rank_name"),
@@ -315,6 +330,17 @@ public class LookupService {
             case "PLATOON" -> "Взвод";
             case "SQUAD" -> "Отделение";
             default -> type;
+        };
+    }
+
+    private String rankDbCategory(String category) {
+        if (category == null || category.isBlank()) {
+            return null;
+        }
+        return switch (category.trim().toUpperCase(Locale.ROOT)) {
+            case "OFFICERS", "OFFICER" -> "Офицерский";
+            case "ENLISTED_AND_SERGEANTS", "ENLISTED", "SERGEANTS" -> "Сержантский и Рядовой";
+            default -> category.trim();
         };
     }
 
