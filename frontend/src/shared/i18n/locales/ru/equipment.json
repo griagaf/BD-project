@@ -44,7 +44,7 @@
     "purpose": "Назначение",
     "manufacturer": "Производитель",
     "adoptionYear": "Год принятия",
-    "attributes": "Динамические атрибуты",
+    "attributes": "Характеристики категории",
     "attributeName": "Название атрибута",
     "attributeType": "Тип данных",
     "createAttribute": "Создать атрибут",

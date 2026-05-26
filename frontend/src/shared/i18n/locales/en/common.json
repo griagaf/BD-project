@@ -63,7 +63,7 @@
     "inventoryUpdate": "Inventory update",
     "inventoryAdd": "Add inventory row",
     "inventoryPosition": "Inventory position",
-    "inventoryPositionDescription": "Select unit, type, and quantity without entering technical IDs.",
+    "inventoryPositionDescription": "Select unit, type, and quantity from the registry.",
     "buildingRegistry": "Building registry",
     "editBuilding": "Edit building",
     "createBuilding": "Create building",

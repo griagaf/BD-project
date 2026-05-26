@@ -21,17 +21,17 @@ export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, i
   const { t } = useTranslation("common")
   const [unitId, setUnitId] = useState<number | null>(null)
   const [typeId, setTypeId] = useState<number | null>(null)
-  const [quantity, setQuantity] = useState(0)
+  const [quantity, setQuantity] = useState("")
 
   useEffect(() => {
     if (row) {
       setUnitId(row.unitId)
       setTypeId(row.typeId)
-      setQuantity(row.quantity)
+      setQuantity(String(row.quantity))
     } else if (open) {
       setUnitId(initialUnitId ?? null)
       setTypeId(initialTypeId ?? null)
-      setQuantity(1)
+      setQuantity("1")
     }
   }, [initialTypeId, initialUnitId, open, row])
 
@@ -39,7 +39,8 @@ export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, i
     return null
   }
 
-  const canSubmit = Boolean(unitId && typeId && quantity >= 0)
+  const parsedQuantity = quantity.trim() === "" ? null : Number(quantity)
+  const canSubmit = Boolean(unitId && typeId && parsedQuantity !== null && Number.isFinite(parsedQuantity) && parsedQuantity >= 0)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
@@ -75,7 +76,7 @@ export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, i
             min={0}
             placeholder={t("placeholders.quantity")}
             value={quantity}
-            onChange={(event) => setQuantity(Number(event.target.value))}
+            onChange={(event) => setQuantity(event.target.value)}
             className="mt-2 h-10 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-emerald-500"
           />
         </label>
@@ -86,7 +87,7 @@ export function InventoryDialog({ row, open, saving, unitOptions, typeOptions, i
             disabled={saving || !canSubmit}
             onClick={() => {
               if (unitId && typeId) {
-                onSubmit({ unitId, typeId, quantity })
+                onSubmit({ unitId, typeId, quantity: parsedQuantity ?? 0 })
               }
             }}
           >

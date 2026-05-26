@@ -39,10 +39,14 @@ export const lookupApi = {
       parentId: extra?.parentId,
       type: extra?.type,
     })}`),
-  ranks: (search?: string) => apiClient<LookupOption[]>(`/api/lookups/ranks?${query(search)}`),
-  specialties: (search?: string) => apiClient<LookupOption[]>(`/api/lookups/specialties?${query(search)}`),
-  equipmentTypes: (search?: string) => apiClient<LookupOption[]>(`/api/lookups/equipment-types?${query(search)}`),
-  weaponTypes: (search?: string) => apiClient<LookupOption[]>(`/api/lookups/weapon-types?${query(search)}`),
-  buildings: (search?: string) => apiClient<LookupOption[]>(`/api/lookups/buildings?${query(search)}`),
-  personnel: (search?: string) => apiClient<LookupOption[]>(`/api/lookups/personnel?${query(search)}`),
+  ranks: (search?: string, limit = 50) => apiClient<LookupOption[]>(`/api/lookups/ranks?${query(search, limit)}`),
+  specialties: (search?: string, limit = 50) => apiClient<LookupOption[]>(`/api/lookups/specialties?${query(search, limit)}`),
+  equipmentTypes: (search?: string, limit = 50) => apiClient<LookupOption[]>(`/api/lookups/equipment-types?${query(search, limit)}`),
+  weaponTypes: (search?: string, limit = 50) => apiClient<LookupOption[]>(`/api/lookups/weapon-types?${query(search, limit)}`),
+  buildings: (search?: string, limit = 50) => apiClient<LookupOption[]>(`/api/lookups/buildings?${query(search, limit)}`),
+  personnel: (search?: string, extra?: { unitId?: number | null; subdivisionId?: number | null; limit?: number }) =>
+    apiClient<LookupOption[]>(`/api/lookups/personnel?${query(search, extra?.limit ?? 50, {
+      unitId: extra?.unitId,
+      subdivisionId: extra?.subdivisionId,
+    })}`),
 }

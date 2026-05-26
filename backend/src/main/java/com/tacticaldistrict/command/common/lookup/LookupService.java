@@ -138,7 +138,7 @@ public class LookupService {
                 SELECT rank_id AS id, name AS label
                 FROM military_ranks
                 WHERE (:search = '' OR lower(name) LIKE :pattern)
-                ORDER BY rank_order, name
+                ORDER BY rank_id, name
                 LIMIT :limit
                 """, params(search, limit), this::simple);
     }
@@ -229,8 +229,11 @@ public class LookupService {
     }
 
     @Transactional(readOnly = true)
-    public List<LookupOptionResponse> personnel(String search, int limit) {
+    public List<LookupOptionResponse> personnel(String search, int limit, Long unitId, Long subdivisionId) {
         UserContext user = userContextProvider.current();
+        Map<String, Object> params = params(search, limit);
+        params.put("unitId", unitId);
+        params.put("subdivisionId", subdivisionId);
         return jdbcTemplate.query("""
                 SELECT p.personnel_id AS id,
                        trim(p.last_name || ' ' || p.first_name || ' ' || coalesce(p.middle_name, '')) AS label,
@@ -244,9 +247,11 @@ public class LookupService {
                 LEFT JOIN military_ranks mr ON mr.rank_id = pr.rank_id
                 WHERE (:search = '' OR lower(p.last_name || ' ' || p.first_name || ' ' || coalesce(p.middle_name, '')) LIKE :pattern
                        OR lower(p.personal_number) LIKE :pattern)
+                  AND (CAST(:unitId AS BIGINT) IS NULL OR s.unit_id = :unitId)
+                  AND (CAST(:subdivisionId AS BIGINT) IS NULL OR s.subdivision_id = :subdivisionId)
                 ORDER BY p.last_name, p.first_name, p.middle_name
                 LIMIT :limit
-                """, params(search, limit), (rs, rowNum) -> new LookupOptionResponse(
+                """, params, (rs, rowNum) -> new LookupOptionResponse(
                 rs.getLong("id"),
                 rs.getString("label"),
                 rs.getString("rank_name"),
